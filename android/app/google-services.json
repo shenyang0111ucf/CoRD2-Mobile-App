@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "664978581793",
+    "project_id": "cord2-senior-design",
+    "storage_bucket": "cord2-senior-design.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:664978581793:android:bcf5d067948fdb0e017660",
+        "android_client_info": {
+          "package_name": "com.cord.cord2_mobile_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "664978581793-qu98skff43dai5mqpnd1pcbd5u71i7th.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cord.cord2_mobile_app",
+            "certificate_hash": "ada4267713e4af3af8af3b95a7d744ee66bb751b"
+          }
+        },
+        {
+          "client_id": "664978581793-i34gehevc44hffk77f4dvt7cvo7pm8eh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCoOwA2rgEl8L4V43v5SJQIfYD_ZdL0OtI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "664978581793-i34gehevc44hffk77f4dvt7cvo7pm8eh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "664978581793-hhiai0uleqpvu23sj2soh4ps7j38grbe.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.cord.cord2MobileApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
