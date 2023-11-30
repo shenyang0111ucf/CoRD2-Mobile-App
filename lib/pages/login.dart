@@ -82,8 +82,8 @@ class _SignOnPageState extends State<SignOnPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.primary,
-        title: Center(
-          child :const Text("CoRD2 Mobile Application")
+        title: const Center(
+          child :Text("CoRD2 Mobile Application")
         )
       ),
       body: Container(
@@ -92,13 +92,15 @@ class _SignOnPageState extends State<SignOnPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              const FractionallySizedBox(
+              FractionallySizedBox(
                 widthFactor: 0.8,
                 child: Card(
                   color: Color(darkBlue),
                   child: Padding(
                     padding: EdgeInsets.all(25.0),
-                    child: Center(child: Text("Please Sign In", style: whiteText))
+                    child: Center(child:
+                      _currentUser != null ? Text("Welcome Back, ${_currentUser?.displayName}!", style: whiteText) : const Text("Please Sign In", style: whiteText)
+                    )
                   )
                 )
               ),
