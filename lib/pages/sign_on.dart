@@ -219,10 +219,15 @@ class _SignOnPageState extends State<SignOnPage> {
           margin: const EdgeInsets.symmetric(vertical: 10.0),
           child: createButton("Register", () => handleRegister())),
       Text(_error, style: const TextStyle(color: Colors.red)),
-      const Text("Already have an account?"),
+      Text("Already have an account?", style: TextStyle(color: Color(blurple))),
       GestureDetector(
-          child: const Text("Login",
-              style: TextStyle(decoration: TextDecoration.underline)),
+          child: Text("Login",
+              style: TextStyle(
+                  decoration: TextDecoration.underline,
+                  color: Color(blurple),
+                  fontStyle: FontStyle.italic
+              )
+          ),
           onTap: () {
             switchPage();
           }),
@@ -266,8 +271,13 @@ class _SignOnPageState extends State<SignOnPage> {
         ),
       ),
       GestureDetector(
-        child: const Text("Forgot Password?",
-            style: TextStyle(decoration: TextDecoration.underline)),
+        child: Text("Forgot Password?",
+          style: TextStyle(
+            decoration: TextDecoration.underline,
+            color: Color(blurple),
+            fontStyle: FontStyle.italic
+          )
+        ),
         onTap: () {
           //TODO: Implement forgot password
         }
@@ -277,8 +287,13 @@ class _SignOnPageState extends State<SignOnPage> {
         child: createButton("Login", () => ()),
       ),
       GestureDetector(
-        child: const Text("Create a new account",
-            style: TextStyle(decoration: TextDecoration.underline)),
+        child: Text("Create a new account",
+          style: TextStyle(
+            decoration: TextDecoration.underline,
+            color: Color(blurple),
+            fontStyle: FontStyle.italic
+          )
+        ),
         onTap: () {
           switchPage();
         }
