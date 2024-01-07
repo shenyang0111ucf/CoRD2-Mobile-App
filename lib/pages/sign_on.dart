@@ -44,11 +44,13 @@ class _SignOnPageState extends State<SignOnPage> {
   void handleGoogleUser(GoogleSignInAccount? account) async {
     // In mobile, being authenticated means being authorized...
     bool isAuthorized = account != null;
+    print(account);
     if (isAuthorized) {
       DocumentSnapshot doc = await users.doc(account?.id).get();
       // Found a user account
       if (doc.exists) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        print(data);
       } else {
         // Need to create a new account
         users
@@ -299,7 +301,7 @@ class _SignOnPageState extends State<SignOnPage> {
         }
       ),
       Container(
-        margin: EdgeInsets.symmetric(vertical: 10.0),
+        margin: const EdgeInsets.symmetric(vertical: 10.0),
         child: SignInButton(Buttons.Google, onPressed: signInWithGoogle),
       ),
     ];
