@@ -12,12 +12,14 @@ class SignOnPage extends StatefulWidget {
   State<SignOnPage> createState() => _SignOnPageState();
 }
 
+enum Page { Login, Register, Forgot }
+
 class _SignOnPageState extends State<SignOnPage> {
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
   CollectionReference users = FirebaseFirestore.instance.collection('users');
   GoogleSignInAccount? _currentUser;
   bool _isAuthorized = false;
-  bool _login = true;
+  Page current = Page.Login;
   TextEditingController emailController = TextEditingController();
   TextEditingController passController = TextEditingController();
   TextEditingController confirmPassController = TextEditingController();
@@ -35,18 +37,22 @@ class _SignOnPageState extends State<SignOnPage> {
     // Update the stored user
     _googleSignIn.onCurrentUserChanged
         .listen((GoogleSignInAccount? account) => handleGoogleUser(account));
-
     // Attempt to log in a previously authorized user
     _googleSignIn.signInSilently();
   }
 
   // Handle the Google Authorization Flow
   void handleGoogleUser(GoogleSignInAccount? account) async {
-    // In mobile, being authenticated means being authorized...
     bool isAuthorized = account != null;
-    print(account);
     if (isAuthorized) {
-      DocumentSnapshot doc = await users.doc(account?.id).get();
+      GoogleSignInAuthentication googleAuth = await account.authentication;
+      OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken
+      );
+      UserCredential firebaseCred = await FirebaseAuth.instance.signInWithCredential(credential);
+
+      DocumentSnapshot doc = await users.doc(firebaseCred.user?.uid).get();
       // Found a user account
       if (doc.exists) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
@@ -54,7 +60,7 @@ class _SignOnPageState extends State<SignOnPage> {
       } else {
         // Need to create a new account
         users
-            .doc(account.id)
+            .doc(firebaseCred.user?.uid)
             .set({
               'name': account.displayName,
               'email': account.email,
@@ -89,12 +95,14 @@ class _SignOnPageState extends State<SignOnPage> {
       setState(() {
         _error = "Passwords don't match";
       });
+      return;
     }
     if (passController.text.isEmpty || displayNameController.text.isEmpty ||
         emailController.text.isEmpty || confirmPassController.text.isEmpty) {
       setState(() {
         _error = "Please fill out all fields";
       });
+      return;
     }
     try {
       UserCredential userCredential = await FirebaseAuth.instance
@@ -126,6 +134,37 @@ class _SignOnPageState extends State<SignOnPage> {
     }
   }
 
+  void handleLogin() async {
+    setState(() {
+      _error = "";
+    });
+
+    if (emailController.text.isEmpty || passController.text.isEmpty) {
+      setState(() {
+        _error = "Please fill out all fields";
+      });
+      return;
+    }
+
+    try {
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailController.text,
+          password: passController.text
+      );
+      print("Succesful login: $credential");
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        setState(() {
+          _error = "No user found for that email";
+        });
+      } else if (e.code == 'wrong-password') {
+        setState(() {
+          _error = "Incorrect email/password";
+        });
+      }
+    }
+  }
+
   // Creates a button on the login screen
   FractionallySizedBox createButton(String text, onPressed) {
     return FractionallySizedBox(
@@ -140,15 +179,30 @@ class _SignOnPageState extends State<SignOnPage> {
     );
   }
 
-  void switchPage() {
+  void switchPage(Page newPage) {
     emailController.clear();
     displayNameController.clear();
     passController.clear();
     confirmPassController.clear();
     setState(() {
-      _login = !_login;
+      current = newPage;
       _error = "";
     });
+  }
+
+  void handlePassReset() async {
+    if (emailController.text.isEmpty) {
+      setState(() {
+        _error = "Please enter an email";
+      });
+      return;
+    }
+
+    await FirebaseAuth.instance
+        .sendPasswordResetEmail(email: emailController.text);
+
+    // Redirect to Login page after sending the reset
+    switchPage(Page.Login);
   }
 
   List<Widget> registerPage() {
@@ -219,7 +273,8 @@ class _SignOnPageState extends State<SignOnPage> {
       ),
       Container(
           margin: const EdgeInsets.symmetric(vertical: 10.0),
-          child: createButton("Register", () => handleRegister())),
+          child: createButton("Register", () => handleRegister())
+      ),
       Text(_error, style: const TextStyle(color: Colors.red)),
       Text("Already have an account?", style: TextStyle(color: Color(blurple))),
       GestureDetector(
@@ -231,7 +286,46 @@ class _SignOnPageState extends State<SignOnPage> {
               )
           ),
           onTap: () {
-            switchPage();
+            switchPage(Page.Login);
+          }),
+    ];
+  }
+
+  List<Widget> forgotPassPage() {
+    return [
+      Container(
+        margin: const EdgeInsets.symmetric(vertical: 15.0),
+        child: Text("Forgot Password?", style: TextStyle(color: Color(blurple), fontSize: 25.0))
+      ),
+      Container(
+        margin: const EdgeInsets.symmetric(vertical: 10.0),
+        child: TextField(
+          controller: emailController,
+          style: const TextStyle(color: Colors.white, height: 1.0),
+          decoration: InputDecoration(
+              isDense: true,
+              hintStyle: const TextStyle(color: Colors.white),
+              fillColor: Color(darkBlue),
+              filled: true,
+              border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
+              hintText: "Enter Your Email"),
+        ),
+      ),
+      Text(_error, style: const TextStyle(color: Colors.red)),
+      Container(
+          margin: const EdgeInsets.symmetric(vertical: 10.0),
+          child: createButton("Send Reset Email", () => handlePassReset())
+      ),
+      GestureDetector(
+          child: Text("Login",
+              style: TextStyle(
+                  decoration: TextDecoration.underline,
+                  color: Color(blurple),
+                  fontStyle: FontStyle.italic
+              )
+          ),
+          onTap: () {
+            switchPage(Page.Login);
           }),
     ];
   }
@@ -284,9 +378,10 @@ class _SignOnPageState extends State<SignOnPage> {
           //TODO: Implement forgot password
         }
       ),
+      Text(_error, style: const TextStyle(color: Colors.red)),
       Container(
         margin: const EdgeInsets.symmetric(vertical: 10.0),
-        child: createButton("Login", () => ()),
+        child: createButton("Login", () => handleLogin()),
       ),
       GestureDetector(
         child: Text("Create a new account",
@@ -297,7 +392,7 @@ class _SignOnPageState extends State<SignOnPage> {
           )
         ),
         onTap: () {
-          switchPage();
+          switchPage(Page.Register);
         }
       ),
       Container(
@@ -305,6 +400,17 @@ class _SignOnPageState extends State<SignOnPage> {
         child: SignInButton(Buttons.Google, onPressed: signInWithGoogle),
       ),
     ];
+  }
+
+  List<Widget> renderCurrentPage() {
+    switch (current) {
+      case Page.Login:
+        return loginPage();
+      case Page.Register:
+        return registerPage();
+      case Page.Forgot:
+        return forgotPassPage();
+    }
   }
 
   @override
@@ -321,11 +427,13 @@ class _SignOnPageState extends State<SignOnPage> {
                   padding: const EdgeInsets.all(40.0),
                   child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
-                      children: _login ? loginPage() : registerPage()),
-                )
+                      children: renderCurrentPage(),
+                ),
               ),
             ),
           ),
-        ));
+        ),
+      ),
+    );
   }
 }
