@@ -404,24 +404,24 @@ class _SignOnPageState extends State<SignOnPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        resizeToAvoidBottomInset: true,
-        body: Container(
-          color: Color(lightBlue),
-          child: Center(
-            child: SingleChildScrollView(
-              child: Card(
-                margin: const EdgeInsets.fromLTRB(50, 75, 50, 75),
-                child: Padding(
-                  padding: const EdgeInsets.all(40.0),
-                  child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: renderCurrentPage(),
-                  ),
+      resizeToAvoidBottomInset: true,
+      body: Container(
+        color: Color(lightBlue),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Card(
+              margin: const EdgeInsets.fromLTRB(50, 75, 50, 75),
+              child: Padding(
+                padding: const EdgeInsets.all(40.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: renderCurrentPage(),
                 ),
               ),
             ),
           ),
         ),
+      ),
     );
   }
 }
