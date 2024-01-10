@@ -17,8 +17,6 @@ enum Page { Login, Register, Forgot }
 class _SignOnPageState extends State<SignOnPage> {
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
   CollectionReference users = FirebaseFirestore.instance.collection('users');
-  GoogleSignInAccount? _currentUser;
-  bool _isAuthorized = false;
   Page current = Page.Login;
   TextEditingController emailController = TextEditingController();
   TextEditingController passController = TextEditingController();
@@ -39,6 +37,12 @@ class _SignOnPageState extends State<SignOnPage> {
         .listen((GoogleSignInAccount? account) => handleGoogleUser(account));
     // Attempt to log in a previously authorized user
     _googleSignIn.signInSilently();
+  }
+
+  void setError(String msg) {
+    setState(() {
+      _error = msg;
+    });
   }
 
   // Handle the Google Authorization Flow
@@ -71,12 +75,9 @@ class _SignOnPageState extends State<SignOnPage> {
             .catchError((err) => print("Failed to add user $err"));
       }
     }
-    setState(() {
-      _currentUser = account;
-      _isAuthorized = isAuthorized;
-    });
   }
 
+  // Wrapper to call the google auth flow
   Future<void> signInWithGoogle() async {
     try {
       await _googleSignIn.signIn();
@@ -85,23 +86,16 @@ class _SignOnPageState extends State<SignOnPage> {
     }
   }
 
-  Future<void> signOut() => _googleSignIn.disconnect();
-
+  // Handles the email/password registration flow
   void handleRegister() async {
-    setState(() {
-      _error = "";
-    });
+    setError("");
     if (passController.text != confirmPassController.text) {
-      setState(() {
-        _error = "Passwords don't match";
-      });
+      setError("Passwords don't match");
       return;
     }
     if (passController.text.isEmpty || displayNameController.text.isEmpty ||
         emailController.text.isEmpty || confirmPassController.text.isEmpty) {
-      setState(() {
-        _error = "Please fill out all fields";
-      });
+      setError("Please fill out all fields");
       return;
     }
     try {
@@ -109,6 +103,7 @@ class _SignOnPageState extends State<SignOnPage> {
           .createUserWithEmailAndPassword(
             email: emailController.text, password: passController.text
       );
+
       users
           .doc(userCredential.user?.uid)
           .set({
@@ -121,28 +116,23 @@ class _SignOnPageState extends State<SignOnPage> {
         .catchError((err) => print("Failed to add user $err"));
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
-        setState(() {
-          _error = "Password is too weak";
-        });
+        setError("Password is too weak");
       } else if (e.code == 'email-already-in-use') {
-        setState(() {
-          _error = "This email is already in use";
-        });
+        setError("This email is already in use");
       }
     } catch (e) {
       print(e);
     }
   }
 
+  // Handles the email/password authentication flow
   void handleLogin() async {
     setState(() {
       _error = "";
     });
 
     if (emailController.text.isEmpty || passController.text.isEmpty) {
-      setState(() {
-        _error = "Please fill out all fields";
-      });
+      setError("Please fill our all fields");
       return;
     }
 
@@ -154,18 +144,13 @@ class _SignOnPageState extends State<SignOnPage> {
       print("Succesful login: $credential");
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        setState(() {
-          _error = "No user found for that email";
-        });
+        setError("No user found for that email");
       } else if (e.code == 'wrong-password') {
-        setState(() {
-          _error = "Incorrect email/password";
-        });
+        setError("Incorrect email/password");
       }
     }
   }
 
-  // Creates a button on the login screen
   FractionallySizedBox createButton(String text, onPressed) {
     return FractionallySizedBox(
       widthFactor: 0.8,
@@ -174,11 +159,15 @@ class _SignOnPageState extends State<SignOnPage> {
           style: ElevatedButton.styleFrom(
               backgroundColor: Color(blurple),
               shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(15)))),
-          child: Text(text, style: whiteText)),
+                  borderRadius: BorderRadius.all(Radius.circular(15))
+              ),
+          ),
+          child: Text(text, style: whiteText)
+      ),
     );
   }
 
+  // Handles switching between the different pages
   void switchPage(Page newPage) {
     emailController.clear();
     displayNameController.clear();
@@ -190,11 +179,10 @@ class _SignOnPageState extends State<SignOnPage> {
     });
   }
 
+  // Sends a password reset email for a Firebase user
   void handlePassReset() async {
     if (emailController.text.isEmpty) {
-      setState(() {
-        _error = "Please enter an email";
-      });
+      setError("Please enter an email");
       return;
     }
 
@@ -428,12 +416,12 @@ class _SignOnPageState extends State<SignOnPage> {
                   child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: renderCurrentPage(),
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
     );
   }
 }
