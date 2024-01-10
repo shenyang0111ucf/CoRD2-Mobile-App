@@ -127,12 +127,9 @@ class _SignOnPageState extends State<SignOnPage> {
 
   // Handles the email/password authentication flow
   void handleLogin() async {
-    setState(() {
-      _error = "";
-    });
-
+    setError("");
     if (emailController.text.isEmpty || passController.text.isEmpty) {
-      setError("Please fill our all fields");
+      setError("Please fill out all fields");
       return;
     }
 
@@ -141,12 +138,14 @@ class _SignOnPageState extends State<SignOnPage> {
           email: emailController.text,
           password: passController.text
       );
-      print("Succesful login: $credential");
+      print("Successful login: $credential");
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         setError("No user found for that email");
       } else if (e.code == 'wrong-password') {
         setError("Incorrect email/password");
+      } else {
+        setError("Unknown error occurred");
       }
     }
   }
@@ -363,7 +362,7 @@ class _SignOnPageState extends State<SignOnPage> {
           )
         ),
         onTap: () {
-          //TODO: Implement forgot password
+          switchPage(Page.Forgot);
         }
       ),
       Text(_error, style: const TextStyle(color: Colors.red)),
