@@ -37,8 +37,7 @@ class _SignOnPageState extends State<SignOnPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (user != null) {
-        Navigator.pushAndRemoveUntil(
-            context, MaterialPageRoute(builder: (context) => const ChatPage()), (Route route) => false);
+        chatScreen();
       }
     });
     // Update the stored user
@@ -52,6 +51,11 @@ class _SignOnPageState extends State<SignOnPage> {
     setState(() {
       _error = msg;
     });
+  }
+
+  void chatScreen() {
+    Navigator.pushAndRemoveUntil(
+        context, MaterialPageRoute(builder: (context) => const ChatPage()), (Route route) => false);
   }
 
   // Handle the Google Authorization Flow
@@ -69,7 +73,6 @@ class _SignOnPageState extends State<SignOnPage> {
       // Found a user account
       if (doc.exists) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        print(data);
       } else {
         // Need to create a new account
         users
@@ -83,6 +86,7 @@ class _SignOnPageState extends State<SignOnPage> {
             .then((value) => print("Successfully added user!"))
             .catchError((err) => print("Failed to add user $err"));
       }
+      chatScreen();
     }
   }
 
@@ -147,7 +151,7 @@ class _SignOnPageState extends State<SignOnPage> {
           email: emailController.text,
           password: passController.text
       );
-      print("Successful login: $credential");
+      chatScreen();
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         setError("No user found for that email");

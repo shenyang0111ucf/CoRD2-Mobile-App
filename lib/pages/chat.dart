@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../models/chat_model.dart';
 import '../models/message_model.dart';
@@ -81,7 +82,7 @@ class _ChatPageState extends State<ChatPage> {
                   child: Column(
                     children: [
                       Text("Chat with: ${item.participant['name']!}"),
-                      Text("Last Message at: ${item.lastUpdate}")
+                      Text(DateFormat.yMEd().add_jms().format(item.lastUpdate))
                     ],
                   )
                 )

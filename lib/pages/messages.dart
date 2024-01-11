@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -39,6 +38,9 @@ class _MessagePageState extends State<MessagePage> {
   }
 
   void getMessages() {
+    setState(() {
+      _messages = [];
+    });
     ChatModel chat = widget.chat;
     DatabaseReference msgRef = FirebaseDatabase.instance.ref('msgs/${chat.id}').orderByKey().ref;
     msgRef.onValue.listen((DatabaseEvent event) async {
@@ -66,9 +68,7 @@ class _MessagePageState extends State<MessagePage> {
         });
       }
     });
-    setState(() {
-      _messages = [];
-    });
+
   }
 
   ListView renderMessages() {
@@ -82,7 +82,7 @@ class _MessagePageState extends State<MessagePage> {
           return BubbleSpecialThree(
               text: item.contents,
               isSender: item.didSend,
-              tail: true,
+              tail: index == _messages.length - 1 ? true: false,
               color: item.didSend ? const Color(0xFF1B97F3) : const Color(0xFFE8E8EE),
               textStyle: TextStyle(
                   color: item.didSend ? Colors.white : Colors.black
@@ -118,6 +118,7 @@ class _MessagePageState extends State<MessagePage> {
     await chatRef.update({
       "lastUpdate": DateTime.now().toString()
     });
+    textController.clear();
   }
 
   Widget renderTextBar() {
