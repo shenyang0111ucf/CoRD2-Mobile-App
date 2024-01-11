@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cord2_mobile_app/pages/chat.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/button_list.dart';
@@ -16,6 +17,7 @@ enum Page { Login, Register, Forgot }
 
 class _SignOnPageState extends State<SignOnPage> {
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
+  final User? user = FirebaseAuth.instance.currentUser;
   CollectionReference users = FirebaseFirestore.instance.collection('users');
   Page current = Page.Login;
   TextEditingController emailController = TextEditingController();
@@ -29,9 +31,16 @@ class _SignOnPageState extends State<SignOnPage> {
   final int blurple = 0xff20297A;
   final TextStyle whiteText = const TextStyle(color: Colors.white);
 
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (user != null) {
+        Navigator.pushAndRemoveUntil(
+            context, MaterialPageRoute(builder: (context) => const ChatPage()), (Route route) => false);
+      }
+    });
     // Update the stored user
     _googleSignIn.onCurrentUserChanged
         .listen((GoogleSignInAccount? account) => handleGoogleUser(account));
