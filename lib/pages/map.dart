@@ -16,6 +16,7 @@ class _Page2PageState extends State<Page2> {
   final double longitude = -81.3789;
   late List<Marker> _markers;
   CollectionReference events = FirebaseFirestore.instance.collection('events');
+  CollectionReference users = FirebaseFirestore.instance.collection('users');
 
   @override
   void initState(){
@@ -27,52 +28,79 @@ class _Page2PageState extends State<Page2> {
 
   void createMarkers() async{
     List<Marker> markers = [];
-
-
     // Get docs from collection reference
     QuerySnapshot querySnapshot = await events.get();
-
     // Get data from docs and convert map to List
     final allData = querySnapshot.docs.map((doc) => doc.data()as Map<String, dynamic>).toList();
 
+    // troublehoot delete later
     print(allData);
+
+    // get user
+    // Get docs from collection reference
+    QuerySnapshot userSnapshot = await users.get();
+    // Get data from docs and convert map to List
+    final allUsers = userSnapshot.docs.map((doc) => doc.data()as Map<String, dynamic>).toList();
+
+    // troubleshoot delete later
+    print(allUsers);
+
+    for (var person in allUsers) {
+      print('=================================================================');
+      print('Hello: ');
+      print(person['name']);
+      print('=================================================================');
+    }
 
     // loop through allData and add markers there
     for (var point in allData) {
+      // troubleshoot delete later
+      print('=================================================================');
       print('latitude');
       print(point['latitude']);
       print('longitude');
       print(point['longitude']);
+      print('active status');
+      print(point['active']);
+      print(point['creator']);
+      print('=================================================================');
 
       // if active show/add, otherwise dont show
-      markers.add(Marker(
-          point: LatLng(point['latitude'] as double, point['longitude'] as double),
-          width: 56,
-          height: 56,
-          child: customMarker(point['latitude']as double, point['longitude'] as double)
-      ));
+      if (point['active'] == true) {
+        //print('DANGER ZONE!');
+        markers.add(Marker(
+            point: LatLng(point['latitude'] as double, point['longitude'] as double),
+            width: 56,
+            height: 56,
+            child: customMarker(
+              point['title'],
+              point['description'],
+              point['latitude']as double,
+              point['longitude'] as double,
+              point['eventType'],
+              point['time'],
+            )
+        ));
+      }
     }
-
-
 
   setState(() {
     _markers = markers;
   });
 
-
   }
 
-  MouseRegion customMarker(lat, lon) {
+  MouseRegion customMarker(title, desc, lat, lon, eType, timeSub) {
     return MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
-            onTap: () => _showInfoScreen(context, lat, lon),
+            onTap: () => _showInfoScreen(context, title, desc, lat, lon, eType, timeSub),
             child: const Icon(Icons.person_pin_circle_rounded)
         )
     );
   }
 
-  void _showInfoScreen(context, lat, lon) {
+  void _showInfoScreen(context, title, desc, lat, lon, eType, timeSub) {
     showModalBottomSheet(useRootNavigator: true, context: context, builder: (BuildContext bc) {
       return SizedBox(
           height: MediaQuery.of(context).size.height * 0.6,
@@ -82,8 +110,63 @@ class _Page2PageState extends State<Page2> {
               CloseButton(
                 onPressed: () => Navigator.of(context).pop(),
               ),
-              Center(
-                  child: Text("Marker ($lat, $lon)")
+              Container(
+                margin: EdgeInsets.all(25.0),
+                decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.all(Radius.circular(25)),
+                ),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Center(
+                          child: Text(
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              '$title')
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Center(
+                          child: Text(
+                              style: TextStyle(
+                                fontSize: 16,
+                              ),
+                              "$desc")
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Center(
+                          child: Text('[Insert Image Here]')
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Coordinates: ($lat, $lon)'),
+                          const SizedBox(
+                            width: 5,
+                          ),
+                          Text('Hazard: $eType '),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Center(
+                          child: Text('$timeSub')
+                      ),
+                    ),
+
+                  ],
+                ),
               )
             ],
           )
