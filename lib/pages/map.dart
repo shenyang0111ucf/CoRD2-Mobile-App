@@ -46,23 +46,34 @@ class _Page2PageState extends State<Page2> {
     print(allUsers);
 
     for (var person in allUsers) {
-      print('=================================================================');
+      print('----------------------------------------------------------------');
       print('Hello: ');
+      print(person);
       print(person['name']);
-      print('=================================================================');
+      print(person['email']);
+      print(person['events']);
+      print('----------------------------------------------------------------');
     }
 
     // loop through allData and add markers there
     for (var point in allData) {
+      String theUser;
+
       // troubleshoot delete later
       print('=================================================================');
+      print('active status');
+      print(point['active']);
+      print('user');
+      print(point['creator']);
+      print('title');
+      print(point['description']);
+      print('event type');
+      print(point['eventType']);
+      print('coordinates');
       print('latitude');
       print(point['latitude']);
       print('longitude');
       print(point['longitude']);
-      print('active status');
-      print(point['active']);
-      print(point['creator']);
       print('=================================================================');
 
       // if active show/add, otherwise dont show
@@ -74,6 +85,7 @@ class _Page2PageState extends State<Page2> {
             height: 56,
             child: customMarker(
               point['title'],
+              point['creator'],
               point['description'],
               point['latitude']as double,
               point['longitude'] as double,
@@ -90,86 +102,131 @@ class _Page2PageState extends State<Page2> {
 
   }
 
-  MouseRegion customMarker(title, desc, lat, lon, eType, timeSub) {
+  MouseRegion customMarker(title, user, desc, lat, lon, eType, timeSub) {
     return MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
-            onTap: () => _showInfoScreen(context, title, desc, lat, lon, eType, timeSub),
+            onTap: () => _showInfoScreen(context, title, user, desc, lat, lon, eType, timeSub),
             child: const Icon(Icons.person_pin_circle_rounded)
         )
     );
   }
 
-  void _showInfoScreen(context, title, desc, lat, lon, eType, timeSub) {
+  void _showInfoScreen(context, title, user, desc, lat, lon, eType, timeSub) {
     showModalBottomSheet(useRootNavigator: true, context: context, builder: (BuildContext bc) {
-      return SizedBox(
-          height: MediaQuery.of(context).size.height * 0.6,
-          width: MediaQuery.of(context).size.width * 1,
-          child: Column(
-            children: [
-              CloseButton(
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              Container(
-                margin: EdgeInsets.all(25.0),
-                decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.all(Radius.circular(25)),
+      return Container(
+        decoration:  BoxDecoration(
+          color: Colors.blue[300],
+          borderRadius: BorderRadius.all(Radius.circular(25)),
+        ),
+        child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.6,
+            width: MediaQuery.of(context).size.width * 1,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.redAccent,
+                      borderRadius: BorderRadius.all(Radius.circular(25)),
+                    ),
+                    child: CloseButton(
+                      color: Colors.white,
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
                 ),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Center(
-                          child: Text(
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              '$title')
+                Container(
+                  margin: EdgeInsets.all(25.0),
+                  decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.all(Radius.circular(25)),
+                  ),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Center(
+                            child: Text(
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                '$title')
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Center(
-                          child: Text(
-                              style: TextStyle(
-                                fontSize: 16,
-                              ),
-                              "$desc")
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Center(
+                            child: Text(
+                                style: const TextStyle(
+                                  //fontSize: 24,
+                                  //fontWeight: FontWeight.bold,
+                                ),
+                                'Submitted by: $user')
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Center(
-                          child: Text('[Insert Image Here]')
+                      const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Center(
+                            child: Text('[Insert Image Here]')
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('Coordinates: ($lat, $lon)'),
-                          const SizedBox(
-                            width: 5,
-                          ),
-                          Text('Hazard: $eType '),
-                        ],
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Center(
+                            child: Text(
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                ),
+                                "$desc")
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Center(
-                          child: Text('$timeSub')
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                              children: [
+                                const Text('Coordinates: '),
+                                Text(
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    '($lat, $lon)'),
+                              ],
+                            ),
+                            const SizedBox(
+                              width: 5,
+                            ),
+                            Row(
+                              children: [
+                                const Text('Hazard: '),
+                                Text(
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    '$eType'),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                      /*Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Center(
+                            child: Text('$timeSub')
+                        ),
+                      ),*/
 
-                  ],
-                ),
-              )
-            ],
-          )
+                    ],
+                  ),
+                )
+              ],
+            )
+        ),
       );
     });
   }
