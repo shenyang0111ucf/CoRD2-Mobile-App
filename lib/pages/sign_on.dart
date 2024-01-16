@@ -355,15 +355,15 @@ class _SignOnPageState extends State<SignOnPage> {
       ),
       GestureDetector(
           child: Text("Forgot Password?",
-              style: TextStyle(
-                  decoration: TextDecoration.underline,
-                  color: Color(blurple),
-                  fontStyle: FontStyle.italic
-              )
-          ),
-          onTap: () {
-            switchPage(Page.Forgot);
-          }
+          style: TextStyle(
+            decoration: TextDecoration.underline,
+            color: Color(blurple),
+            fontStyle: FontStyle.italic
+          )
+        ),
+        onTap: () {
+          switchPage(Page.Forgot);
+        }
       ),
       Text(_error, style: const TextStyle(color: Colors.red)),
       Container(
