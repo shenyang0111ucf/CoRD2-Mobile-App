@@ -1,5 +1,4 @@
 import 'package:cord2_mobile_app/pages/map.dart';
-//import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -25,7 +24,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff5F79BA)),
         useMaterial3: true,
       ),
-      home: const Page2(),
+      home: const DisplayMap(),
     );
   }
 }

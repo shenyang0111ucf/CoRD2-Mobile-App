@@ -3,15 +3,16 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 
-class Page2 extends StatefulWidget {
-  const Page2({super.key});
+class DisplayMap extends StatefulWidget {
+  const DisplayMap({super.key});
 
   @override
-  State<Page2> createState() => _Page2PageState();
+  State<DisplayMap> createState() => _DisplayMapPageState();
 }
 
-class _Page2PageState extends State<Page2> {
+class _DisplayMapPageState extends State<DisplayMap> {
   final double latitude = 28.5384;
   final double longitude = -81.3789;
   late List<Marker> _markers;
@@ -231,23 +232,48 @@ class _Page2PageState extends State<Page2> {
     });
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return FlutterMap(
         options: MapOptions(
             initialCenter: LatLng(latitude, longitude),
-            initialZoom: 9.0
+            initialZoom: 7.0
         ),
         children: [
           TileLayer(
             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
             userAgentPackageName: "com.app.demo",
           ),
-          MarkerLayer(
+          // replaced with MarkerCLusterLayerWidget
+          /*MarkerLayer(
             markers: _markers,
-          ),
+          ),*/
+          MarkerClusterLayerWidget(
+              options: MarkerClusterLayerOptions(
+                maxClusterRadius: 50,
+                size: const Size(40, 40),
+                alignment: Alignment.center,
+                padding: const EdgeInsets.all(50),
+                markers: _markers,
+                builder: (context, markers) {
+                  return Container(
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.blue,
+                    ),
+                    child: Text(
+                      markers.length.toString(),
+                      style:  const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        decoration: TextDecoration.none,
+                      )
+                    )
+                  );
+                }
+              ))
         ]
     );
   }
