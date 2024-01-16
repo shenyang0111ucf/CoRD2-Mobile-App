@@ -40,6 +40,11 @@ dependencies:
   firebase_core: ^2.23.0
   cloud_firestore: ^4.13.3
   flutter_signin_button: ^2.0.0
+  flutter_map: 6.0.1
+  latlong2: 0.9.0
+  pointer_interceptor: 0.9.3+7
+  flutter_map_geojson: ^1.0.6
+  flutter_map_marker_cluster: any
 
 dev_dependencies:
   flutter_test:
