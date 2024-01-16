@@ -81,7 +81,8 @@ class _SignOnPageState extends State<SignOnPage> {
               'name': account.displayName,
               'email': account.email,
               'events': [],
-              'chats': []
+              'chats': [],
+              'isResponder': false
             })
             .then((value) => print("Successfully added user!"))
             .catchError((err) => print("Failed to add user $err"));
@@ -123,7 +124,8 @@ class _SignOnPageState extends State<SignOnPage> {
         'name': displayNameController.text,
         'email': userCredential.user?.email,
         'events': [],
-        'chats': []
+        'chats': [],
+        'isResponder': false
       })
         .then((value) => print("Successfully added user!"))
         .catchError((err) => print("Failed to add user $err"));

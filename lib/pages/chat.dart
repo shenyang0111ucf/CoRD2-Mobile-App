@@ -39,24 +39,28 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void getChatData() async {
-    DatabaseReference chatRef = FirebaseDatabase.instance.ref('chats');
+    DatabaseReference chatRef = FirebaseDatabase.instance.ref('chats/${user?.uid}');
     chatRef.onValue.listen((DatabaseEvent event) async {
       List<ChatModel> newList = [];
+      print(event.snapshot.value);
       for (DataSnapshot val in event.snapshot.children) {
+        print(val.value);
         final map = val.value as Map?;
-        Map<String, String> participant = {};
+        Map<String, String> otherUser = {};
+        List<String> participants = [];
         for (Object? part in map?['participants']) {
+          participants.add(part.toString());
           if (part.toString() != user?.uid) {
-            participant['uid'] = part.toString();
+            otherUser['uid'] = part.toString();
             DocumentSnapshot doc = await users.doc(part.toString()).get();
             Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-            participant['name'] = data['name'];
+            otherUser['name'] = data['name'];
           }
         }
-        if (participant.entries.isEmpty) continue;
+        if (otherUser.entries.isEmpty) continue;
         DateTime lastUpdate = DateTime.parse(map!['lastUpdate'].toString());
         newList.add(
-          ChatModel(participant, lastUpdate, val.key)
+          ChatModel(otherUser, participants, lastUpdate, val.key)
         );
         setState(() {
           _chats = newList;
@@ -81,7 +85,7 @@ class _ChatPageState extends State<ChatPage> {
                   },
                   child: Column(
                     children: [
-                      Text("Chat with: ${item.participant['name']!}"),
+                      Text("Chat with: ${item.otherUser['name']!}"),
                       Text(DateFormat.yMEd().add_jms().format(item.lastUpdate))
                     ],
                   )

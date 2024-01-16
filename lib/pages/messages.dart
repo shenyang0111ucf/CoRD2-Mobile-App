@@ -114,9 +114,20 @@ class _MessagePageState extends State<MessagePage> {
       "contents": textController.text,
       "time": DateTime.now().toString()
     });
-    DatabaseReference chatRef = FirebaseDatabase.instance.ref("chats/${widget.chat.id}");
+    DatabaseReference chatRef = FirebaseDatabase.instance.ref("chats");
     await chatRef.update({
-      "lastUpdate": DateTime.now().toString()
+      widget.chat.participants[0]: {
+        widget.chat.id: {
+          "lastUpdate": DateTime.now().toString(),
+          "participants": widget.chat.participants
+        }
+      },
+      widget.chat.participants[1]: {
+        widget.chat.id: {
+          "lastUpdate": DateTime.now().toString(),
+          "participants": widget.chat.participants
+        }
+      }
     });
     textController.clear();
   }
@@ -160,7 +171,7 @@ class _MessagePageState extends State<MessagePage> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-          title: Text("${widget.chat.participant['name']}")
+          title: Text("${widget.chat.otherUser['name']}")
       ),
       body: SafeArea(
         child: Container(
