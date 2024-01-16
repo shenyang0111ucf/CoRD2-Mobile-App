@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:chat_bubbles/bubbles/bubble_special_three.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -27,6 +28,7 @@ class _ChatPageState extends State<ChatPage> {
   final TextStyle whiteText = const TextStyle(color: Colors.white);
   final User? user = FirebaseAuth.instance.currentUser;
   final CollectionReference users = FirebaseFirestore.instance.collection('users');
+  late StreamSubscription<DatabaseEvent> _chatSubscription;
   late List<ChatModel> _chats = [];
 
   @override
@@ -40,7 +42,7 @@ class _ChatPageState extends State<ChatPage> {
 
   void getChatData() async {
     DatabaseReference chatRef = FirebaseDatabase.instance.ref('chats/${user?.uid}');
-    chatRef.onValue.listen((DatabaseEvent event) async {
+    _chatSubscription = chatRef.onValue.listen((DatabaseEvent event) async {
       List<ChatModel> newList = [];
       print(event.snapshot.value);
       for (DataSnapshot val in event.snapshot.children) {

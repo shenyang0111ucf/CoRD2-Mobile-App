@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'dart:async';
 
 import '../models/chat_model.dart';
 import '../models/message_model.dart';
@@ -25,6 +26,7 @@ class _MessagePageState extends State<MessagePage> {
   final TextStyle whiteText = const TextStyle(color: Colors.white);
   final User? user = FirebaseAuth.instance.currentUser;
   final CollectionReference users = FirebaseFirestore.instance.collection('users');
+  late StreamSubscription<DatabaseEvent> _msgSubscription;
   late List<MessageModel> _messages = [];
   TextEditingController textController = TextEditingController();
 
@@ -43,7 +45,7 @@ class _MessagePageState extends State<MessagePage> {
     });
     ChatModel chat = widget.chat;
     DatabaseReference msgRef = FirebaseDatabase.instance.ref('msgs/${chat.id}').orderByKey().ref;
-    msgRef.onValue.listen((DatabaseEvent event) async {
+    _msgSubscription = msgRef.onValue.listen((DatabaseEvent event) async {
       List<MessageModel> newList = [];
       for (DataSnapshot val in event.snapshot.children) {
         final map = val.value as Map?;
@@ -115,20 +117,16 @@ class _MessagePageState extends State<MessagePage> {
       "time": DateTime.now().toString()
     });
     DatabaseReference chatRef = FirebaseDatabase.instance.ref("chats");
-    await chatRef.update({
-      widget.chat.participants[0]: {
-        widget.chat.id: {
-          "lastUpdate": DateTime.now().toString(),
-          "participants": widget.chat.participants
-        }
-      },
-      widget.chat.participants[1]: {
-        widget.chat.id: {
-          "lastUpdate": DateTime.now().toString(),
-          "participants": widget.chat.participants
-        }
-      }
-    });
+    final Map<String, Map> updates = {};
+    updates["${widget.chat.participants[0]}/${widget.chat.id}"] = {
+      "lastUpdate": DateTime.now().toString(),
+      "participants": widget.chat.participants
+    };
+    updates["${widget.chat.participants[1]}/${widget.chat.id}"] = {
+      "lastUpdate": DateTime.now().toString(),
+      "participants": widget.chat.participants
+    };
+    var res = await chatRef.update(updates);
     textController.clear();
   }
 
@@ -168,19 +166,25 @@ class _MessagePageState extends State<MessagePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-          title: Text("${widget.chat.otherUser['name']}")
-      ),
-      body: SafeArea(
-        child: Container(
-            color: Color(lightBlue),
-            child: Center(
-                child: renderTextScreen()
-            )
+    return WillPopScope(
+        onWillPop: () async {
+          _msgSubscription.cancel();
+          return true;
+        },
+        child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(
+            title: Text("${widget.chat.otherUser['name']}")
         ),
-      ),
+        body: SafeArea(
+          child: Container(
+              color: Color(lightBlue),
+              child: Center(
+                  child: renderTextScreen()
+              )
+          ),
+        ),
+      )
     );
   }
 }
