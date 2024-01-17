@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_geojson/flutter_map_geojson.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 class DisplayMap extends StatefulWidget {
   const DisplayMap({super.key});
@@ -15,13 +17,72 @@ class DisplayMap extends StatefulWidget {
 class _DisplayMapPageState extends State<DisplayMap> {
   final double latitude = 28.5384;
   final double longitude = -81.3789;
-  late List<Marker> _markers;
+  late List<Marker> _markers = [];
+  late List<Marker> school_markers = [];
+  late List<Marker> sunrail_markers = [];
+  late List<Marker> transit_markers = [];
   CollectionReference events = FirebaseFirestore.instance.collection('events');
   CollectionReference users = FirebaseFirestore.instance.collection('users');
 
+  // instantiate parser, use the defaults
+  GeoJsonParser geoJsonParser = GeoJsonParser(
+    defaultMarkerColor: Colors.deepOrange,
+    defaultPolygonBorderColor: Colors.red,
+    defaultPolygonFillColor: Colors.red.withOpacity(0.1),
+    defaultCircleMarkerColor: Colors.red.withOpacity(0.25),
+  );
+
+  // can filter based on criteria
+  bool myFilterFunction(Map<String, dynamic> properties) {
+    if (properties['FID'].toString().contains('0')) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  // related to lotis data points
+  void onTapMarkerFunction(Map<String, dynamic> map) {
+    // Going to need to de switch/if-else statements here for proper popup info
+    showModalBottomSheet(
+        useRootNavigator: true,
+        context: context,
+        builder: (BuildContext bc) {
+          return SizedBox(
+              height: MediaQuery.of(context).size.height * 0.6,
+              width: MediaQuery.of(context).size.width * 1,
+              child: Column(
+                children: [
+                  CloseButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  Column(
+                    children: [
+                      Center(
+                        child: Text(map['FID'].toString(),
+                            style: TextStyle(fontSize: 42)),
+                      ),
+                      Center(
+                        child: Text(map['School_Nam'].toString(),
+                            style: TextStyle(fontSize: 42)),
+                      ),
+                      Center(
+                        child: Text(map['School_Typ'].toString(),
+                            style: TextStyle(fontSize: 42)),
+                      ),
+                    ],
+                  )
+                ],
+              ));
+        });
+  }
+
+
   @override
   void initState(){
-    _markers = [];
+    geoJsonParser.setDefaultMarkerTapCallback(onTapMarkerFunction);
+    //_markers = [];
+    processData();
     createMarkers();
 
     super.initState();
@@ -113,6 +174,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
     );
   }
 
+  // related to user submitted points
   void _showInfoScreen(context, title, user, desc, lat, lon, eType, timeSub) {
     showModalBottomSheet(useRootNavigator: true, context: context, builder: (BuildContext bc) {
       return Container(
@@ -232,6 +294,31 @@ class _DisplayMapPageState extends State<DisplayMap> {
     });
   }
 
+  Future<void> processData() async {
+    // parse a small test geoJson
+    // normally one would use http to access geojson on web and this is
+    // the reason why this function is async.
+    List<String> paths = [
+      'assets/LOTIS_SUNRAIL.geojson',
+      'assets/LOTIS_SCHOOL.geojson',
+      'assets/LOTIS_TRANSIT.geojson'
+    ];
+
+    // gets geojson from assets
+    String geoJsonData = await rootBundle.loadString(paths[0]);
+    String geoJsonData2 = await rootBundle.loadString(paths[1]);
+    String geoJsonData3 = await rootBundle.loadString(paths[2]);
+
+    setState(() {
+      geoJsonParser.parseGeoJsonAsString(geoJsonData);
+      sunrail_markers = geoJsonParser.markers;
+      geoJsonParser.parseGeoJsonAsString(geoJsonData2);
+      school_markers = geoJsonParser.markers;
+      geoJsonParser.parseGeoJsonAsString(geoJsonData3);
+      transit_markers = geoJsonParser.markers;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return FlutterMap(
@@ -273,6 +360,84 @@ class _DisplayMapPageState extends State<DisplayMap> {
                     )
                   );
                 }
+              )),
+          MarkerClusterLayerWidget(
+              options: MarkerClusterLayerOptions(
+                  maxClusterRadius: 50,
+                  size: const Size(40, 40),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.all(50),
+                  markers: school_markers,
+                  builder: (context, markers) {
+                    return Container(
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.green,
+                        ),
+                        child: Text(
+                            markers.length.toString(),
+                            style:  const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              decoration: TextDecoration.none,
+                            )
+                        )
+                    );
+                  }
+              )),
+          MarkerClusterLayerWidget(
+              options: MarkerClusterLayerOptions(
+                  maxClusterRadius: 50,
+                  size: const Size(40, 40),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.all(50),
+                  markers: sunrail_markers,
+                  builder: (context, markers) {
+                    return Container(
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.yellow,
+                        ),
+                        child: Text(
+                            markers.length.toString(),
+                            style:  const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              decoration: TextDecoration.none,
+                            )
+                        )
+                    );
+                  }
+              )),
+          MarkerClusterLayerWidget(
+              options: MarkerClusterLayerOptions(
+                  maxClusterRadius: 50,
+                  size: const Size(40, 40),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.all(50),
+                  markers: transit_markers,
+                  builder: (context, markers) {
+                    return Container(
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.red,
+                        ),
+                        child: Text(
+                            markers.length.toString(),
+                            style:  const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              decoration: TextDecoration.none,
+                            )
+                        )
+                    );
+                  }
               ))
         ]
     );
