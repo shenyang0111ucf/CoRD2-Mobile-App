@@ -102,7 +102,10 @@ class _ChatPageState extends State<ChatPage> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: const Text("Your Chats")
+        title: const Align(
+          alignment: Alignment.centerRight,
+          child: Text("Your Chats")
+        ),
       ),
       body: SafeArea(
         child: Container(

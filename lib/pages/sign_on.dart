@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cord2_mobile_app/pages/chat.dart';
+import 'package:cord2_mobile_app/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/button_list.dart';
@@ -37,7 +38,7 @@ class _SignOnPageState extends State<SignOnPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (user != null) {
-        chatScreen();
+        homePage();
       }
     });
     // Update the stored user
@@ -51,11 +52,6 @@ class _SignOnPageState extends State<SignOnPage> {
     setState(() {
       _error = msg;
     });
-  }
-
-  void chatScreen() {
-    Navigator.pushAndRemoveUntil(
-        context, MaterialPageRoute(builder: (context) => const ChatPage()), (Route route) => false);
   }
 
   // Handle the Google Authorization Flow
@@ -88,7 +84,7 @@ class _SignOnPageState extends State<SignOnPage> {
             .then((value) => print("Successfully added user!"))
             .catchError((err) => print("Failed to add user $err"));
       }
-      chatScreen();
+      homePage();
     }
   }
 
@@ -154,7 +150,7 @@ class _SignOnPageState extends State<SignOnPage> {
           email: emailController.text,
           password: passController.text
       );
-      chatScreen();
+      homePage();
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         setError("No user found for that email");
@@ -164,6 +160,11 @@ class _SignOnPageState extends State<SignOnPage> {
         setError("Unknown error occurred");
       }
     }
+  }
+
+  void homePage() {
+    Navigator.pushAndRemoveUntil(
+        context, MaterialPageRoute(builder: (context) => HomePage()), (Route route) => false);
   }
 
   FractionallySizedBox createButton(String text, onPressed) {
