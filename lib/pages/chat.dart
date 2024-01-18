@@ -44,9 +44,7 @@ class _ChatPageState extends State<ChatPage> {
     DatabaseReference chatRef = FirebaseDatabase.instance.ref('chats/${user?.uid}');
     _chatSubscription = chatRef.onValue.listen((DatabaseEvent event) async {
       List<ChatModel> newList = [];
-      print(event.snapshot.value);
       for (DataSnapshot val in event.snapshot.children) {
-        print(val.value);
         final map = val.value as Map?;
         Map<String, String> otherUser = {};
         List<String> participants = [];
