@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -5,7 +6,11 @@ import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(MyApp());
 }
 
@@ -83,8 +88,10 @@ class _HomePageState extends State<HomePage> {
             const Divider(),
             ListTile(
               title: const Text('Log Out'),
-              onTap: () {
-                // Add logout action here
+              onTap: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pushAndRemoveUntil(
+                    context, MaterialPageRoute(builder: (context) => SignOnPage()), (Route route) => false);
               },
             ),
           ],
