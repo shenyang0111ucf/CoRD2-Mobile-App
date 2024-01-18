@@ -13,8 +13,8 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: HomePage(),
+    return const MaterialApp(
+      home: SignOnPage(),
     );
   }
 }
@@ -46,12 +46,12 @@ class _HomePageState extends State<HomePage> {
                 _scaffoldKey.currentState?.openDrawer();
               },
               child: Container(
-                padding: EdgeInsets.all(8.0),
-                decoration: BoxDecoration(
+                padding: const EdgeInsets.all(8.0),
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.blue,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.menu,
                   color: Colors.white,
                 ),
@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            DrawerHeader(
+            const DrawerHeader(
               decoration: BoxDecoration(
                 color: Colors.blue,
               ),
@@ -80,9 +80,9 @@ class _HomePageState extends State<HomePage> {
             _buildDrawerItem("Report"),
             _buildDrawerItem("Chat"),
             _buildDrawerItem("Profile"),
-            Divider(),
+            const Divider(),
             ListTile(
-              title: Text('Log Out'),
+              title: const Text('Log Out'),
               onTap: () {
                 // Add logout action here
               },
