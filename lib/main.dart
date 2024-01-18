@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cord2_mobile_app/pages/sign_on.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+
+import 'firebase_options.dart';
 
 void main() {
   runApp(MyApp());
