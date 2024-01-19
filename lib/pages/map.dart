@@ -18,6 +18,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
   final double latitude = 28.5384;
   final double longitude = -81.3789;
   late List<Marker> _markers = [];
+  // related to lotis data
   late List<Marker> school_markers = [];
   late List<Marker> sunrail_markers = [];
   late List<Marker> transit_markers = [];
@@ -26,7 +27,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
 
   // instantiate parser, use the defaults
   GeoJsonParser geoJsonParser = GeoJsonParser(
-    defaultMarkerColor: Colors.deepOrange,
+    defaultMarkerColor: Colors.yellow[800],
     defaultPolygonBorderColor: Colors.red,
     defaultPolygonFillColor: Colors.red.withOpacity(0.1),
     defaultCircleMarkerColor: Colors.red.withOpacity(0.25),
@@ -41,11 +42,13 @@ class _DisplayMapPageState extends State<DisplayMap> {
     }
   }
 
-  // related to lotis data points
+  // shows lotis data points
   void onTapMarkerFunction(Map<String, dynamic> map) {
-    // Going to need to de switch/if-else statements here for proper popup info
+    // the specific geojsons all record diff data, so popup needs to be customized
+    // for what you want to display in popup, a lot are just blank
     showModalBottomSheet(
         useRootNavigator: true,
+        backgroundColor: Colors.blue[300],
         context: context,
         builder: (BuildContext bc) {
           return SizedBox(
@@ -56,36 +59,62 @@ class _DisplayMapPageState extends State<DisplayMap> {
                   CloseButton(
                     onPressed: () => Navigator.of(context).pop(),
                   ),
-                  Column(
-                    children: [
-                      Center(
-                        child: Text(map['FID'].toString(),
-                            style: TextStyle(fontSize: 42)),
-                      ),
-                      Center(
-                        child: Text(map['School_Nam'].toString(),
-                            style: TextStyle(fontSize: 42)),
-                      ),
-                      Center(
-                        child: Text(map['School_Typ'].toString(),
-                            style: TextStyle(fontSize: 42)),
-                      ),
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.all(25.0),
+                    child: Column(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(20.0)
+                            ),
+                            color: Colors.grey[300],
+
+                          ),
+                          child: Center(
+                            child: Text(map['FID'].toString(), // all have
+                                style: TextStyle(fontSize: 42)),
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                          ),
+                          child: Center(
+                            child: map['NAME'] != null ?
+                            Text(map['NAME'], style: TextStyle(fontSize: 42)) :
+                            Text(map['School_Nam'], style: TextStyle(fontSize: 42)),
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                          ),
+                          child: Center(
+                            child: map['City'] != null ?
+                            Text(map['City'], style: TextStyle(fontSize: 42)) :
+                            Text(map['School_Dst'], style: TextStyle(fontSize: 42)),
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.vertical(
+                                bottom: Radius.circular(20.0)
+                            ),
+                            color: Colors.grey[300],
+                          ),
+                          child: Center(
+                            child: map['School_Typ'] != null ?
+                            Text(map['School_Typ'], style: TextStyle(fontSize: 42)) :
+                            Text(map['Type'], style: TextStyle(fontSize: 42)),
+                          ),
+                        ),
+                      ],
+                    ),
                   )
                 ],
               ));
         });
-  }
-
-
-  @override
-  void initState(){
-    geoJsonParser.setDefaultMarkerTapCallback(onTapMarkerFunction);
-    //_markers = [];
-    processData();
-    createMarkers();
-
-    super.initState();
   }
 
   void createMarkers() async{
@@ -122,7 +151,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
       String theUser;
 
       // troubleshoot delete later
-      print('=================================================================');
+      print('================================================================');
       print('active status');
       print(point['active']);
       print('user');
@@ -136,7 +165,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
       print(point['latitude']);
       print('longitude');
       print(point['longitude']);
-      print('=================================================================');
+      print('================================================================');
 
       // if active show/add, otherwise dont show
       if (point['active'] == true) {
@@ -174,7 +203,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
     );
   }
 
-  // related to user submitted points
+  // shows user submitted points
   void _showInfoScreen(context, title, user, desc, lat, lon, eType, timeSub) {
     showModalBottomSheet(useRootNavigator: true, context: context, builder: (BuildContext bc) {
       return Container(
@@ -295,7 +324,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
   }
 
   Future<void> processData() async {
-    // parse a small test geoJson
+    // parses geoJson
     // normally one would use http to access geojson on web and this is
     // the reason why this function is async.
     List<String> paths = [
@@ -320,6 +349,15 @@ class _DisplayMapPageState extends State<DisplayMap> {
   }
 
   @override
+  void initState(){
+    geoJsonParser.setDefaultMarkerTapCallback(onTapMarkerFunction);
+    processData();
+    createMarkers();
+
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FlutterMap(
         options: MapOptions(
@@ -335,111 +373,41 @@ class _DisplayMapPageState extends State<DisplayMap> {
           /*MarkerLayer(
             markers: _markers,
           ),*/
-          MarkerClusterLayerWidget(
-              options: MarkerClusterLayerOptions(
-                maxClusterRadius: 50,
-                size: const Size(40, 40),
-                alignment: Alignment.center,
-                padding: const EdgeInsets.all(50),
-                markers: _markers,
-                builder: (context, markers) {
-                  return Container(
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.blue,
-                    ),
-                    child: Text(
-                      markers.length.toString(),
-                      style:  const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        decoration: TextDecoration.none,
-                      )
-                    )
-                  );
-                }
-              )),
-          MarkerClusterLayerWidget(
-              options: MarkerClusterLayerOptions(
-                  maxClusterRadius: 50,
-                  size: const Size(40, 40),
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.all(50),
-                  markers: school_markers,
-                  builder: (context, markers) {
-                    return Container(
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: Colors.green,
-                        ),
-                        child: Text(
-                            markers.length.toString(),
-                            style:  const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              decoration: TextDecoration.none,
-                            )
-                        )
-                    );
-                  }
-              )),
-          MarkerClusterLayerWidget(
-              options: MarkerClusterLayerOptions(
-                  maxClusterRadius: 50,
-                  size: const Size(40, 40),
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.all(50),
-                  markers: sunrail_markers,
-                  builder: (context, markers) {
-                    return Container(
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: Colors.yellow,
-                        ),
-                        child: Text(
-                            markers.length.toString(),
-                            style:  const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              decoration: TextDecoration.none,
-                            )
-                        )
-                    );
-                  }
-              )),
-          MarkerClusterLayerWidget(
-              options: MarkerClusterLayerOptions(
-                  maxClusterRadius: 50,
-                  size: const Size(40, 40),
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.all(50),
-                  markers: transit_markers,
-                  builder: (context, markers) {
-                    return Container(
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: Colors.red,
-                        ),
-                        child: Text(
-                            markers.length.toString(),
-                            style:  const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              decoration: TextDecoration.none,
-                            )
-                        )
-                    );
-                  }
-              ))
+          _buildClusterLayer(_markers, Colors.blue),
+          _buildClusterLayer(school_markers, Colors.green),
+          _buildClusterLayer(sunrail_markers, Colors.yellow),
+          _buildClusterLayer(transit_markers, Colors.red),
         ]
     );
+  }
+
+  // handles clustering of points
+  MarkerClusterLayerWidget _buildClusterLayer(List<Marker> markers, Color color) {
+    return MarkerClusterLayerWidget(
+            options: MarkerClusterLayerOptions(
+              maxClusterRadius: 50,
+              size: const Size(40, 40),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.all(50),
+              markers: markers,
+              builder: (context, markers) {
+                return Container(
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: color,
+                  ),
+                  child: Text(
+                    markers.length.toString(),
+                    style:  const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      decoration: TextDecoration.none,
+                    )
+                  )
+                );
+              }
+            ));
   }
 }
