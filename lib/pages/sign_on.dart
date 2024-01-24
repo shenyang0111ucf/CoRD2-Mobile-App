@@ -34,8 +34,7 @@ class _SignOnPageState extends State<SignOnPage> {
   void initState() {
     super.initState();
     // Update the stored user
-    _googleSignIn.onCurrentUserChanged
-        .listen((GoogleSignInAccount? account) => handleGoogleUser(account));
+    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount? account) => handleGoogleUser(account));
     // Attempt to log in a previously authorized user
     _googleSignIn.signInSilently();
   }
