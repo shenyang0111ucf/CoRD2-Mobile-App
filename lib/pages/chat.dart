@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
 
-import 'package:chat_bubbles/bubbles/bubble_special_three.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cord2_mobile_app/pages/messages.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
@@ -12,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../models/chat_model.dart';
-import '../models/message_model.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});

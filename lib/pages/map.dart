@@ -267,17 +267,17 @@ class _DisplayMapPageState extends State<DisplayMap> {
     ];
 
     // gets geojson from assets
-    String geoJsonData = await rootBundle.loadString(paths[0]);
+    // String geoJsonData = await rootBundle.loadString(paths[0]);
     String geoJsonData2 = await rootBundle.loadString(paths[1]);
-    String geoJsonData3 = await rootBundle.loadString(paths[2]);
+    // String geoJsonData3 = await rootBundle.loadString(paths[2]);
 
     setState(() {
-      geoJsonParser.parseGeoJsonAsString(geoJsonData);
-      sunrail_markers = geoJsonParser.markers;
+      // geoJsonParser.parseGeoJsonAsString(geoJsonData);
+      // sunrail_markers = geoJsonParser.markers;
       geoJsonParser.parseGeoJsonAsString(geoJsonData2);
       school_markers = geoJsonParser.markers;
-      geoJsonParser.parseGeoJsonAsString(geoJsonData3);
-      transit_markers = geoJsonParser.markers;
+      // geoJsonParser.parseGeoJsonAsString(geoJsonData3);
+      // transit_markers = geoJsonParser.markers;
     });
   }
 
@@ -349,58 +349,58 @@ class _DisplayMapPageState extends State<DisplayMap> {
                     );
                   }
               )),
-          MarkerClusterLayerWidget(
-              options: MarkerClusterLayerOptions(
-                  maxClusterRadius: 50,
-                  size: const Size(40, 40),
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.all(50),
-                  markers: sunrail_markers,
-                  builder: (context, markers) {
-                    return Container(
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: Colors.yellow,
-                        ),
-                        child: Text(
-                            markers.length.toString(),
-                            style:  const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              decoration: TextDecoration.none,
-                            )
-                        )
-                    );
-                  }
-              )),
-          MarkerClusterLayerWidget(
-              options: MarkerClusterLayerOptions(
-                  maxClusterRadius: 50,
-                  size: const Size(40, 40),
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.all(50),
-                  markers: transit_markers,
-                  builder: (context, markers) {
-                    return Container(
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: Colors.red,
-                        ),
-                        child: Text(
-                            markers.length.toString(),
-                            style:  const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              decoration: TextDecoration.none,
-                            )
-                        )
-                    );
-                  }
-              ))
+          // MarkerClusterLayerWidget(
+          //     options: MarkerClusterLayerOptions(
+          //         maxClusterRadius: 50,
+          //         size: const Size(40, 40),
+          //         alignment: Alignment.center,
+          //         padding: const EdgeInsets.all(50),
+          //         markers: sunrail_markers,
+          //         builder: (context, markers) {
+          //           return Container(
+          //               alignment: Alignment.center,
+          //               padding: const EdgeInsets.all(8),
+          //               decoration: BoxDecoration(
+          //                 borderRadius: BorderRadius.circular(20),
+          //                 color: Colors.yellow,
+          //               ),
+          //               child: Text(
+          //                   markers.length.toString(),
+          //                   style:  const TextStyle(
+          //                     color: Colors.white,
+          //                     fontSize: 16,
+          //                     decoration: TextDecoration.none,
+          //                   )
+          //               )
+          //           );
+          //         }
+          //     )),
+          // MarkerClusterLayerWidget(
+          //     options: MarkerClusterLayerOptions(
+          //         maxClusterRadius: 50,
+          //         size: const Size(40, 40),
+          //         alignment: Alignment.center,
+          //         padding: const EdgeInsets.all(50),
+          //         markers: transit_markers,
+          //         builder: (context, markers) {
+          //           return Container(
+          //               alignment: Alignment.center,
+          //               padding: const EdgeInsets.all(8),
+          //               decoration: BoxDecoration(
+          //                 borderRadius: BorderRadius.circular(20),
+          //                 color: Colors.red,
+          //               ),
+          //               child: Text(
+          //                   markers.length.toString(),
+          //                   style:  const TextStyle(
+          //                     color: Colors.white,
+          //                     fontSize: 16,
+          //                     decoration: TextDecoration.none,
+          //                   )
+          //               )
+          //           );
+          //         }
+          //     ))
         ]
     );
   }
