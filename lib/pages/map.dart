@@ -73,7 +73,10 @@ class _DisplayMapPageState extends State<DisplayMap> {
                           ),
                           child: Center(
                             child: Text(map['FID'].toString(), // all have
-                                style: TextStyle(fontSize: 42)),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                )),
                           ),
                         ),
                         Container(
@@ -82,8 +85,8 @@ class _DisplayMapPageState extends State<DisplayMap> {
                           ),
                           child: Center(
                             child: map['NAME'] != null ?
-                            Text(map['NAME'], style: TextStyle(fontSize: 42)) :
-                            Text(map['School_Nam'], style: TextStyle(fontSize: 42)),
+                            Text(map['NAME'], style: TextStyle(fontSize: 12)) :
+                            Text(map['School_Nam'], style: TextStyle(fontSize: 12)),
                           ),
                         ),
                         Container(
@@ -92,8 +95,8 @@ class _DisplayMapPageState extends State<DisplayMap> {
                           ),
                           child: Center(
                             child: map['City'] != null ?
-                            Text(map['City'], style: TextStyle(fontSize: 42)) :
-                            Text(map['School_Dst'], style: TextStyle(fontSize: 42)),
+                            Text(map['City'], style: TextStyle(fontSize: 12)) :
+                            Text(map['School_Dst'], style: TextStyle(fontSize: 12)),
                           ),
                         ),
                         Container(
@@ -105,8 +108,8 @@ class _DisplayMapPageState extends State<DisplayMap> {
                           ),
                           child: Center(
                             child: map['School_Typ'] != null ?
-                            Text(map['School_Typ'], style: TextStyle(fontSize: 42)) :
-                            Text(map['Type'], style: TextStyle(fontSize: 42)),
+                            Text(map['School_Typ'], style: TextStyle(fontSize: 12)) :
+                            Text(map['Type'], style: TextStyle(fontSize: 12)),
                           ),
                         ),
                       ],
