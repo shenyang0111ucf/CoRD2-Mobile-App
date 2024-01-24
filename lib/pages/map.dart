@@ -94,48 +94,11 @@ class _DisplayMapPageState extends State<DisplayMap> {
     // Get data from docs and convert map to List
     final allData = querySnapshot.docs.map((doc) => doc.data()as Map<String, dynamic>).toList();
 
-    // troublehoot delete later
-    print(allData);
-
-    // get user
-    // Get docs from collection reference
-    QuerySnapshot userSnapshot = await users.get();
-    // Get data from docs and convert map to List
-    final allUsers = userSnapshot.docs.map((doc) => doc.data()as Map<String, dynamic>).toList();
-
-    // troubleshoot delete later
-    print(allUsers);
-
-    for (var person in allUsers) {
-      print('----------------------------------------------------------------');
-      print('Hello: ');
-      print(person);
-      print(person['name']);
-      print(person['email']);
-      print(person['events']);
-      print('----------------------------------------------------------------');
-    }
-
     // loop through allData and add markers there
     for (var point in allData) {
       String theUser;
 
       // troubleshoot delete later
-      print('=================================================================');
-      print('active status');
-      print(point['active']);
-      print('user');
-      print(point['creator']);
-      print('title');
-      print(point['description']);
-      print('event type');
-      print(point['eventType']);
-      print('coordinates');
-      print('latitude');
-      print(point['latitude']);
-      print('longitude');
-      print(point['longitude']);
-      print('=================================================================');
 
       // if active show/add, otherwise dont show
       if (point['active'] == true) {
