@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cord2_mobile_app/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/button_list.dart';
@@ -60,7 +61,6 @@ class _SignOnPageState extends State<SignOnPage> {
       // Found a user account
       if (doc.exists) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        print(data);
       } else {
         // Need to create a new account
         users
@@ -138,7 +138,7 @@ class _SignOnPageState extends State<SignOnPage> {
           email: emailController.text,
           password: passController.text
       );
-      print("Successful login: $credential");
+      homePage();
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         setError("No user found for that email");
@@ -148,6 +148,11 @@ class _SignOnPageState extends State<SignOnPage> {
         setError("Unknown error occurred");
       }
     }
+  }
+
+  void homePage() {
+    Navigator.pushAndRemoveUntil(
+        context, MaterialPageRoute(builder: (context) => HomePage()), (Route route) => false);
   }
 
   FractionallySizedBox createButton(String text, onPressed) {
