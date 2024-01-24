@@ -152,13 +152,15 @@ class _DisplayMapPageState extends State<DisplayMap> {
     // loop through allData and add markers there
     for (var point in allData) {
       String theUser;
-
+      DocumentSnapshot doc = await users.doc(point['creator'].toString()).get();
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      String username = data['name'];
       // troubleshoot delete later
       print('================================================================');
       print('active status');
       print(point['active']);
       print('user');
-      print(point['creator']);
+      print(username);
       print('title');
       print(point['description']);
       print('event type');
@@ -172,6 +174,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
 
       // if active show/add, otherwise dont show
       if (point['active'] == true) {
+
         //print('DANGER ZONE!');
         markers.add(Marker(
             point: LatLng(point['latitude'] as double, point['longitude'] as double),
@@ -179,7 +182,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
             height: 56,
             child: customMarker(
               point['title'],
-              point['creator'],
+              username,
               point['description'],
               point['latitude']as double,
               point['longitude'] as double,
