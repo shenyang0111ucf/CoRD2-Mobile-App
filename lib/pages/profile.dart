@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -30,7 +31,7 @@ class _ProfilePage extends State<ProfilePage> {
 
     return Material(
       child: SafeArea(
-        child: Container(
+        child: SizedBox(
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
           child: Column(
@@ -78,65 +79,13 @@ class _ProfilePage extends State<ProfilePage> {
                                 return snapshot.data as Widget;
                               }),
                           displayUserID(),
-                          displayUserLocation(),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: ElevatedButton(
-                              onPressed: () => {
-                                showModalBottomSheet(
-                                    context: context,
-                                    showDragHandle: true,
-                                    useSafeArea: true,
-                                    builder: (context) {
-                                      return const PasswordResetForm();
-                                    })
-                              },
-                              style: ButtonStyle(
-                                backgroundColor:
-                                    MaterialStateProperty.all<Color>(primary),
-                              ),
-                              child: Container(
-                                alignment: Alignment.center,
-                                width: 150,
-                                child: const Text(
-                                  "Change Password",
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 16),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: ElevatedButton(
-                              onPressed: () => {
-                                showModalBottomSheet(
-                                    context: context,
-                                    showDragHandle: true,
-                                    useSafeArea: true,
-                                    builder: (context) {
-                                      return const PasswordResetForm();
-                                    })
-                              },
-                              style: ButtonStyle(
-                                  backgroundColor:
-                                      MaterialStateProperty.all<Color>(
-                                          primary)),
-                              child: Container(
-                                alignment: Alignment.center,
-                                width: 150,
-                                child: const Text(
-                                  "Change Email",
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 16),
-                                ),
-                              ),
-                            ),
-                          ),
+                          //displayUserLocation(),
+                          displayResetPasswordButton(primary, highlight),
+                          displayChangeEmailButton(context, primary),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 20),
                             child: ElevatedButton(
-                              onPressed: () => {print("Yo")},
+                              onPressed: () => signOutUser(),
                               style: ButtonStyle(
                                   backgroundColor:
                                       MaterialStateProperty.all<Color>(
@@ -165,14 +114,104 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
+  Padding displayChangeEmailButton(BuildContext context, Color primary) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: ElevatedButton(
+        onPressed: () => {
+          showModalBottomSheet(
+              context: context,
+              showDragHandle: true,
+              useSafeArea: true,
+              builder: (context) {
+                return updateUserEmailForm();
+              })
+        },
+        style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all<Color>(primary)),
+        child: Container(
+          alignment: Alignment.center,
+          width: 150,
+          child: const Text(
+            "Change Email",
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Padding displayResetPasswordButton(Color primary, Color highlight) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: ElevatedButton(
+        onPressed: () => showDialog(
+            context: context,
+            useSafeArea: true,
+            builder: (context) {
+              return FutureBuilder(
+                future: resetUserPassword(),
+                builder: (context, snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                    case ConnectionState.none:
+                      return const AlertDialog(
+                        elevation: 10,
+                        content: SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                      );
+
+                    case ConnectionState.active:
+                    case ConnectionState.done:
+                      return AlertDialog(
+                        title: Text(
+                          "Password Reset",
+                          style: TextStyle(color: highlight),
+                        ),
+                        elevation: 10,
+                        content: SizedBox(
+                          width: 50,
+                          child: Text(
+                            snapshot.data,
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ),
+                        actions: [
+                          ElevatedButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text("Ok"))
+                        ],
+                      );
+                  }
+                },
+              );
+            }),
+        style: ButtonStyle(
+          backgroundColor: MaterialStateProperty.all<Color>(primary),
+        ),
+        child: Container(
+          alignment: Alignment.center,
+          width: 150,
+          child: const Text(
+            "Change Password",
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
+        ),
+      ),
+    );
+  }
+
   // display's the reports made by the current user
   Future<Widget> displayReports(Color primary) async {
     TextStyle columnTitle = const TextStyle(color: Colors.white, fontSize: 18);
     double columnSpacing = 20;
     UserReportsTable userTable = reports as UserReportsTable;
     userTable.setContext(context);
-    String userID = await UserData.getUserID("test123@gmail.com");
-    // Create a function to set the list of reports in the user reports table
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -194,7 +233,7 @@ class _ProfilePage extends State<ProfilePage> {
         ),
       ),
       child: FutureBuilder<List<Map<String, dynamic>>?>(
-        future: UserData.getUserReports(userID),
+        future: UserData.getUserReports(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Column(
@@ -206,7 +245,6 @@ class _ProfilePage extends State<ProfilePage> {
           }
 
           userTable.reports = snapshot.data;
-          // if (!snapshot.hasData) return const Text("No reports submitted yet.");
           switch (snapshot.connectionState) {
             case ConnectionState.waiting:
             case ConnectionState.none:
@@ -214,6 +252,9 @@ class _ProfilePage extends State<ProfilePage> {
 
             case ConnectionState.active:
             case ConnectionState.done:
+              if (!snapshot.hasData) {
+                return const Text("No reports available.");
+              }
               return PaginatedDataTable(
                 source: reports,
                 rowsPerPage: UserReportsTable.getMaxRowsPerPage(),
@@ -267,8 +308,6 @@ class _ProfilePage extends State<ProfilePage> {
   }
 
   Widget displayUserID() {
-    String userEmail = "test123@gmail.com";
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 30),
       child: Column(
@@ -291,26 +330,10 @@ class _ProfilePage extends State<ProfilePage> {
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                child: FutureBuilder<String>(
-                    future: UserData.getUserID(userEmail),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return const Text(
-                          "Network error",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
-                        );
-                      }
-                      if (!snapshot.hasData) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      return SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Text(snapshot.data ?? "Unavailable."));
-                    }),
+                child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Text(FirebaseAuth.instance.currentUser?.uid ??
+                        "Unavailable.")),
               ),
             )
           ]),
@@ -335,6 +358,30 @@ class _ProfilePage extends State<ProfilePage> {
         ],
       ),
     );
+  }
+
+  void signOutUser() {
+    FirebaseAuth.instance.signOut();
+  }
+
+  Future resetUserPassword() async {
+    String status;
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(
+          email: FirebaseAuth.instance.currentUser?.email ?? "error");
+      // await Future.delayed(const Duration(seconds: 1));
+      status =
+          "An email has been sent to: \n${FirebaseAuth.instance.currentUser?.email}";
+    } catch (e) {
+      print(e);
+      status = "An error occured. Please try again.";
+    }
+    print(status);
+    return status;
+  }
+
+  Widget updateUserEmailForm() {
+    return const Placeholder();
   }
 }
 
@@ -451,61 +498,100 @@ class UserReportsTable extends DataTableSource {
 
   @override
   DataRow? getRow(int index) {
+    String eventID = reports![index]['id'];
+    String eventType = reports![index]['eventType'];
+    bool activeStatus = reports![index]['active'];
+
     print(index);
     if (reports == null) {
       return DataRow(
         cells: [
-          DataCell(Container(
-            width: 80,
-            decoration: tableDataColumnDecoration(index),
-            child: Center(
-              child: Text("No data.", style: dataStyle),
+          DataCell(
+            Container(
+              width: 80,
+              decoration: tableDataColumnDecoration(index),
+              child: Center(
+                child: Text("No data.", style: dataStyle),
+              ),
             ),
-          )),
-          DataCell(Container(
-            width: 80,
-            decoration: tableDataColumnDecoration(index),
-            child: Center(
-              child: Text("No data.", style: dataStyle),
+          ),
+          DataCell(
+            Container(
+              width: 80,
+              decoration: tableDataColumnDecoration(index),
+              child: Center(
+                child: Text("No data.", style: dataStyle),
+              ),
             ),
-          )),
-          DataCell(Container(
-            width: 50,
-            decoration: tableDataColumnDecoration(index),
-            child: Center(
-              child: Text("No data.", style: dataStyle),
+          ),
+          DataCell(
+            Container(
+              width: 50,
+              decoration: tableDataColumnDecoration(index),
+              child: Center(
+                child: Text("No data.", style: dataStyle),
+              ),
             ),
-          )),
+          ),
           const DataCell(Text(""))
         ],
       );
     }
 
     return DataRow(cells: [
-      DataCell(Container(
-        width: 60,
-        decoration: tableDataColumnDecoration(index),
-        child: Center(
-          child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Text(index.toString(), style: dataStyle)),
-          //child: Text(reports![index]["id"], style: dataStyle)),
+      DataCell(
+        Container(
+          width: 60,
+          decoration: tableDataColumnDecoration(index),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  // child: Text(index.toString(), style: dataStyle)),
+                  child: Text(eventID, style: dataStyle)),
+            ),
+          ),
         ),
-      )),
-      DataCell(Container(
-        width: 80,
-        decoration: tableDataColumnDecoration(index),
-        child: Center(
-          child: Text(reports![index]['eventType'], style: dataStyle),
+        onTap: () => {
+          showModalBottomSheet(
+              showDragHandle: true,
+              context: context,
+              builder: (context) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: Text(
+                      "Report ID: \n$eventID",
+                      style: const TextStyle(fontSize: 30),
+                    ),
+                  ),
+                );
+              })
+        },
+      ),
+      DataCell(
+        Container(
+          width: 80,
+          decoration: tableDataColumnDecoration(index),
+          child: Center(
+            child: Text(eventType, style: dataStyle),
+          ),
         ),
-      )),
-      DataCell(Container(
-        width: 60,
-        decoration: tableDataColumnDecoration(index),
-        child: Center(
-          child: setStatus(reports![index]['active']),
+      ),
+      DataCell(
+        Container(
+          width: 60,
+          decoration: tableDataColumnDecoration(index),
+          child: Center(
+            child: setStatus(activeStatus),
+          ),
         ),
-      )),
+      ),
       DataCell(
         IconButton(
           onPressed: () => {
@@ -626,14 +712,6 @@ class DeleteButton {
   }
 }
 
-class ReportDeleteConfirmation extends StatelessWidget {
-  const ReportDeleteConfirmation({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return const Placeholder();
-  }
-}
-
 class UserData {
   static final CollectionReference _users =
       FirebaseFirestore.instance.collection('users');
@@ -641,26 +719,40 @@ class UserData {
   static final CollectionReference _events =
       FirebaseFirestore.instance.collection('events');
 
-  static Future<String> getUserID(String userEmail) async {
-    QuerySnapshot snapshot =
-        await _users.where("email", isEqualTo: userEmail).get();
-    //return FirebaseAuth.instance.currentUser.uid;
-    return snapshot.docs[0].id;
+  static String? getUserID(String userEmail) {
+    return FirebaseAuth.instance.currentUser?.uid;
   }
+  // static Future<String> getUserID(String userEmail) async {
+  //   QuerySnapshot snapshot =
+  //       await _users.where("email", isEqualTo: userEmail).get();
+  //   return snapshot.docs[0].id;
+  // }
 
   // Get a user's list of reports that they have made
-  static Future<List<Map<String, dynamic>>?> getUserReports(
-      String userID) async {
-    QuerySnapshot snapshot =
-        await _events.where("creator", isEqualTo: userID).get();
-    if (snapshot.docs.isEmpty) return null;
-    List<Map<String, dynamic>> reports = [];
+  static Future<List<Map<String, dynamic>>?> getUserReports() async {
+    DocumentSnapshot userDataSnapshot = await _users
+        .doc(FirebaseAuth.instance.currentUser?.uid.toString())
+        .get();
+    if (!userDataSnapshot.exists) return null;
 
-    for (QueryDocumentSnapshot doc in snapshot.docs) {
-      Map<String, dynamic> docData = doc.data() as Map<String, dynamic>;
-      docData["id"] = doc.id;
-      reports.add(docData);
+    Map<String, dynamic> userData =
+        userDataSnapshot.data() as Map<String, dynamic>;
+    List reportIDs = userData["events"];
+
+    List<Map<String, dynamic>>? reports = [];
+
+    // Find reports and store them in a list
+    for (String reportID in reportIDs) {
+      DocumentSnapshot eventsSnapshot = await _events.doc(reportID).get();
+
+      Map<String, dynamic> eventData =
+          eventsSnapshot.data() as Map<String, dynamic>;
+      eventData["id"] = reportID;
+      reports.add(eventData);
     }
+
+    // No reports were submitted by the current user
+    if (reports.isEmpty) return null;
 
     return reports;
   }
