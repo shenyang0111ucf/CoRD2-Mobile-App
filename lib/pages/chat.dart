@@ -103,7 +103,7 @@ class _ChatPageState extends State<ChatPage> {
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Align(
-          alignment: Alignment.centerRight,
+          alignment: Alignment.center,
           child: Text("Your Chats")
         ),
       ),
