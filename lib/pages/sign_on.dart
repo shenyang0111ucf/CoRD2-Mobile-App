@@ -61,6 +61,7 @@ class _SignOnPageState extends State<SignOnPage> {
       // Found a user account
       if (doc.exists) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        //homePage();
       } else {
         // Need to create a new account
         users
@@ -74,6 +75,7 @@ class _SignOnPageState extends State<SignOnPage> {
             .then((value) => print("Successfully added user!"))
             .catchError((err) => print("Failed to add user $err"));
       }
+      //homePage();
     }
   }
 

@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_geojson/flutter_map_geojson.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter/services.dart' show rootBundle;
+
 
 class DisplayMap extends StatefulWidget {
   const DisplayMap({super.key});
@@ -84,6 +86,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
                             color: Colors.grey[300],
                           ),
                           child: Center(
+                            // transit/sunrail both have NAME, school has School_Nam
                             child: map['NAME'] != null ?
                             Text(map['NAME'], style: TextStyle(fontSize: 12)) :
                             Text(map['School_Nam'], style: TextStyle(fontSize: 12)),
@@ -94,6 +97,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
                             color: Colors.grey[300],
                           ),
                           child: Center(
+                            // transit/sunrail both have City, school has School_Dst
                             child: map['City'] != null ?
                             Text(map['City'], style: TextStyle(fontSize: 12)) :
                             Text(map['School_Dst'], style: TextStyle(fontSize: 12)),
@@ -107,10 +111,19 @@ class _DisplayMapPageState extends State<DisplayMap> {
                             color: Colors.grey[300],
                           ),
                           child: Center(
+                            // transit/sunrail have Type, school has School_Typ
                             child: map['School_Typ'] != null ?
                             Text(map['School_Typ'], style: TextStyle(fontSize: 12)) :
                             Text(map['Type'], style: TextStyle(fontSize: 12)),
                           ),
+                        ),
+                        Container(
+                          child: map['School_Typ'] != null && map['School_Typ'].isNotEmpty ?
+                          Text(map['School_Typ'], style: TextStyle(fontSize: 12)) :
+                          map['Type'] != null && map['Type'].isNotEmpty ?
+                          Text(map['Type'], style: TextStyle(fontSize: 12)) :
+                          Text('No Data Available'), // Or display a placeholder text if both values are empty
+
                         ),
                       ],
                     ),
@@ -128,7 +141,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
     final allData = querySnapshot.docs.map((doc) => doc.data()as Map<String, dynamic>).toList();
 
     // troublehoot delete later
-    print(allData);
+    //print(allData);
 
     // get user
     // Get docs from collection reference
@@ -137,7 +150,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
     final allUsers = userSnapshot.docs.map((doc) => doc.data()as Map<String, dynamic>).toList();
 
     // troubleshoot delete later
-    print(allUsers);
+    /*print(allUsers);
 
     for (var person in allUsers) {
       print('----------------------------------------------------------------');
@@ -147,7 +160,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
       print(person['email']);
       print(person['events']);
       print('----------------------------------------------------------------');
-    }
+    }*/
 
     // loop through allData and add markers there
     for (var point in allData) {
@@ -155,6 +168,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
       DocumentSnapshot doc = await users.doc(point['creator'].toString()).get();
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
       String username = data['name'];
+      DateTime time = point['time'].toDate();
       // troubleshoot delete later
       print('================================================================');
       print('active status');
@@ -170,11 +184,14 @@ class _DisplayMapPageState extends State<DisplayMap> {
       print(point['latitude']);
       print('longitude');
       print(point['longitude']);
+      print('time raw');
+      print(point['time']);
+      print('time translate');
+      //print(time);
       print('================================================================');
 
       // if active show/add, otherwise dont show
       if (point['active'] == true) {
-
         //print('DANGER ZONE!');
         markers.add(Marker(
             point: LatLng(point['latitude'] as double, point['longitude'] as double),
@@ -187,7 +204,9 @@ class _DisplayMapPageState extends State<DisplayMap> {
               point['latitude']as double,
               point['longitude'] as double,
               point['eventType'],
-              point['time'],
+              //time,
+              DateFormat.yMEd().add_jms().format(time),
+              //point['time'],
             )
         ));
       }
@@ -312,12 +331,12 @@ class _DisplayMapPageState extends State<DisplayMap> {
                           ],
                         ),
                       ),
-                      /*Padding(
+                      Padding(
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: Center(
                             child: Text('$timeSub')
                         ),
-                      ),*/
+                      ),
 
                     ],
                   ),
