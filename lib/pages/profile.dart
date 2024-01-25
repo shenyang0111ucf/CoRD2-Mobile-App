@@ -262,32 +262,13 @@ class _ProfilePage extends State<ProfilePage> {
                 showFirstLastButtons: true,
                 showCheckboxColumn: false,
                 columnSpacing: columnSpacing,
+                horizontalMargin: 12,
                 columns: [
                   DataColumn(
                     label: Expanded(
                       child: Center(
                         child: Text(
-                          "ID",
-                          style: columnTitle,
-                        ),
-                      ),
-                    ),
-                  ),
-                  DataColumn(
-                    label: Expanded(
-                      child: Center(
-                        child: Text(
-                          "Type",
-                          style: columnTitle,
-                        ),
-                      ),
-                    ),
-                  ),
-                  DataColumn(
-                    label: Expanded(
-                      child: Center(
-                        child: Text(
-                          "Status",
+                          "Report Name",
                           style: columnTitle,
                         ),
                       ),
@@ -322,7 +303,7 @@ class _ProfilePage extends State<ProfilePage> {
             const Padding(padding: EdgeInsets.only(right: 10)),
             Container(
               alignment: Alignment.centerLeft,
-              width: 200,
+              width: 225,
               height: 30,
               decoration: const BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.elliptical(10, 10)),
@@ -332,7 +313,7 @@ class _ProfilePage extends State<ProfilePage> {
                 padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                 child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    child: Text(FirebaseAuth.instance.currentUser?.uid ??
+                    child: Text(FirebaseAuth.instance.currentUser?.displayName ??
                         "Unavailable.")),
               ),
             )
@@ -498,6 +479,7 @@ class UserReportsTable extends DataTableSource {
 
   @override
   DataRow? getRow(int index) {
+    String eventName = reports![index]['title'];
     String eventID = reports![index]['id'];
     String eventType = reports![index]['eventType'];
     bool activeStatus = reports![index]['active'];
@@ -515,24 +497,6 @@ class UserReportsTable extends DataTableSource {
               ),
             ),
           ),
-          DataCell(
-            Container(
-              width: 80,
-              decoration: tableDataColumnDecoration(index),
-              child: Center(
-                child: Text("No data.", style: dataStyle),
-              ),
-            ),
-          ),
-          DataCell(
-            Container(
-              width: 50,
-              decoration: tableDataColumnDecoration(index),
-              child: Center(
-                child: Text("No data.", style: dataStyle),
-              ),
-            ),
-          ),
           const DataCell(Text(""))
         ],
       );
@@ -541,7 +505,7 @@ class UserReportsTable extends DataTableSource {
     return DataRow(cells: [
       DataCell(
         Container(
-          width: 60,
+          width: 225,
           decoration: tableDataColumnDecoration(index),
           child: Center(
             child: Padding(
@@ -549,7 +513,7 @@ class UserReportsTable extends DataTableSource {
               child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   // child: Text(index.toString(), style: dataStyle)),
-                  child: Text(eventID, style: dataStyle)),
+                  child: Text(eventName, style: dataStyle)),
             ),
           ),
         ),
@@ -573,24 +537,6 @@ class UserReportsTable extends DataTableSource {
                 );
               })
         },
-      ),
-      DataCell(
-        Container(
-          width: 80,
-          decoration: tableDataColumnDecoration(index),
-          child: Center(
-            child: Text(eventType, style: dataStyle),
-          ),
-        ),
-      ),
-      DataCell(
-        Container(
-          width: 60,
-          decoration: tableDataColumnDecoration(index),
-          child: Center(
-            child: setStatus(activeStatus),
-          ),
-        ),
       ),
       DataCell(
         IconButton(
@@ -722,11 +668,6 @@ class UserData {
   static String? getUserID(String userEmail) {
     return FirebaseAuth.instance.currentUser?.uid;
   }
-  // static Future<String> getUserID(String userEmail) async {
-  //   QuerySnapshot snapshot =
-  //       await _users.where("email", isEqualTo: userEmail).get();
-  //   return snapshot.docs[0].id;
-  // }
 
   // Get a user's list of reports that they have made
   static Future<List<Map<String, dynamic>>?> getUserReports() async {
