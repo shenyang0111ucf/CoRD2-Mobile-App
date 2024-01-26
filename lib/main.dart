@@ -1,5 +1,6 @@
 import 'package:cord2_mobile_app/pages/chat.dart';
 import 'package:cord2_mobile_app/pages/map.dart';
+import 'package:cord2_mobile_app/pages/profile.dart';
 import 'package:cord2_mobile_app/pages/report.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -128,7 +129,7 @@ class _HomePageState extends State<HomePage> {
       case "Chat":
         return const Center(child: ChatPage());
       case "Profile":
-        return const Center(child: Text('Profile Content'));
+        return const Center(child: ProfilePage());
       default:
         return Container(); // Default empty container
     }

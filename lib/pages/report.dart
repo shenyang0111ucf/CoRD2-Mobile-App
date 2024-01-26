@@ -71,6 +71,7 @@ class _ReportFormState extends State<ReportForm> {
       'latitude': 28.544331,
       'longitude': -81.191931,
       'time': DateTime.now(),
+      'active': true
     };
 
       try {
