@@ -74,9 +74,16 @@ class _ReportFormState extends State<ReportForm> {
     };
 
       try {
-        await _firestore.collection('users').doc(userId).update({
-          'events': FieldValue.arrayUnion([submissionData]),
+        // await _firestore.collection('users').doc(userId).update({
+        //   'events': FieldValue.arrayUnion([submissionData]),
+        // });
+        await _firestore.collection('events').add(submissionData)
+        .then((DocumentReference data) async {
+          await _firestore.collection('users').doc(userId).update({
+            'events': FieldValue.arrayUnion([data.id]),
+          });
         });
+
         print('Submission saved successfully!');
       } catch (e) {
         print('Error saving submission: $e');
