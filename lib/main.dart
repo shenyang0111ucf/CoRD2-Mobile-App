@@ -1,3 +1,5 @@
+import 'package:cord2_mobile_app/pages/map.dart';
+import 'package:cord2_mobile_app/pages/report.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
@@ -25,13 +27,19 @@ class MyApp extends StatelessWidget {
 }
 
 class HomePage extends StatefulWidget {
+  String? userId;
+
+  HomePage({required this.userId});// Track the current page
+
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  String get currentUserId => widget.userId ?? ""; // Using "currentUserId" instead of "userId"
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  String currentPage = "Map"; // Track the current page
+  String currentPage = "Map";
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +49,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           // Your content goes here
           _getPageContent(
-              currentPage), // Show content based on the current page
+              currentPage, currentUserId), // Show content based on the current page
           // Circular menu button
           Positioned(
             top: 30.0,
@@ -111,13 +119,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _getPageContent(String pageName) {
+  Widget _getPageContent(String pageName, String? userId) {
     // Return the respective page content based on the selected page
     switch (pageName) {
       case "Map":
-        return Center(child: Text('Map Content'));
+        return Center(child: DisplayMap());
       case "Report":
-        return Center(child: Text('Report Content'));
+        return Center(child: ReportForm(userId: currentUserId));
       case "Chat":
         return Center(child: Text('Chat Content'));
       case "Profile":

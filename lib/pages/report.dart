@@ -2,47 +2,91 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_map/flutter_map.dart';
 //import 'firebase_options.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class ReportForm extends StatefulWidget {
-  const ReportForm({super.key});
+  String? userId; // Add a variable to hold the additional String?
 
+  ReportForm({required this.userId});
+  //const ReportForm({super.key});
   @override
   State<ReportForm> createState() => _ReportFormState();
 }
-/*
-class ImageUploadForm extends StatefulWidget {
+
+
+class _ReportFormState extends State<ReportForm> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  String get currentUserId => widget.userId ?? "";
+
   @override
-  _ImageUploadFormState createState() => _ImageUploadFormState();
-}
+  void initState() {
+    super.initState();
+    print(currentUserId);
+  }
 
-class _ImageUploadFormState extends State<ImageUploadForm> {
-  late File _imageFile;
+  TextEditingController descriptionCon = TextEditingController();
+  TextEditingController titleCon = TextEditingController();
+  String selectedCategory = 'Hurricane';
+  File? _imageFile;
+  String _error = "";
 
-  Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().getImage(source: ImageSource.gallery);
+  Future<void> pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
       });
     }
-  }*/
-
-class _ReportFormState extends State<ReportForm> {
-
-   @override
-  void initState() {
-    super.initState();
   }
-  
-  TextEditingController descriptionCon = TextEditingController();
-  String selectedCategory = 'Hurricane';
+
+  void setError(String msg) {
+    setState(() {
+      _error = msg;
+    });
+  }
+
+  // Sets the user's report vals in firebase
+  Future submitReport(String userId) async {
+    setError("");
+    if (descriptionCon.text.isEmpty) {
+      setError("Please fill out the description field.");
+      return;
+    }
+    if (titleCon.text.isEmpty) {
+      setError("Please add a title.");
+      return;
+    }
+
+    Map<String, dynamic> submissionData = {
+      'description': descriptionCon.text,
+      'creator': userId,
+      'images': [],
+      'title': titleCon.text,
+      'eventType': selectedCategory,
+      'latitude': 28.544331,
+      'longitude': -81.191931,
+      'time': DateTime.now(),
+    };
+
+      try {
+        await _firestore.collection('users').doc(userId).update({
+          'events': FieldValue.arrayUnion([submissionData]),
+        });
+        print('Submission saved successfully!');
+      } catch (e) {
+        print('Error saving submission: $e');
+      }
+}
 
   @override
   Widget build(BuildContext context) {
-    return Material(child:
-        Container(
+    return
+    Container(
       padding: const EdgeInsets.only(top: 0),
       color: Colors.white,
       child: Column(
@@ -58,7 +102,7 @@ class _ReportFormState extends State<ReportForm> {
           ),
           const SizedBox(height: 50),
           Container(
-         //   height: MediaQuery.of(context).size.height-200,
+            //   height: MediaQuery.of(context).size.height-200,
             padding: const EdgeInsets.only(top: 30),
             decoration: const BoxDecoration(
               color: Colors.blue,
@@ -71,6 +115,19 @@ class _ReportFormState extends State<ReportForm> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
+                  Padding(
+                      padding: const EdgeInsets.only(
+                          top: 20, bottom: 30, right: 30, left: 30),
+                      child:
+                      TextField(
+                        controller: titleCon,
+                        decoration: const InputDecoration(
+                          filled: true,
+                          fillColor: Colors.white,
+                          // Set your desired background color
+                          labelText: 'Add a title.',
+                        ),
+                      )),
                   const Text(
                     'Category',
                     style: TextStyle(
@@ -83,7 +140,7 @@ class _ReportFormState extends State<ReportForm> {
                       decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(10)),
-                      padding: EdgeInsets.only(right:10, left:10),
+                      padding: EdgeInsets.only(right: 10, left: 10),
                       child:
                       DropdownButton<String>(
                         style: const TextStyle(
@@ -119,27 +176,43 @@ class _ReportFormState extends State<ReportForm> {
                     ),
                   ),
                   Padding(
-                      padding: const EdgeInsets.only(top:20, bottom:30, right: 30, left:30),
+                      padding: const EdgeInsets.only(
+                          top: 20, bottom: 30, right: 30, left: 30),
                       child:
                       TextField(
                         controller: descriptionCon,
                         decoration: const InputDecoration(
                           filled: true,
-                          fillColor: Colors.white, // Set your desired background color
+                          fillColor: Colors.white,
+                          // Set your desired background color
                           labelText: 'Please provide more information.',
                         ),
                       )),
+                  _imageFile == null
+                      ? ElevatedButton(
+                    onPressed: () {
+                      pickImage();
+                    },
+                    child: Text('Pick Image'))
+                  : Image.file(
+                    _imageFile!,
+                    height: 200,
+                    width: 200,
+                    fit: BoxFit.cover,
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      submitReport(currentUserId);
+                    },
+                    child: Text('Submit a report.'),
+                  )
                 ],
               ),
             ),
-          ),
-       //   const SizedBox(height: 20.0),
-          // Add other form fields as needed
-          // For example: text fields, submit button, etc.
-          //   Expanded(child: Container()),
-          // Expanded widget to take up remaining space
+          )
         ],
       ),
-    ));
+    );
   }
 }
+

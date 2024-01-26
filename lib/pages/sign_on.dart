@@ -60,6 +60,7 @@ class _SignOnPageState extends State<SignOnPage> {
       // Found a user account
       if (doc.exists) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        homePage(firebaseCred.user?.uid);
       } else {
         // Need to create a new account
         users
@@ -70,7 +71,7 @@ class _SignOnPageState extends State<SignOnPage> {
           'events': [],
           'chats': []
         })
-            .then((value) => print("Successfully added user!"))
+            .then((value) => homePage(firebaseCred.user?.uid))
             .catchError((err) => print("Failed to add user $err"));
       }
     }
@@ -137,7 +138,7 @@ class _SignOnPageState extends State<SignOnPage> {
           email: emailController.text,
           password: passController.text
       );
-      homePage();
+      homePage(credential.user?.uid);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         setError("No user found for that email");
@@ -149,9 +150,9 @@ class _SignOnPageState extends State<SignOnPage> {
     }
   }
 
-  void homePage() {
+  void homePage(String? userId) {
     Navigator.pushAndRemoveUntil(
-        context, MaterialPageRoute(builder: (context) => HomePage()), (Route route) => false);
+        context, MaterialPageRoute(builder: (context) => HomePage(userId: userId)), (Route route) => false);
   }
 
   FractionallySizedBox createButton(String text, onPressed) {
