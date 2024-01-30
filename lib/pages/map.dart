@@ -8,7 +8,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-
 class DisplayMap extends StatefulWidget {
   const DisplayMap({super.key});
 
@@ -24,8 +23,14 @@ class _DisplayMapPageState extends State<DisplayMap> {
   late List<Marker> school_markers = [];
   late List<Marker> sunrail_markers = [];
   late List<Marker> transit_markers = [];
+  late MapController mapController;
   CollectionReference events = FirebaseFirestore.instance.collection('events');
   CollectionReference users = FirebaseFirestore.instance.collection('users');
+
+  void refreshMap() {
+    mapController.move(LatLng(28.538336, -81.379234), 17.0);
+    setState(() {});
+  }
 
   // instantiate parser, use the defaults
   GeoJsonParser geoJsonParser = GeoJsonParser(
@@ -68,16 +73,14 @@ class _DisplayMapPageState extends State<DisplayMap> {
                         Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(20.0)
-                            ),
+                                top: Radius.circular(20.0)),
                             color: Colors.grey[300],
-
                           ),
                           child: Center(
                             child: Text(map['FID'].toString(), // all have
                                 style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
                                 )),
                           ),
                         ),
@@ -86,10 +89,12 @@ class _DisplayMapPageState extends State<DisplayMap> {
                             color: Colors.grey[300],
                           ),
                           child: Center(
-                            // transit/sunrail both have NAME, school has School_Nam
-                            child: map['NAME'] != null ?
-                            Text(map['NAME'], style: TextStyle(fontSize: 12)) :
-                            Text(map['School_Nam'], style: TextStyle(fontSize: 12)),
+                            // transit/sunrail both have StrName, school has School_Nam
+                            child: map['School_Nam'] != null
+                                ? Text(map['School_Nam'],
+                                    style: TextStyle(fontSize: 12))
+                                : Text(map['StrName'],
+                                    style: TextStyle(fontSize: 12)),
                           ),
                         ),
                         Container(
@@ -98,32 +103,27 @@ class _DisplayMapPageState extends State<DisplayMap> {
                           ),
                           child: Center(
                             // transit/sunrail both have City, school has School_Dst
-                            child: map['City'] != null ?
-                            Text(map['City'], style: TextStyle(fontSize: 12)) :
-                            Text(map['School_Dst'], style: TextStyle(fontSize: 12)),
+                            child: map['City'] != null
+                                ? Text(map['City'],
+                                    style: TextStyle(fontSize: 12))
+                                : Text(map['School_Dst'],
+                                    style: TextStyle(fontSize: 12)),
                           ),
                         ),
                         Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.vertical(
-                                bottom: Radius.circular(20.0)
-                            ),
+                                bottom: Radius.circular(20.0)),
                             color: Colors.grey[300],
                           ),
                           child: Center(
                             // transit/sunrail have Type, school has School_Typ
-                            child: map['School_Typ'] != null ?
-                            Text(map['School_Typ'], style: TextStyle(fontSize: 12)) :
-                            Text(map['Type'], style: TextStyle(fontSize: 12)),
+                            child: map['School_Typ'] != null
+                                ? Text(map['School_Typ'],
+                                    style: TextStyle(fontSize: 12))
+                                : Text(map['Type'],
+                                    style: TextStyle(fontSize: 12)),
                           ),
-                        ),
-                        Container(
-                          child: map['School_Typ'] != null && map['School_Typ'].isNotEmpty ?
-                          Text(map['School_Typ'], style: TextStyle(fontSize: 12)) :
-                          map['Type'] != null && map['Type'].isNotEmpty ?
-                          Text(map['Type'], style: TextStyle(fontSize: 12)) :
-                          Text('No Data Available'), // Or display a placeholder text if both values are empty
-
                         ),
                       ],
                     ),
@@ -133,12 +133,15 @@ class _DisplayMapPageState extends State<DisplayMap> {
         });
   }
 
-  void createMarkers() async{
+  // shows user submitted reports
+  void createMarkers() async {
     List<Marker> markers = [];
     // Get docs from collection reference
     QuerySnapshot querySnapshot = await events.get();
     // Get data from docs and convert map to List
-    final allData = querySnapshot.docs.map((doc) => doc.data()as Map<String, dynamic>).toList();
+    final allData = querySnapshot.docs
+        .map((doc) => doc.data() as Map<String, dynamic>)
+        .toList();
 
     // troublehoot delete later
     //print(allData);
@@ -147,7 +150,9 @@ class _DisplayMapPageState extends State<DisplayMap> {
     // Get docs from collection reference
     QuerySnapshot userSnapshot = await users.get();
     // Get data from docs and convert map to List
-    final allUsers = userSnapshot.docs.map((doc) => doc.data()as Map<String, dynamic>).toList();
+    final allUsers = userSnapshot.docs
+        .map((doc) => doc.data() as Map<String, dynamic>)
+        .toList();
 
     // troubleshoot delete later
     /*print(allUsers);
@@ -194,158 +199,151 @@ class _DisplayMapPageState extends State<DisplayMap> {
       if (point['active'] == true) {
         //print('DANGER ZONE!');
         markers.add(Marker(
-            point: LatLng(point['latitude'] as double, point['longitude'] as double),
+            point: LatLng(
+                point['latitude'] as double, point['longitude'] as double),
             width: 56,
             height: 56,
             child: customMarker(
               point['title'],
               username,
               point['description'],
-              point['latitude']as double,
+              point['latitude'] as double,
               point['longitude'] as double,
               point['eventType'],
               //time,
               DateFormat.yMEd().add_jms().format(time),
               //point['time'],
-            )
-        ));
+            )));
       }
     }
 
-  setState(() {
-    _markers = markers;
-  });
-
+    setState(() {
+      _markers = markers;
+    });
   }
 
   MouseRegion customMarker(title, user, desc, lat, lon, eType, timeSub) {
     return MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
-            onTap: () => _showInfoScreen(context, title, user, desc, lat, lon, eType, timeSub),
-            child: const Icon(Icons.person_pin_circle_rounded)
-        )
-    );
+            onTap: () => _showInfoScreen(
+                context, title, user, desc, lat, lon, eType, timeSub),
+            child: const Icon(Icons.person_pin_circle_rounded)));
   }
 
   // shows user submitted points
   void _showInfoScreen(context, title, user, desc, lat, lon, eType, timeSub) {
-    showModalBottomSheet(useRootNavigator: true, context: context, builder: (BuildContext bc) {
-      return Container(
-        decoration:  BoxDecoration(
-          color: Colors.blue[300],
-          borderRadius: BorderRadius.all(Radius.circular(25)),
-        ),
-        child: SizedBox(
-            height: MediaQuery.of(context).size.height * 0.6,
-            width: MediaQuery.of(context).size.width * 1,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.redAccent,
-                      borderRadius: BorderRadius.all(Radius.circular(25)),
+    showModalBottomSheet(
+        useRootNavigator: true,
+        context: context,
+        builder: (BuildContext bc) {
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.blue[300],
+              borderRadius: BorderRadius.all(Radius.circular(25)),
+            ),
+            child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.6,
+                width: MediaQuery.of(context).size.width * 1,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.redAccent,
+                          borderRadius: BorderRadius.all(Radius.circular(25)),
+                        ),
+                        child: CloseButton(
+                          color: Colors.white,
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ),
                     ),
-                    child: CloseButton(
-                      color: Colors.white,
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.all(25.0),
-                  decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.all(Radius.circular(25)),
-                  ),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Center(
-                            child: Text(
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                '$title')
-                        ),
+                    Container(
+                      margin: const EdgeInsets.all(25.0),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(25)),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Center(
-                            child: Text(
-                                style: const TextStyle(
-                                  //fontSize: 24,
-                                  //fontWeight: FontWeight.bold,
-                                ),
-                                'Submitted by: $user')
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Center(
-                            child: Text('[Insert Image Here]')
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Center(
-                            child: Text(
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                ),
-                                "$desc")
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Row(
-                              children: [
-                                const Text('Coordinates: '),
-                                Text(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Center(
+                                child: Text(
                                     style: const TextStyle(
+                                      fontSize: 24,
                                       fontWeight: FontWeight.bold,
                                     ),
-                                    '($lat, $lon)'),
-                              ],
-                            ),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            Row(
-                              children: [
-                                const Text('Hazard: '),
-                                Text(
+                                    '$title')),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Center(
+                                child: Text(
                                     style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
+                                        //fontSize: 24,
+                                        //fontWeight: FontWeight.bold,
+                                        ),
+                                    'Submitted by: $user')),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Center(child: Text('[Insert Image Here]')),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Center(
+                                child: Text(
+                                    style: const TextStyle(
+                                      fontSize: 16,
                                     ),
-                                    '$eType'),
+                                    "$desc")),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Text('Coordinates: '),
+                                    Text(
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        '($lat, $lon)'),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  width: 5,
+                                ),
+                                Row(
+                                  children: [
+                                    const Text('Hazard: '),
+                                    Text(
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        '$eType'),
+                                  ],
+                                ),
                               ],
                             ),
-                          ],
-                        ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Center(child: Text('$timeSub')),
+                          ),
+                        ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Center(
-                            child: Text('$timeSub')
-                        ),
-                      ),
-
-                    ],
-                  ),
-                )
-              ],
-            )
-        ),
-      );
-    });
+                    )
+                  ],
+                )),
+          );
+        });
   }
 
   Future<void> processData() async {
@@ -374,8 +372,9 @@ class _DisplayMapPageState extends State<DisplayMap> {
   }
 
   @override
-  void initState(){
+  void initState() {
     geoJsonParser.setDefaultMarkerTapCallback(onTapMarkerFunction);
+    mapController = MapController();
     processData();
     createMarkers();
 
@@ -384,11 +383,11 @@ class _DisplayMapPageState extends State<DisplayMap> {
 
   @override
   Widget build(BuildContext context) {
-    return FlutterMap(
+    return Scaffold(
+      body: FlutterMap(
+        mapController: mapController,
         options: MapOptions(
-            initialCenter: LatLng(latitude, longitude),
-            initialZoom: 7.0
-        ),
+            initialCenter: LatLng(latitude, longitude), initialZoom: 17.0),
         children: [
           TileLayer(
             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -402,37 +401,39 @@ class _DisplayMapPageState extends State<DisplayMap> {
           _buildClusterLayer(school_markers, Colors.green),
           _buildClusterLayer(sunrail_markers, Colors.yellow),
           _buildClusterLayer(transit_markers, Colors.red),
-        ]
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: refreshMap,
+        child: const Icon(Icons.refresh),
+      ),
     );
   }
 
   // handles clustering of points
-  MarkerClusterLayerWidget _buildClusterLayer(List<Marker> markers, Color color) {
+  MarkerClusterLayerWidget _buildClusterLayer(
+      List<Marker> markers, Color color) {
     return MarkerClusterLayerWidget(
-            options: MarkerClusterLayerOptions(
-              maxClusterRadius: 50,
-              size: const Size(40, 40),
-              alignment: Alignment.center,
-              padding: const EdgeInsets.all(50),
-              markers: markers,
-              builder: (context, markers) {
-                return Container(
+        options: MarkerClusterLayerOptions(
+            maxClusterRadius: 75,
+            size: const Size(40, 40),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.all(50),
+            markers: markers,
+            builder: (context, markers) {
+              return Container(
                   alignment: Alignment.center,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
                     color: color,
                   ),
-                  child: Text(
-                    markers.length.toString(),
-                    style:  const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      decoration: TextDecoration.none,
-                    )
-                  )
-                );
-              }
-            ));
+                  child: Text(markers.length.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        decoration: TextDecoration.none,
+                      )));
+            }));
   }
 }
