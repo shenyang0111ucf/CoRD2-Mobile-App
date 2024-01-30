@@ -109,12 +109,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Search Overlay Example'),
-      ),
-      body: Center(
-        child: Text('Your main content goes here'),
-      ),
+
       floatingActionButtonLocation: FloatingActionButtonLocation.centerTop,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(top: 30.0),
