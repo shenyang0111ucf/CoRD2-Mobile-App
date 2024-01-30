@@ -3,9 +3,16 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cord2_mobile_app/models/event_model.dart';
+import 'package:cord2_mobile_app/pages/sign_on.dart';
+import 'package:cord2_mobile_app/classes/user_report_table.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import '../classes/user_data.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -34,26 +41,31 @@ class _ProfilePage extends State<ProfilePage> {
         child: SizedBox(
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const Padding(padding: EdgeInsets.only(top: 50)),
-              Text(
-                "Profile",
-                style: TextStyle(color: primary, fontSize: pageHeadingfontSize),
-              ),
-              const Padding(padding: EdgeInsets.only(top: 20)),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.only(
-                        topLeft: Radius.elliptical(40, 40),
-                        topRight: Radius.elliptical(40, 40)),
-                    color: secondary,
-                  ),
-                  child: ListView(
-                    children: [
-                      Column(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              (reports as UserReportsTable).refreshData();
+              return;
+            },
+            child: ListView(
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const Padding(padding: EdgeInsets.only(top: 50)),
+                    Text(
+                      "Profile",
+                      style: TextStyle(
+                          color: primary, fontSize: pageHeadingfontSize),
+                    ),
+                    const Padding(padding: EdgeInsets.only(top: 20)),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.only(
+                            topLeft: Radius.elliptical(40, 40),
+                            topRight: Radius.elliptical(40, 40)),
+                        color: secondary,
+                      ),
+                      child: Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Icon(
@@ -79,7 +91,6 @@ class _ProfilePage extends State<ProfilePage> {
                                 return snapshot.data as Widget;
                               }),
                           displayUserID(),
-                          //displayUserLocation(),
                           displayResetPasswordButton(primary, highlight),
                           displayChangeEmailButton(context, primary),
                           Padding(
@@ -103,11 +114,11 @@ class _ProfilePage extends State<ProfilePage> {
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -206,7 +217,7 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
-  // display's the reports made by the current user
+  // Displays all reports the current user has made
   Future<Widget> displayReports(Color primary) async {
     TextStyle columnTitle = const TextStyle(color: Colors.white, fontSize: 18);
     double columnSpacing = 20;
@@ -232,7 +243,8 @@ class _ProfilePage extends State<ProfilePage> {
           ),
         ),
       ),
-      child: FutureBuilder<List<Map<String, dynamic>>?>(
+      // Retrieve user's reports
+      child: FutureBuilder<List<EventModel>?>(
         future: UserData.getUserReports(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
@@ -243,8 +255,8 @@ class _ProfilePage extends State<ProfilePage> {
               ],
             );
           }
-
-          userTable.reports = snapshot.data;
+          // set the data table's report data
+          userTable.events = snapshot.data;
           switch (snapshot.connectionState) {
             case ConnectionState.waiting:
             case ConnectionState.none:
@@ -255,14 +267,15 @@ class _ProfilePage extends State<ProfilePage> {
               if (!snapshot.hasData) {
                 return const Text("No reports available.");
               }
+              // Display table with reports
               return PaginatedDataTable(
                 source: reports,
-                rowsPerPage: UserReportsTable.getMaxRowsPerPage(),
+                rowsPerPage: (reports as UserReportsTable).getMaxRowsPerPage(),
                 arrowHeadColor: Colors.white,
                 showFirstLastButtons: true,
                 showCheckboxColumn: false,
                 columnSpacing: columnSpacing,
-                horizontalMargin: 12,
+                horizontalMargin: 25,
                 columns: [
                   DataColumn(
                     label: Expanded(
@@ -288,6 +301,7 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
+  // Displays the user's username
   Widget displayUserID() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 30),
@@ -313,7 +327,8 @@ class _ProfilePage extends State<ProfilePage> {
                 padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                 child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    child: Text(FirebaseAuth.instance.currentUser?.displayName ??
+                    child: Text(FirebaseAuth.instance.currentUser?.displayName
+                            .toString() ??
                         "Unavailable.")),
               ),
             )
@@ -323,34 +338,17 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
-  Widget displayUserLocation() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 10),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Text("Your Location"),
-          Padding(padding: EdgeInsets.only(bottom: 10)),
-          SizedBox(
-            width: 300,
-            height: 300,
-            child: Placeholder(),
-          )
-        ],
-      ),
-    );
-  }
-
+  // Signs out the current user (and should redirect them to login)
   void signOutUser() {
     FirebaseAuth.instance.signOut();
   }
 
+  // Sends a password reset email to the current user
   Future resetUserPassword() async {
     String status;
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(
           email: FirebaseAuth.instance.currentUser?.email ?? "error");
-      // await Future.delayed(const Duration(seconds: 1));
       status =
           "An email has been sent to: \n${FirebaseAuth.instance.currentUser?.email}";
     } catch (e) {
@@ -363,338 +361,5 @@ class _ProfilePage extends State<ProfilePage> {
 
   Widget updateUserEmailForm() {
     return const Placeholder();
-  }
-}
-
-class UserReportsTable extends DataTableSource {
-  late BuildContext context;
-  late UserData userData;
-  List<Map<String, dynamic>>? reports;
-
-  UserReportsTable(this.userData);
-
-  Widget setStatus(bool status) {
-    Icon statusIcon;
-    Color color = Colors.black;
-
-    if (status) {
-      statusIcon = Icon(
-        CupertinoIcons.check_mark,
-        color: color,
-      );
-    } else {
-      statusIcon = Icon(
-        CupertinoIcons.xmark,
-        color: color,
-      );
-    }
-
-    // switch (status) {
-    //   case "active":
-    //     statusIcon = Icon(
-    //       CupertinoIcons.check_mark,
-    //       color: color,
-    //     );
-    //     break;
-    //   case 1:
-    //     statusIcon = Icon(
-    //       CupertinoIcons.xmark,
-    //       color: color,
-    //     );
-    //     break;
-    //   case 2:
-    //     statusIcon = Icon(
-    //       CupertinoIcons.hourglass_bottomhalf_fill,
-    //       color: color,
-    //     );
-    //     break;
-    //   default:
-    //     statusIcon = Icon(
-    //       CupertinoIcons.question,
-    //       color: color,
-    //     );
-    // }
-
-    return statusIcon;
-  }
-
-  TextStyle dataStyle = const TextStyle(color: Colors.black);
-  static const int _maxRowsPerPage = 5;
-
-  static int getMaxRowsPerPage() {
-    return _maxRowsPerPage;
-  }
-
-  void setContext(BuildContext context) {
-    this.context = context;
-  }
-
-  // Returns a border radius for a specified index row
-  BorderRadiusGeometry? calculateRowBorderRadius(int index) {
-    BorderRadiusGeometry? borderRadius;
-    if (reports == null) return null;
-
-    // There is only a single row on a page, so create a full border radius
-    if (index == reports!.length - 1 && index % _maxRowsPerPage == 0) {
-      borderRadius = const BorderRadius.all(Radius.circular(10));
-    }
-    // Starting row has a top border radius
-    else if (index % _maxRowsPerPage == 0) {
-      borderRadius = const BorderRadius.only(
-          topLeft: Radius.circular(10), topRight: Radius.circular(10));
-    }
-    // Last row has a bottom border radius
-    else if (index % _maxRowsPerPage == _maxRowsPerPage - 1 ||
-        index == reports!.length - 1) {
-      borderRadius = const BorderRadius.only(
-          bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10));
-    }
-    // Middle rows have no border radius
-    else {
-      borderRadius = const BorderRadius.all(Radius.zero);
-    }
-
-    return borderRadius;
-  }
-
-  Widget tableDataColumnBackground(int index, Widget data) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: calculateRowBorderRadius(index),
-      ),
-      width: 60,
-      child: Center(
-        child: data,
-      ),
-    );
-  }
-
-  Decoration? tableDataColumnDecoration(int index) {
-    return BoxDecoration(
-      color: Colors.white,
-      borderRadius: calculateRowBorderRadius(index),
-    );
-  }
-
-  @override
-  DataRow? getRow(int index) {
-    String eventName = reports![index]['title'];
-    String eventID = reports![index]['id'];
-    String eventType = reports![index]['eventType'];
-    bool activeStatus = reports![index]['active'];
-
-    print(index);
-    if (reports == null) {
-      return DataRow(
-        cells: [
-          DataCell(
-            Container(
-              width: 80,
-              decoration: tableDataColumnDecoration(index),
-              child: Center(
-                child: Text("No data.", style: dataStyle),
-              ),
-            ),
-          ),
-          const DataCell(Text(""))
-        ],
-      );
-    }
-
-    return DataRow(cells: [
-      DataCell(
-        Container(
-          width: 225,
-          decoration: tableDataColumnDecoration(index),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  // child: Text(index.toString(), style: dataStyle)),
-                  child: Text(eventName, style: dataStyle)),
-            ),
-          ),
-        ),
-        onTap: () => {
-          showModalBottomSheet(
-              showDragHandle: true,
-              context: context,
-              builder: (context) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 8.0,
-                  ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    child: Text(
-                      "Report ID: \n$eventID",
-                      style: const TextStyle(fontSize: 30),
-                    ),
-                  ),
-                );
-              })
-        },
-      ),
-      DataCell(
-        IconButton(
-          onPressed: () => {
-            showModalBottomSheet(
-                context: context,
-                showDragHandle: true,
-                useSafeArea: true,
-                builder: (context) {
-                  return reportDeleteConfirmation(index);
-                }),
-          },
-          icon: const Icon(
-            CupertinoIcons.trash,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    ]);
-  }
-
-  Widget reportDeleteConfirmation(int index) {
-    return Container(
-      alignment: Alignment.topCenter,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const Text(
-                "This report will be permanently deleted. Would you like to continue?",
-                style: TextStyle(
-                  fontSize: 25,
-                ),
-              ),
-              const SizedBox(height: 50),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                      style: ButtonStyle(
-                          fixedSize: MaterialStateProperty.resolveWith(
-                              (states) => const Size.fromWidth(125)),
-                          backgroundColor: MaterialStateColor.resolveWith(
-                              (states) => Colors.red)),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        reports!.removeAt(index);
-                        notifyListeners();
-                        print("Delete");
-                      },
-                      child: const Text(
-                        "Delete",
-                        style: TextStyle(color: Colors.white, fontSize: 18),
-                      )),
-                  const SizedBox(
-                    width: 50,
-                  ),
-                  // change to min/max-width
-                  ElevatedButton(
-                      style: ButtonStyle(
-                          fixedSize: MaterialStateProperty.resolveWith(
-                              (states) => const Size.fromWidth(125)),
-                          backgroundColor: MaterialStateColor.resolveWith(
-                              (states) => Colors.white12)),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text(
-                        "Back",
-                        style: TextStyle(color: Colors.white, fontSize: 18),
-                      )),
-                ],
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-    // return FutureBuilder(
-    //     future: deleteReport(), builder: (context, snapshot) {});
-  }
-
-  //Future<ConnectionState>
-  Future deleteReport() async {
-    return const Placeholder();
-  }
-
-  @override
-  bool get isRowCountApproximate => false;
-  @override
-  void notifyListeners() {
-    super.notifyListeners();
-  }
-
-  @override
-  int get rowCount => reports?.length ?? 0;
-
-  @override
-  int get selectedRowCount => 0;
-}
-
-class PasswordResetForm extends StatelessWidget {
-  const PasswordResetForm({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.topCenter,
-    );
-  }
-}
-
-class DeleteButton {
-  late int indexToDelete;
-
-  void deleteReport(List<Map<String, dynamic>> reports) {
-    reports.removeAt(indexToDelete);
-  }
-}
-
-class UserData {
-  static final CollectionReference _users =
-      FirebaseFirestore.instance.collection('users');
-
-  static final CollectionReference _events =
-      FirebaseFirestore.instance.collection('events');
-
-  static String? getUserID(String userEmail) {
-    return FirebaseAuth.instance.currentUser?.uid;
-  }
-
-  // Get a user's list of reports that they have made
-  static Future<List<Map<String, dynamic>>?> getUserReports() async {
-    DocumentSnapshot userDataSnapshot = await _users
-        .doc(FirebaseAuth.instance.currentUser?.uid.toString())
-        .get();
-    if (!userDataSnapshot.exists) return null;
-
-    Map<String, dynamic> userData =
-        userDataSnapshot.data() as Map<String, dynamic>;
-    List reportIDs = userData["events"];
-
-    List<Map<String, dynamic>>? reports = [];
-
-    // Find reports and store them in a list
-    for (String reportID in reportIDs) {
-      DocumentSnapshot eventsSnapshot = await _events.doc(reportID).get();
-
-      Map<String, dynamic> eventData =
-          eventsSnapshot.data() as Map<String, dynamic>;
-      eventData["id"] = reportID;
-      reports.add(eventData);
-    }
-
-    // No reports were submitted by the current user
-    if (reports.isEmpty) return null;
-
-    return reports;
   }
 }
