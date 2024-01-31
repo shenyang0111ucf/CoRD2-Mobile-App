@@ -27,9 +27,10 @@ class _DisplayMapPageState extends State<DisplayMap> {
   CollectionReference events = FirebaseFirestore.instance.collection('events');
   CollectionReference users = FirebaseFirestore.instance.collection('users');
 
-  void refreshMap() {
-    mapController.move(LatLng(28.538336, -81.379234), 17.0);
-    setState(() {});
+  void refreshMap() async{
+    //mapController.move(LatLng(28.538336, -81.379234), 17.0);
+    //setState(() {});
+    createMarkers();
   }
 
   // instantiate parser, use the defaults
