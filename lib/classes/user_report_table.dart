@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 
 class UserReportsTable extends DataTableSource {
   late BuildContext context;
-  late UserData userData;
+  late UserData _userData;
   late List<EventModel>? events;
   TextStyle reportItem = const TextStyle(fontSize: 16);
 
@@ -15,7 +15,7 @@ class UserReportsTable extends DataTableSource {
   double dataTableWidth = 400;
   Color highlight = const Color(0xff20297A);
 
-  UserReportsTable(this.userData);
+  UserReportsTable(this._userData);
 
   Widget setStatus(bool status) {
     Icon statusIcon;
@@ -243,7 +243,7 @@ class UserReportsTable extends DataTableSource {
             padding: const EdgeInsets.all(8.0),
             child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                child: Text(events![index].title * 10, style: dataStyle)),
+                child: Text(events![index].title, style: dataStyle)),
           ),
         ),
       ),
@@ -302,7 +302,7 @@ class UserReportsTable extends DataTableSource {
                             DataCell(Padding(
                               padding:
                                   const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Text(events![index].description * 5),
+                              child: Text(events![index].description),
                             ))
                           ],
                         ),
