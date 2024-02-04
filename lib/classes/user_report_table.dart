@@ -3,6 +3,7 @@ import 'package:cord2_mobile_app/classes/user_data.dart';
 import 'package:cord2_mobile_app/models/event_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:intl/intl.dart';
 
 class UserReportsTable extends DataTableSource {
@@ -105,7 +106,6 @@ class UserReportsTable extends DataTableSource {
   void setTableWidths() {
     double screenSize = MediaQuery.of(context).size.width;
     double smallScreen = 400;
-    double mediumScreen = 550;
     double largeScreen = 700;
     double xLargeScreen = 800;
 
@@ -187,6 +187,7 @@ class UserReportsTable extends DataTableSource {
                                     (states) => highlight)),
                             onPressed: () {
                               Navigator.pop(context);
+                              deleteReport([events![index].id]);
                               events!.removeAt(index);
                               notifyListeners();
                               print("Delete");
@@ -199,7 +200,6 @@ class UserReportsTable extends DataTableSource {
                         const SizedBox(
                           width: 50,
                         ),
-                        // change to min/max-width
                         ElevatedButton(
                             style: ButtonStyle(
                                 fixedSize: MaterialStateProperty.resolveWith(
@@ -348,5 +348,20 @@ class UserReportsTable extends DataTableSource {
   void refreshData() async {
     events = await UserData.getUserReports();
     notifyListeners();
+  }
+
+  void deleteReport(List<String> reportID) async {
+    print(reportID);
+    bool deletedSuccessfully = await UserData.deleteUserReports(reportID);
+
+    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+      if (!deletedSuccessfully) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("An error occured deleting event")));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Successfully deleted")));
+      }
+    });
   }
 }

@@ -11,11 +11,11 @@ class EventModel {
   final double longitude;
   final Timestamp time;
   final String title;
-  final String? id;
+  final String id;
 
   EventModel(this.active, this.creator, this.description, this.type,
       this.images, this.latitude, this.longitude, this.time, this.title,
-      [this.id]);
+      [this.id = ""]);
 
   EventModel.fromJson(Map<String, dynamic> json)
       : active = json['active'] as bool,
@@ -27,7 +27,7 @@ class EventModel {
         longitude = json['longitude'] as double,
         time = json['time'] as Timestamp,
         title = json['title'] as String,
-        id = json['id'] as String?;
+        id = json['id'] != null ? json['id'] as String : "";
 
   Map<String, dynamic> toJson() => {
         'active': active,

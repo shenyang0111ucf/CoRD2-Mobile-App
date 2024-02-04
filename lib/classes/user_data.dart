@@ -12,9 +12,8 @@ class UserData {
 
   // Get a user's list of reports that they have made
   static Future<List<EventModel>?> getUserReports() async {
-    DocumentSnapshot userDataSnapshot = await _users
-        .doc(FirebaseAuth.instance.currentUser?.uid.toString())
-        .get();
+    DocumentSnapshot userDataSnapshot =
+        await _users.doc(FirebaseAuth.instance.currentUser?.uid).get();
 
     if (!userDataSnapshot.exists) return null;
 
@@ -29,6 +28,7 @@ class UserData {
       Map<String, dynamic> eventData =
           eventsSnapshot.data() as Map<String, dynamic>;
       eventData["id"] = reportID;
+      print(eventData["id"]);
       reports.add(EventModel.fromJson(eventData));
     }
 
@@ -36,5 +36,30 @@ class UserData {
     if (reports.isEmpty) return null;
 
     return reports;
+  }
+
+  // Attempts to delete a list of events.
+  // Returns true when delete was successful, otherwise false.
+  static Future<bool> deleteUserReports(List<String> eventDocIDs) async {
+    bool errorOccurred = false;
+    // Delete each document with the specified ID
+    for (String eventDocID in eventDocIDs) {
+      await _events.doc(eventDocID).delete().catchError((e) {
+        print("Error deleting document $e");
+        errorOccurred = true;
+      });
+
+      // Updates user's event list only when event deletion was successful
+      if (!errorOccurred) {
+        final updates = <String, dynamic>{
+          'events': FieldValue.arrayRemove([eventDocID])
+        };
+
+        await _users
+            .doc(FirebaseAuth.instance.currentUser?.uid)
+            .update(updates);
+      }
+    }
+    return errorOccurred;
   }
 }
