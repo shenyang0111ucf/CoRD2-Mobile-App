@@ -355,7 +355,7 @@ class _ProfilePage extends State<ProfilePage> {
 
   Widget updateUserEmailForm() {
     TextEditingController emailController = TextEditingController();
-
+    
     return Container(
       color: secondary,
       child: SafeArea(
@@ -363,7 +363,7 @@ class _ProfilePage extends State<ProfilePage> {
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 32),
           child: Column(
             children: [
-              const SizedBox(height: 50),
+              const Row(children: [BackButton()],),
               Text(
                 "Change Email",
                 style: TextStyle(
@@ -417,6 +417,7 @@ class _ProfilePage extends State<ProfilePage> {
                             case ConnectionState.done:
                               print(snapshot.data);
                               if (snapshot.data != null) {
+                                // handle error cases
                                 switch (snapshot.data!.code) {
                                   case "requires-recent-login":
                                   case "user-token-expired":
@@ -478,17 +479,8 @@ class _ProfilePage extends State<ProfilePage> {
       print(e);
       return e as FirebaseAuthException?;
     }
-    print("navigating to profile");
-    navigateToProfile();
-    return null;
-  }
 
-  void navigateToProfile() {
-    // Send a snack bar with email verification sent
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ProfilePage()),
-    );
+    return null;
   }
 
   AlertDialog displayEmailAlert(String alertTitle, String alertMsg,
