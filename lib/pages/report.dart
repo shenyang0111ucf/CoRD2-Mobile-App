@@ -24,6 +24,8 @@ class _ReportFormState extends State<ReportForm> {
   String get currentUserId => widget.userId ?? "";
   String imageUrl = '';
   List<String> imageUrls = [];
+  Reference referenceDirImages = FirebaseStorage.instance.ref().child('images');
+  XFile? _imageFile;
 
   @override
   void initState() {
@@ -34,7 +36,6 @@ class _ReportFormState extends State<ReportForm> {
   TextEditingController descriptionCon = TextEditingController();
   TextEditingController titleCon = TextEditingController();
   String selectedCategory = 'Hurricane';
-  File? _imageFile;
   String _error = "";
 
   Future<void> pickImage() async {
@@ -43,24 +44,12 @@ class _ReportFormState extends State<ReportForm> {
 
     if (file == null) {
       return;
+    } else {
+      setState(() {
+        _imageFile = file;
+      });
     }
 
-    print('Image path: ${file.path}');
-
-    String uniqueFileName = DateTime.now().millisecondsSinceEpoch.toString();
-    print('uniquefilename ${uniqueFileName}');
-    Reference referenceRoot = FirebaseStorage.instance.ref();
-    Reference referenceDirImages = referenceRoot.child('images');
-    Reference referenceImageToUpload = referenceDirImages.child(uniqueFileName);
-
-    try {
-      File imageFile = File(file!.path);
-      await referenceImageToUpload.putFile(imageFile);
-      imageUrl = await referenceImageToUpload.getDownloadURL();
-      print('Uploaded image URL: $imageUrl');
-    } catch (error) {
-      print('Error: $error');
-    }
   }
 
   void setError(String msg) {
@@ -80,9 +69,21 @@ class _ReportFormState extends State<ReportForm> {
       setError("Please add a title.");
       return;
     }
-    if(imageUrl.isEmpty){
+    if(_imageFile == null){
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please upload an image!")));
       return;
+    }
+
+    String uniqueFileName = DateTime.now().millisecondsSinceEpoch.toString();
+    Reference referenceImageToUpload = referenceDirImages.child(uniqueFileName);
+
+    try {
+      File imageFile = File(_imageFile!.path);
+      await referenceImageToUpload.putFile(imageFile);
+      imageUrl = await referenceImageToUpload.getDownloadURL();
+      print('Uploaded image URL: $imageUrl');
+    } catch (error) {
+      print('Error: $error');
     }
 
     imageUrls.add(imageUrl);
