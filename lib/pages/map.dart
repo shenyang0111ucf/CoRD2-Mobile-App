@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cord2_mobile_app/pages/search.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:flutter_map/flutter_map.dart';
@@ -8,17 +9,18 @@ import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-class DisplayMap extends StatefulWidget {
-  const DisplayMap({super.key});
+import '../models/point_data.dart';
 
+class DisplayMap extends StatefulWidget {
   @override
-  State<DisplayMap> createState() => _DisplayMapPageState();
+  State<DisplayMap> createState() => DisplayMapPageState();
 }
 
-class _DisplayMapPageState extends State<DisplayMap> {
+class DisplayMapPageState extends State<DisplayMap> {
   final double latitude = 28.5384;
   final double longitude = -81.3789;
   late List<Marker> _markers = [];
+  late List<PointData> _data = [];
   // related to lotis data
   late List<Marker> school_markers = [];
   late List<Marker> sunrail_markers = [];
@@ -27,9 +29,13 @@ class _DisplayMapPageState extends State<DisplayMap> {
   CollectionReference events = FirebaseFirestore.instance.collection('events');
   CollectionReference users = FirebaseFirestore.instance.collection('users');
 
-  void refreshMap() {
-    mapController.move(LatLng(28.538336, -81.379234), 17.0);
-    setState(() {});
+  void refreshMap() async {
+    mapController.move(LatLng(28.538336, -81.379234), 9.0);
+    createMarkers();
+  }
+
+  void zoomTo(double lat, double lon) {
+    mapController.move(LatLng(lat, lon), 15.0);
   }
 
   // instantiate parser, use the defaults
@@ -72,13 +78,13 @@ class _DisplayMapPageState extends State<DisplayMap> {
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.vertical(
+                            borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(20.0)),
                             color: Colors.grey[300],
                           ),
                           child: Center(
                             child: Text(map['FID'].toString(), // all have
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 )),
@@ -112,7 +118,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.vertical(
+                            borderRadius: const BorderRadius.vertical(
                                 bottom: Radius.circular(20.0)),
                             color: Colors.grey[300],
                           ),
@@ -136,6 +142,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
   // shows user submitted reports
   void createMarkers() async {
     List<Marker> markers = [];
+    List<PointData> pointData = [];
     // Get docs from collection reference
     QuerySnapshot querySnapshot = await events.get();
     // Get data from docs and convert map to List
@@ -150,8 +157,6 @@ class _DisplayMapPageState extends State<DisplayMap> {
     final allUsers = userSnapshot.docs
         .map((doc) => doc.data() as Map<String, dynamic>)
         .toList();
-
-
 
     // loop through allData and add markers there
     for (var point in allData) {
@@ -179,11 +184,20 @@ class _DisplayMapPageState extends State<DisplayMap> {
               DateFormat.yMEd().add_jms().format(time),
               //point['time'],
             )));
+        pointData.add(PointData(
+            point['latitude'] as double,
+            point['longitude'] as double,
+            point['description'],
+            point['title'],
+            point['eventType'],
+            DateFormat.yMEd().add_jms().format(time),
+            username));
       }
     }
 
     setState(() {
       _markers = markers;
+      _data = pointData;
     });
   }
 
@@ -346,28 +360,37 @@ class _DisplayMapPageState extends State<DisplayMap> {
     super.initState();
   }
 
+  Widget buildMap() {
+    return FlutterMap(
+      mapController: mapController,
+      options: MapOptions(
+          initialCenter: LatLng(latitude, longitude), initialZoom: 9.0),
+      children: [
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: "com.app.demo",
+        ),
+        // replaced with MarkerCLusterLayerWidget
+        /*MarkerLayer(
+            markers: _markers,
+          ),*/
+        _buildClusterLayer(_markers, Colors.blue),
+        _buildClusterLayer(school_markers, Colors.green),
+        _buildClusterLayer(sunrail_markers, Colors.yellow),
+        _buildClusterLayer(transit_markers, Colors.red),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FlutterMap(
-        mapController: mapController,
-        options: MapOptions(
-            initialCenter: LatLng(latitude, longitude), initialZoom: 17.0),
-        children: [
-          TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: "com.app.demo",
-          ),
-          // replaced with MarkerCLusterLayerWidget
-          /*MarkerLayer(
-            markers: _markers,
-          ),*/
-          _buildClusterLayer(_markers, Colors.blue),
-          _buildClusterLayer(school_markers, Colors.green),
-          _buildClusterLayer(sunrail_markers, Colors.yellow),
-          _buildClusterLayer(transit_markers, Colors.red),
-        ],
-      ),
+      body: Search(
+          map: buildMap(),
+          data: _data,
+          onSelect: _showInfoScreen,
+          mapContext: context,
+          zoomTo: zoomTo),
       floatingActionButton: FloatingActionButton(
         onPressed: refreshMap,
         child: const Icon(Icons.refresh),

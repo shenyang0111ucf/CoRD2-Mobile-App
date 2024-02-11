@@ -1,3 +1,4 @@
+import 'package:cord2_mobile_app/pages/map.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
@@ -117,7 +118,7 @@ class _HomePageState extends State<HomePage> {
     // Return the respective page content based on the selected page
     switch (pageName) {
       case "Map":
-        return Center(child: Search());
+        return Center(child: DisplayMap());
       case "Report":
         return Center(child: Text('Report Content'));
       case "Chat":

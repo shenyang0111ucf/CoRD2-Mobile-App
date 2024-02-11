@@ -1,21 +1,29 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import 'map.dart';
+import '../models/point_data.dart';
 
-class Search extends StatefulWidget {
-  const Search({super.key});
+class Search extends StatelessWidget {
+  Search(
+      {Key? key,
+      required this.map,
+      required this.data,
+      required this.onSelect,
+      required this.mapContext,
+      required this.zoomTo})
+      : super(key: key);
+  final Widget map;
+  final List<PointData> data;
+  final Function(
+          BuildContext, String, String, String, double, double, String, String)
+      onSelect;
+  final BuildContext mapContext;
+  final Function(double, double) zoomTo;
 
-  @override
-  _SearchState createState() => _SearchState();
-}
-
-class _SearchState extends State<Search> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: const Center(
-        child: DisplayMap(),
+      body: Center(
+        child: map,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerTop,
       floatingActionButton: Padding(
@@ -24,7 +32,11 @@ class _SearchState extends State<Search> {
           onPressed: () {
             showSearch(
               context: context,
-              delegate: CustomSearchDelegate(),
+              delegate: CustomSearchDelegate(
+                  data: data,
+                  onSelect: onSelect,
+                  mapContext: mapContext,
+                  zoomTo: zoomTo),
             );
           },
           style: ElevatedButton.styleFrom(
@@ -48,6 +60,18 @@ class _SearchState extends State<Search> {
 }
 
 class CustomSearchDelegate extends SearchDelegate<String> {
+  CustomSearchDelegate(
+      {required this.data,
+      required this.onSelect,
+      required this.mapContext,
+      required this.zoomTo});
+  final List<PointData> data;
+  final BuildContext mapContext;
+  final Function(
+          BuildContext, String, String, String, double, double, String, String)
+      onSelect;
+  final Function(double, double) zoomTo;
+
   @override
   List<Widget> buildActions(BuildContext context) {
     return [
@@ -77,47 +101,57 @@ class CustomSearchDelegate extends SearchDelegate<String> {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    return StreamBuilder(
-      stream: FirebaseFirestore.instance.collection('events').snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return CircularProgressIndicator();
-        }
+    List<Map<String, dynamic>> suggestionList = [];
 
-        final List<Map<String, dynamic>> suggestionList = query.isEmpty
-            ? (snapshot.data as QuerySnapshot)
-            .docs
-            .where((doc) => doc['active'] == true)
-            .map((doc) => {
-          'title': doc['title'] as String,
-          'description': doc['description'] as String,
-        })
-            .toList()
-            : (snapshot.data as QuerySnapshot)
-            .docs
-            .where((doc) => doc['active'] == true)
-            .map((doc) => {
-          'title': doc['title'] as String,
-          'description': doc['description'] as String,
-        })
-            .where((element) =>
-        element['title'] != null &&
-            element['title']!
-                .toLowerCase()
-                .contains(query.toLowerCase()))
-            .toList();
+    if (query.isEmpty) {
+      suggestionList = data
+          .map((marker) => {
+                'title': marker.title,
+                'description': marker.description,
+                'latitude': marker.latitude,
+                'longitude': marker.longitude,
+                'creator': marker.creator,
+                'eventType': marker.eventType,
+                'time': marker.formattedDate
+              })
+          .toList();
+    } else {
+      suggestionList = data
+          .where((marker) =>
+              marker.description.toLowerCase().contains(query.toLowerCase()) ||
+              marker.title.toLowerCase().contains(query.toLowerCase()))
+          .map((marker) => {
+                'title': marker.title,
+                'description': marker.description,
+                'latitude': marker.latitude,
+                'longitude': marker.longitude,
+                'creator': marker.creator,
+                'eventType': marker.eventType,
+                'time': marker.formattedDate
+              })
+          .toList();
+    }
 
-        return ListView.builder(
-          itemCount: suggestionList.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              title: Text(suggestionList[index]['title'] ?? ''),
-              onTap: () {}
-                );
-              },
-            );
-          },
-        );
+    return ListView.builder(
+      itemCount: suggestionList.length,
+      itemBuilder: (listContext, index) {
+        return ListTile(
+            title: Text(suggestionList[index]['title'] ?? ''),
+            onTap: () {
+              var selected = suggestionList[index];
+              Navigator.pop(listContext);
+              zoomTo(selected['latitude'] as double,
+                  selected['longitude'] as double);
+              onSelect(
+                  mapContext,
+                  selected['title'],
+                  selected['creator'],
+                  selected['description'],
+                  selected['latitude'] as double,
+                  selected['longitude'] as double,
+                  selected['eventType'],
+                  selected['time']);
+            });
       },
     );
   }
