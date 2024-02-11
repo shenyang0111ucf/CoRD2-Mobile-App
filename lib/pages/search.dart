@@ -13,9 +13,7 @@ class Search extends StatelessWidget {
       : super(key: key);
   final Widget map;
   final List<PointData> data;
-  final Function(
-          BuildContext, String, String, String, double, double, String, String)
-      onSelect;
+  final Function(BuildContext, PointData) onSelect;
   final BuildContext mapContext;
   final Function(double, double) zoomTo;
 
@@ -67,9 +65,7 @@ class CustomSearchDelegate extends SearchDelegate<String> {
       required this.zoomTo});
   final List<PointData> data;
   final BuildContext mapContext;
-  final Function(
-          BuildContext, String, String, String, double, double, String, String)
-      onSelect;
+  final Function(BuildContext, PointData) onSelect;
   final Function(double, double) zoomTo;
 
   @override
@@ -101,34 +97,15 @@ class CustomSearchDelegate extends SearchDelegate<String> {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    List<Map<String, dynamic>> suggestionList = [];
+    List<PointData> suggestionList = [];
 
     if (query.isEmpty) {
-      suggestionList = data
-          .map((marker) => {
-                'title': marker.title,
-                'description': marker.description,
-                'latitude': marker.latitude,
-                'longitude': marker.longitude,
-                'creator': marker.creator,
-                'eventType': marker.eventType,
-                'time': marker.formattedDate
-              })
-          .toList();
+      suggestionList = data;
     } else {
       suggestionList = data
           .where((marker) =>
               marker.description.toLowerCase().contains(query.toLowerCase()) ||
               marker.title.toLowerCase().contains(query.toLowerCase()))
-          .map((marker) => {
-                'title': marker.title,
-                'description': marker.description,
-                'latitude': marker.latitude,
-                'longitude': marker.longitude,
-                'creator': marker.creator,
-                'eventType': marker.eventType,
-                'time': marker.formattedDate
-              })
           .toList();
     }
 
@@ -136,21 +113,12 @@ class CustomSearchDelegate extends SearchDelegate<String> {
       itemCount: suggestionList.length,
       itemBuilder: (listContext, index) {
         return ListTile(
-            title: Text(suggestionList[index]['title'] ?? ''),
+            title: Text(suggestionList[index].title ?? ''),
             onTap: () {
               var selected = suggestionList[index];
               Navigator.pop(listContext);
-              zoomTo(selected['latitude'] as double,
-                  selected['longitude'] as double);
-              onSelect(
-                  mapContext,
-                  selected['title'],
-                  selected['creator'],
-                  selected['description'],
-                  selected['latitude'] as double,
-                  selected['longitude'] as double,
-                  selected['eventType'],
-                  selected['time']);
+              zoomTo(selected.latitude, selected.longitude);
+              onSelect(mapContext, selected);
             });
       },
     );

@@ -142,7 +142,7 @@ class DisplayMapPageState extends State<DisplayMap> {
   // shows user submitted reports
   void createMarkers() async {
     List<Marker> markers = [];
-    List<PointData> pointData = [];
+    List<PointData> points = [];
     // Get docs from collection reference
     QuerySnapshot querySnapshot = await events.get();
     // Get data from docs and convert map to List
@@ -168,50 +168,43 @@ class DisplayMapPageState extends State<DisplayMap> {
 
       // if active show/add, otherwise dont show
       if (point['active'] == true) {
-        markers.add(Marker(
-            point: LatLng(
-                point['latitude'] as double, point['longitude'] as double),
-            width: 56,
-            height: 56,
-            child: customMarker(
-              point['title'],
-              username,
-              point['description'],
-              point['latitude'] as double,
-              point['longitude'] as double,
-              point['eventType'],
-              //time,
-              DateFormat.yMEd().add_jms().format(time),
-              //point['time'],
-            )));
-        pointData.add(PointData(
+        var pointData = PointData(
             point['latitude'] as double,
             point['longitude'] as double,
             point['description'],
             point['title'],
             point['eventType'],
             DateFormat.yMEd().add_jms().format(time),
-            username));
+            username);
+
+        markers.add(Marker(
+            point: LatLng(
+                point['latitude'] as double, point['longitude'] as double),
+            width: 56,
+            height: 56,
+            child: customMarker(pointData)
+        ));
+        points.add(pointData);
       }
     }
 
     setState(() {
       _markers = markers;
-      _data = pointData;
+      _data = points;
     });
   }
 
-  MouseRegion customMarker(title, user, desc, lat, lon, eType, timeSub) {
+  MouseRegion customMarker(PointData pointData) {
     return MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
             onTap: () => _showInfoScreen(
-                context, title, user, desc, lat, lon, eType, timeSub),
+                context, pointData),
             child: const Icon(Icons.person_pin_circle_rounded)));
   }
 
   // shows user submitted points
-  void _showInfoScreen(context, title, user, desc, lat, lon, eType, timeSub) {
+  void _showInfoScreen(BuildContext context, PointData pointData) {
     showModalBottomSheet(
         useRootNavigator: true,
         context: context,
@@ -256,7 +249,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
                                     ),
-                                    '$title')),
+                                    pointData.title)),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -266,7 +259,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                                         //fontSize: 24,
                                         //fontWeight: FontWeight.bold,
                                         ),
-                                    'Submitted by: $user')),
+                                    'Submitted by: ${pointData.creator}')),
                           ),
                           const Padding(
                             padding: EdgeInsets.all(8.0),
@@ -279,7 +272,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                                     style: const TextStyle(
                                       fontSize: 16,
                                     ),
-                                    "$desc")),
+                                    pointData.description)),
                           ),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
@@ -293,7 +286,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                         ),
-                                        '($lat, $lon)'),
+                                        '(${pointData.latitude}, ${pointData.longitude})'),
                                   ],
                                 ),
                                 const SizedBox(
@@ -306,7 +299,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                         ),
-                                        '$eType'),
+                                        pointData.eventType),
                                   ],
                                 ),
                               ],
@@ -314,7 +307,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                           ),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
-                            child: Center(child: Text('$timeSub')),
+                            child: Center(child: Text(pointData.formattedDate)),
                           ),
                         ],
                       ),
