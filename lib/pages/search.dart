@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import '../models/point_data.dart';
 
 class Search extends StatelessWidget {
-  Search(
-      {Key? key,
-      required this.map,
-      required this.data,
-      required this.onSelect,
-      required this.mapContext,
-      required this.zoomTo})
+  Search({
+    Key? key,
+    required this.map,
+    required this.data,
+    required this.onSelect,
+    required this.mapContext,
+    required this.zoomTo
+  })
       : super(key: key);
   final Widget map;
   final List<PointData> data;
@@ -58,11 +59,12 @@ class Search extends StatelessWidget {
 }
 
 class CustomSearchDelegate extends SearchDelegate<String> {
-  CustomSearchDelegate(
-      {required this.data,
-      required this.onSelect,
-      required this.mapContext,
-      required this.zoomTo});
+  CustomSearchDelegate({
+    required this.data,
+    required this.onSelect,
+    required this.mapContext,
+    required this.zoomTo
+  });
   final List<PointData> data;
   final BuildContext mapContext;
   final Function(BuildContext, PointData) onSelect;
@@ -72,7 +74,7 @@ class CustomSearchDelegate extends SearchDelegate<String> {
   List<Widget> buildActions(BuildContext context) {
     return [
       IconButton(
-        icon: Icon(Icons.clear),
+        icon: const Icon(Icons.clear),
         onPressed: () {
           query = '';
         },
@@ -83,7 +85,7 @@ class CustomSearchDelegate extends SearchDelegate<String> {
   @override
   Widget buildLeading(BuildContext context) {
     return IconButton(
-      icon: Icon(Icons.arrow_back),
+      icon: const Icon(Icons.arrow_back),
       onPressed: () {
         close(context, "");
       },
