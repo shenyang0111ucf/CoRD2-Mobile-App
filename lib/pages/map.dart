@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cord2_mobile_app/pages/search.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:flutter_map/flutter_map.dart';
@@ -8,17 +9,18 @@ import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-class DisplayMap extends StatefulWidget {
-  const DisplayMap({super.key});
+import '../models/point_data.dart';
 
+class DisplayMap extends StatefulWidget {
   @override
-  State<DisplayMap> createState() => _DisplayMapPageState();
+  State<DisplayMap> createState() => DisplayMapPageState();
 }
 
-class _DisplayMapPageState extends State<DisplayMap> {
+class DisplayMapPageState extends State<DisplayMap> {
   final double latitude = 28.5384;
   final double longitude = -81.3789;
   late List<Marker> _markers = [];
+  late List<PointData> _data = [];
   // related to lotis data
   late List<Marker> school_markers = [];
   late List<Marker> sunrail_markers = [];
@@ -27,9 +29,13 @@ class _DisplayMapPageState extends State<DisplayMap> {
   CollectionReference events = FirebaseFirestore.instance.collection('events');
   CollectionReference users = FirebaseFirestore.instance.collection('users');
 
-  void refreshMap() {
-    mapController.move(LatLng(28.538336, -81.379234), 17.0);
-    setState(() {});
+  void refreshMap() async {
+    mapController.move(LatLng(28.538336, -81.379234), 9.0);
+    createMarkers();
+  }
+
+  void zoomTo(double lat, double lon) {
+    mapController.move(LatLng(lat, lon), 15.0);
   }
 
   // instantiate parser, use the defaults
@@ -72,13 +78,13 @@ class _DisplayMapPageState extends State<DisplayMap> {
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.vertical(
+                            borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(20.0)),
                             color: Colors.grey[300],
                           ),
                           child: Center(
                             child: Text(map['FID'].toString(), // all have
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 )),
@@ -112,7 +118,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.vertical(
+                            borderRadius: const BorderRadius.vertical(
                                 bottom: Radius.circular(20.0)),
                             color: Colors.grey[300],
                           ),
@@ -136,15 +142,13 @@ class _DisplayMapPageState extends State<DisplayMap> {
   // shows user submitted reports
   void createMarkers() async {
     List<Marker> markers = [];
+    List<PointData> points = [];
     // Get docs from collection reference
     QuerySnapshot querySnapshot = await events.get();
     // Get data from docs and convert map to List
     final allData = querySnapshot.docs
         .map((doc) => doc.data() as Map<String, dynamic>)
         .toList();
-
-    // troublehoot delete later
-    //print(allData);
 
     // get user
     // Get docs from collection reference
@@ -154,19 +158,6 @@ class _DisplayMapPageState extends State<DisplayMap> {
         .map((doc) => doc.data() as Map<String, dynamic>)
         .toList();
 
-    // troubleshoot delete later
-    /*print(allUsers);
-
-    for (var person in allUsers) {
-      print('----------------------------------------------------------------');
-      print('Hello: ');
-      print(person);
-      print(person['name']);
-      print(person['email']);
-      print(person['events']);
-      print('----------------------------------------------------------------');
-    }*/
-
     // loop through allData and add markers there
     for (var point in allData) {
       String theUser;
@@ -174,65 +165,46 @@ class _DisplayMapPageState extends State<DisplayMap> {
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
       String username = data['name'];
       DateTime time = point['time'].toDate();
-      // troubleshoot delete later
-      print('================================================================');
-      print('active status');
-      print(point['active']);
-      print('user');
-      print(username);
-      print('title');
-      print(point['description']);
-      print('event type');
-      print(point['eventType']);
-      print('coordinates');
-      print('latitude');
-      print(point['latitude']);
-      print('longitude');
-      print(point['longitude']);
-      print('time raw');
-      print(point['time']);
-      print('time translate');
-      //print(time);
-      print('================================================================');
 
       // if active show/add, otherwise dont show
       if (point['active'] == true) {
-        //print('DANGER ZONE!');
+        var pointData = PointData(
+            point['latitude'] as double,
+            point['longitude'] as double,
+            point['description'],
+            point['title'],
+            point['eventType'],
+            DateFormat.yMEd().add_jms().format(time),
+            username);
+
         markers.add(Marker(
             point: LatLng(
                 point['latitude'] as double, point['longitude'] as double),
             width: 56,
             height: 56,
-            child: customMarker(
-              point['title'],
-              username,
-              point['description'],
-              point['latitude'] as double,
-              point['longitude'] as double,
-              point['eventType'],
-              //time,
-              DateFormat.yMEd().add_jms().format(time),
-              //point['time'],
-            )));
+            child: customMarker(pointData)
+        ));
+        points.add(pointData);
       }
     }
 
     setState(() {
       _markers = markers;
+      _data = points;
     });
   }
 
-  MouseRegion customMarker(title, user, desc, lat, lon, eType, timeSub) {
+  MouseRegion customMarker(PointData pointData) {
     return MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
             onTap: () => _showInfoScreen(
-                context, title, user, desc, lat, lon, eType, timeSub),
+                context, pointData),
             child: const Icon(Icons.person_pin_circle_rounded)));
   }
 
   // shows user submitted points
-  void _showInfoScreen(context, title, user, desc, lat, lon, eType, timeSub) {
+  void _showInfoScreen(BuildContext context, PointData pointData) {
     showModalBottomSheet(
         useRootNavigator: true,
         context: context,
@@ -277,7 +249,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
                                     ),
-                                    '$title')),
+                                    pointData.title)),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -287,7 +259,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
                                         //fontSize: 24,
                                         //fontWeight: FontWeight.bold,
                                         ),
-                                    'Submitted by: $user')),
+                                    'Submitted by: ${pointData.creator}')),
                           ),
                           const Padding(
                             padding: EdgeInsets.all(8.0),
@@ -300,7 +272,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
                                     style: const TextStyle(
                                       fontSize: 16,
                                     ),
-                                    "$desc")),
+                                    pointData.description)),
                           ),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
@@ -314,7 +286,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                         ),
-                                        '($lat, $lon)'),
+                                        '(${pointData.latitude}, ${pointData.longitude})'),
                                   ],
                                 ),
                                 const SizedBox(
@@ -327,7 +299,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                         ),
-                                        '$eType'),
+                                        pointData.eventType),
                                   ],
                                 ),
                               ],
@@ -335,7 +307,7 @@ class _DisplayMapPageState extends State<DisplayMap> {
                           ),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
-                            child: Center(child: Text('$timeSub')),
+                            child: Center(child: Text(pointData.formattedDate)),
                           ),
                         ],
                       ),
@@ -381,28 +353,37 @@ class _DisplayMapPageState extends State<DisplayMap> {
     super.initState();
   }
 
+  Widget buildMap() {
+    return FlutterMap(
+      mapController: mapController,
+      options: MapOptions(
+          initialCenter: LatLng(latitude, longitude), initialZoom: 9.0),
+      children: [
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: "com.app.demo",
+        ),
+        // replaced with MarkerCLusterLayerWidget
+        /*MarkerLayer(
+            markers: _markers,
+          ),*/
+        _buildClusterLayer(_markers, Colors.blue),
+        _buildClusterLayer(school_markers, Colors.green),
+        _buildClusterLayer(sunrail_markers, Colors.yellow),
+        _buildClusterLayer(transit_markers, Colors.red),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FlutterMap(
-        mapController: mapController,
-        options: MapOptions(
-            initialCenter: LatLng(latitude, longitude), initialZoom: 17.0),
-        children: [
-          TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: "com.app.demo",
-          ),
-          // replaced with MarkerCLusterLayerWidget
-          /*MarkerLayer(
-            markers: _markers,
-          ),*/
-          _buildClusterLayer(_markers, Colors.blue),
-          _buildClusterLayer(school_markers, Colors.green),
-          _buildClusterLayer(sunrail_markers, Colors.yellow),
-          _buildClusterLayer(transit_markers, Colors.red),
-        ],
-      ),
+      body: Search(
+          map: buildMap(),
+          data: _data,
+          onSelect: _showInfoScreen,
+          mapContext: context,
+          zoomTo: zoomTo),
       floatingActionButton: FloatingActionButton(
         onPressed: refreshMap,
         child: const Icon(Icons.refresh),
