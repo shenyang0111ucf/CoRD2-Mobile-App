@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:animations/animations.dart';
 import 'package:cord2_mobile_app/models/event_model.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
@@ -7,6 +6,7 @@ import 'package:cord2_mobile_app/classes/user_report_table.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../classes/user_data.dart';
 
@@ -40,6 +40,21 @@ class _ProfilePage extends State<ProfilePage> {
           child: RefreshIndicator(
             onRefresh: () async {
               (reports as UserReportsTable).refreshData();
+              try {
+                await FirebaseAuth.instance.currentUser?.reload();
+              } on FirebaseAuthException catch (e) {
+                if (e.code == "user-token-expired") {
+                  SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content:
+                            Text("Session Expired. Reauthentication needed."),
+                        backgroundColor: Colors.amber));
+                  });
+                  signOutUser();
+                }
+              }
+
+              //setState(() {});
               return;
             },
             child: ListView(
@@ -78,7 +93,7 @@ class _ProfilePage extends State<ProfilePage> {
                             ),
                           ),
                           displayReports(),
-                          displayUserID(),
+                          displayUserData(),
                           displayResetPasswordButton(),
                           displayChangeEmailButton(context),
                           Padding(
@@ -110,6 +125,27 @@ class _ProfilePage extends State<ProfilePage> {
           ),
         ),
       ),
+    );
+  }
+
+  // Displays all of the necessary personal data to the user
+  Widget displayUserData() {
+    TextStyle dataNameStyle =
+        TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: primary);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 30),
+            displayUserID(dataNameStyle),
+            const SizedBox(height: 15),
+            displayUserEmail(dataNameStyle),
+            const SizedBox(height: 20),
+          ],
+        )
+      ],
     );
   }
 
@@ -244,7 +280,6 @@ class _ProfilePage extends State<ProfilePage> {
           }
           // set the data table's report data
           userTable.events = snapshot.data;
-          print(userTable.events);
           switch (snapshot.connectionState) {
             case ConnectionState.waiting:
             case ConnectionState.none:
@@ -290,40 +325,64 @@ class _ProfilePage extends State<ProfilePage> {
   }
 
   // Displays the user's username
-  Widget displayUserID() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 30),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Text(
-              "User ID:",
-              style: TextStyle(fontWeight: FontWeight.w500),
-            ),
-            const Padding(padding: EdgeInsets.only(right: 10)),
-            Container(
-              alignment: Alignment.centerLeft,
-              width: 225,
-              height: 30,
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.elliptical(10, 10)),
-                color: Colors.white,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Text(FirebaseAuth.instance.currentUser?.displayName
-                            .toString() ??
-                        "Unavailable.")),
-              ),
-            )
-          ]),
-        ],
+  Widget displayUserID(TextStyle dataNameStyle) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(
+        "ID",
+        style: dataNameStyle,
       ),
-    );
+      const SizedBox(height: 8),
+      //const Padding(padding: EdgeInsets.only(right: 10)),
+      Container(
+        alignment: Alignment.centerLeft,
+        width: 225,
+        height: 30,
+        decoration: const BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.elliptical(10, 10)),
+          color: Colors.white,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Text(
+                  FirebaseAuth.instance.currentUser?.displayName.toString() ??
+                      "Unavailable.")),
+        ),
+      )
+    ]);
+  }
+
+  // Displays the user's email
+  Widget displayUserEmail(TextStyle dataNameStyle) {
+    return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Email",
+            style: dataNameStyle,
+          ),
+          const SizedBox(height: 8),
+          //const Padding(padding: EdgeInsets.only(right: 10)),
+          Container(
+            alignment: Alignment.centerLeft,
+            width: 225,
+            height: 30,
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.elliptical(10, 10)),
+              color: Colors.white,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Text(
+                    FirebaseAuth.instance.currentUser?.email ?? "unavailable."),
+              ),
+            ),
+          )
+        ]);
   }
 
   // Signs out the current user (and should redirect them to login)
@@ -355,7 +414,7 @@ class _ProfilePage extends State<ProfilePage> {
 
   Widget updateUserEmailForm() {
     TextEditingController emailController = TextEditingController();
-    
+
     return Container(
       color: secondary,
       child: SafeArea(
@@ -363,7 +422,9 @@ class _ProfilePage extends State<ProfilePage> {
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 32),
           child: Column(
             children: [
-              const Row(children: [BackButton()],),
+              const Row(
+                children: [BackButton()],
+              ),
               Text(
                 "Change Email",
                 style: TextStyle(
@@ -392,63 +453,92 @@ class _ProfilePage extends State<ProfilePage> {
                   if (emailController.text.isEmpty) return;
 
                   showDialog(
+                    barrierDismissible: false,
                     context: context,
-                    useSafeArea: true,
                     builder: (context) {
                       // Attempt to update email
-                      return FutureBuilder(
-                        future: updateUserEmail(emailController.text),
-                        builder: (context, snapshot) {
-                          switch (snapshot.connectionState) {
-                            case ConnectionState.waiting:
-                            case ConnectionState.none:
-                              return const AlertDialog(
-                                elevation: 10,
-                                content: SizedBox(
-                                  width: 40,
-                                  height: 40,
-                                  child: Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                ),
-                              );
-
-                            case ConnectionState.active:
-                            case ConnectionState.done:
-                              print(snapshot.data);
-                              if (snapshot.data != null) {
-                                // handle error cases
-                                switch (snapshot.data!.code) {
-                                  case "requires-recent-login":
-                                  case "user-token-expired":
-                                    print("requires login");
-                                    return displayEmailAlert(
-                                        "Reauthentication Needed",
-                                        "For security purposes, please login to verify your identity.",
-                                        actions: [
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              signOutUser();
-                                            },
-                                            child: const Text("Ok"),
-                                          )
-                                        ]);
-                                  case "invalid-email":
-                                    print("invalid email");
-                                    return displayEmailAlert("Invalid Email",
-                                        "Please ensure your email is correct.");
-                                  default:
-                                    print(snapshot.data!.code);
-                                    return displayEmailAlert("Error Occured",
-                                        "Please try again later.");
-                                }
-                              }
-
-                              return displayEmailAlert(
-                                  "Verify New Email Address",
-                                  "A verification email has been sent to ${emailController.text}.");
-                          }
+                      return WillPopScope(
+                        onWillPop: () async {
+                          return false;
                         },
+                        child: FutureBuilder(
+                          future: updateUserEmail(emailController.text),
+                          builder: (context, snapshot) {
+                            switch (snapshot.connectionState) {
+                              case ConnectionState.waiting:
+                              case ConnectionState.none:
+                                return const AlertDialog(
+                                  elevation: 10,
+                                  content: SizedBox(
+                                    width: 40,
+                                    height: 40,
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
+                                );
+
+                              case ConnectionState.active:
+                              case ConnectionState.done:
+                                print(snapshot.data);
+                                if (snapshot.data != null) {
+                                  // handle error cases
+                                  switch (snapshot.data!.code) {
+                                    case "requires-recent-login":
+                                    case "user-token-expired":
+                                      print("requires login");
+                                      return displayAlert(
+                                          "Reauthentication Needed",
+                                          "For security purposes, please login to verify your identity.",
+                                          actions: [
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                signOutUser();
+                                              },
+                                              child: const Text("Ok"),
+                                            )
+                                          ]);
+                                    case "invalid-email":
+                                      print("invalid email");
+                                      return displayAlert("Invalid Email",
+                                          "Please ensure your email is correct.");
+                                    case "same-email":
+                                      return displayAlert(
+                                          "Cannot Update to Same Email",
+                                          "You must update to a different email than your current email.");
+                                    // not working
+                                    case "email-already-exists":
+                                    case "email-already-in-use":
+                                      return displayAlert(
+                                          "Email Already in Use",
+                                          "This email is already taken. Please choose a different email.");
+                                    default:
+                                      print(snapshot.data!.code);
+                                      return displayAlert("Error Occured",
+                                          "Please try again later.");
+                                  }
+                                }
+
+                                // Email verification sent successfully, so prepare for reauthentication.
+                                return displayAlert(
+                                  "Verify New Email Address",
+                                  "A verification email has been sent to ${emailController.text}.",
+                                  actions: [
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        signOutUser();
+                                      },
+                                      style: ButtonStyle(
+                                          backgroundColor:
+                                              MaterialStateColor.resolveWith(
+                                                  (states) => highlight)),
+                                      child: const Text("Ok"),
+                                    ),
+                                  ],
+                                );
+                            }
+                          },
+                        ),
                       );
                     },
                   );
@@ -471,27 +561,40 @@ class _ProfilePage extends State<ProfilePage> {
   }
 
   Future<FirebaseAuthException?> updateUserEmail(String newEmail) async {
+    if (FirebaseAuth.instance.currentUser!.email?.compareTo(newEmail) == 0) {
+      print("Tried update with same email");
+      return FirebaseAuthException(code: "same-email");
+    }
+
     print("attempted update for ${newEmail}");
     try {
       await FirebaseAuth.instance.currentUser
           ?.verifyBeforeUpdateEmail(newEmail);
-    } catch (e) {
-      print(e);
-      return e as FirebaseAuthException?;
+    } on FirebaseAuthException catch (e) {
+      print("email update error: ${e.code}");
+      return e;
     }
 
     return null;
   }
 
-  AlertDialog displayEmailAlert(String alertTitle, String alertMsg,
+  // Returns a custom preset alert dialog
+  AlertDialog displayAlert(String alertTitle, String alertMsg,
       {List<Widget>? actions}) {
+    // Default "Ok" button when no actions are passed
     if (actions == null || actions.isEmpty) {
       actions = [
         ElevatedButton(
-            onPressed: () => Navigator.pop(context), child: const Text("Ok"))
+          onPressed: () => Navigator.pop(context),
+          style: ButtonStyle(
+              backgroundColor:
+                  MaterialStateColor.resolveWith((states) => highlight)),
+          child: const Text("Ok"),
+        )
       ];
     }
 
+    // Custom alert dialog
     return AlertDialog(
       title: Text(
         alertTitle,

@@ -262,6 +262,7 @@ class UserReportsTable extends DataTableSource {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const BackButton(),
                     Text(
                       events![index].title,
                       style: const TextStyle(
@@ -270,6 +271,7 @@ class UserReportsTable extends DataTableSource {
                         wordSpacing: 2,
                       ),
                     ),
+                    SizedBox(height: 8),
                     DataTable(
                       columnSpacing: 40,
                       dataTextStyle: dataStyle,
@@ -356,11 +358,13 @@ class UserReportsTable extends DataTableSource {
 
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
       if (!deletedSuccessfully) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("An error occured deleting event")));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("An error occured deleting the event."),
+            backgroundColor: Colors.red));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Successfully deleted")));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Successfully deleted"),
+            backgroundColor: Colors.red));
       }
     });
   }
