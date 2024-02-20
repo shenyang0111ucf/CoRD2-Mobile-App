@@ -7,6 +7,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../classes/user_data.dart';
 
@@ -412,6 +414,15 @@ class _ProfilePage extends State<ProfilePage> {
     return status;
   }
 
+  Future<void> signInWithGoogle() async {
+    GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
+    try {
+      await _googleSignIn.signIn();
+    } catch (error) {
+      print(error);
+    }
+  }
+
   Widget updateUserEmailForm() {
     TextEditingController emailController = TextEditingController();
 
@@ -552,7 +563,18 @@ class _ProfilePage extends State<ProfilePage> {
                     ),
                   ),
                 ),
-              )
+              ),
+              const SizedBox(height: 10),
+              Text("OR",
+                  style: TextStyle(
+                      color: primary,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold)),
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 10.0),
+                child:
+                    SignInButton(Buttons.Google, onPressed: signInWithGoogle),
+              ),
             ],
           ),
         ),
