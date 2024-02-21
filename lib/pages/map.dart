@@ -31,6 +31,7 @@ class DisplayMapPageState extends State<DisplayMap> {
   late MapController mapController;
   CollectionReference events = FirebaseFirestore.instance.collection('events');
   CollectionReference users = FirebaseFirestore.instance.collection('users');
+  String permType = '';
 
   // changed to zoom to users current position and refresh any new data
   void pinpointUser(lat, long) async {
@@ -41,6 +42,23 @@ class DisplayMapPageState extends State<DisplayMap> {
 
   void zoomTo(double lat, double lon) {
     mapController.move(LatLng(lat, lon), 15.0);
+  }
+
+  // takes in type of permission need/want
+  // returns true/false if have/need perm
+  Future<bool> checkPerms(String permType) async {
+    if (permType == 'cameraPerm') {
+      // logic for camera permission here
+    }
+    if (permType == 'locationPerm') {
+      final status = await permissionLocation.request();
+
+      if (status.isGranted) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   // instantiate parser, use the defaults
@@ -391,32 +409,34 @@ class DisplayMapPageState extends State<DisplayMap> {
           zoomTo: zoomTo),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final status = await permissionLocation.request();
-          if (status.isGranted) {
+          var permResult = await checkPerms('locationPerm');
+          if (permResult == true) {
             final position = await Geolocator.getCurrentPosition();
             pinpointUser(position.latitude, position.longitude);
           } else {
             showDialog(
                 context: context,
                 builder: (BuildContext context) => AlertDialog(
-                  title: const Text('Location Access Denied'),
-                  content: const Text('Please enable Location Access, you can'
-                      'change this later in app settings.'),
-                  actions: <Widget> [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, 'Cancel'),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        openAppSettings();
-                        Navigator.pop(context, 'OK');
-                      },
-                      child: const Text('OK'),
-                    )
-                  ]
+                    title: const Text('Location Access Denied'),
+                    content: const Text('Please enable Location Access, you can'
+                        'change this later in app settings.'),
+                    actions: <Widget> [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, 'Cancel'),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          openAppSettings();
+                          Navigator.pop(context, 'OK');
+                        },
+                        child: const Text('OK'),
+                      )
+                    ]
                 )
             );
+            // use default location or insist on current position?
+            //pinpointUser(latitude, longitude);
           }
         },
         child: const Icon(Icons.location_searching_rounded),
