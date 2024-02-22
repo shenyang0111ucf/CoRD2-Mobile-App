@@ -46,6 +46,7 @@ dependencies:
   flutter_map_geojson: ^1.0.6
   flutter_map_marker_cluster: any
   intl: ^0.18.1
+  paginated_list: ^1.2.3
 
 dev_dependencies:
   flutter_test:
