@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../models/point_data.dart';
 
@@ -19,6 +21,7 @@ class DisplayMap extends StatefulWidget {
 class DisplayMapPageState extends State<DisplayMap> {
   final double latitude = 28.5384;
   final double longitude = -81.3789;
+  final permissionLocation = Permission.location;
   late List<Marker> _markers = [];
   late List<PointData> _data = [];
   // related to lotis data
@@ -28,14 +31,34 @@ class DisplayMapPageState extends State<DisplayMap> {
   late MapController mapController;
   CollectionReference events = FirebaseFirestore.instance.collection('events');
   CollectionReference users = FirebaseFirestore.instance.collection('users');
+  String permType = '';
 
-  void refreshMap() async {
-    mapController.move(LatLng(28.538336, -81.379234), 9.0);
+  // changed to zoom to users current position and refresh any new data
+  void pinpointUser(lat, long) async {
+    //mapController.move(LatLng(28.538336, -81.379234), 9.0);
+    mapController.move(LatLng(lat, long), 15.0);
     createMarkers();
   }
 
   void zoomTo(double lat, double lon) {
     mapController.move(LatLng(lat, lon), 15.0);
+  }
+
+  // takes in type of permission need/want
+  // returns true/false if have/need perm
+  Future<bool> checkPerms(String permType) async {
+    if (permType == 'cameraPerm') {
+      // logic for camera permission here
+    }
+    if (permType == 'locationPerm') {
+      final status = await permissionLocation.request();
+
+      if (status.isGranted) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   // instantiate parser, use the defaults
@@ -385,8 +408,38 @@ class DisplayMapPageState extends State<DisplayMap> {
           mapContext: context,
           zoomTo: zoomTo),
       floatingActionButton: FloatingActionButton(
-        onPressed: refreshMap,
-        child: const Icon(Icons.refresh),
+        onPressed: () async {
+          var permResult = await checkPerms('locationPerm');
+          if (permResult == true) {
+            final position = await Geolocator.getCurrentPosition();
+            pinpointUser(position.latitude, position.longitude);
+          } else {
+            showDialog(
+                context: context,
+                builder: (BuildContext context) => AlertDialog(
+                    title: const Text('Location Access Denied'),
+                    content: const Text('Please enable Location Access, you can'
+                        'change this later in app settings.'),
+                    actions: <Widget> [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, 'Cancel'),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          openAppSettings();
+                          Navigator.pop(context, 'OK');
+                        },
+                        child: const Text('OK'),
+                      )
+                    ]
+                )
+            );
+            // use default location or insist on current position?
+            //pinpointUser(latitude, longitude);
+          }
+        },
+        child: const Icon(Icons.location_searching_rounded),
       ),
     );
   }
