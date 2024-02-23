@@ -5,9 +5,12 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 //import 'firebase_options.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+
+import 'package:permission_handler/permission_handler.dart';
 
 class ReportForm extends StatefulWidget {
   String? userId; // Add a variable to hold the additional String?
@@ -26,6 +29,9 @@ class _ReportFormState extends State<ReportForm> {
   List<String> imageUrls = [];
   Reference referenceDirImages = FirebaseStorage.instance.ref().child('images');
   XFile? _imageFile;
+  final cameraPermission = Permission.camera;
+  final locationPermission = Permission.location;
+  String? permType;
 
   @override
   void initState() {
@@ -38,9 +44,68 @@ class _ReportFormState extends State<ReportForm> {
   String selectedCategory = 'Hurricane';
   String _error = "";
 
+  // takes in type of permission need/want
+  // returns true/false if have/need perm
+  Future<bool> checkPerms(String permType) async {
+    if (permType == null) {
+      print('forgot to specify perm type wanted ie.) camera, location, etc');
+      return false;
+    }
+    if (permType == 'camera') {
+      // logic for camera permission here
+      final status = await Permission.camera.request();
+
+      if (status.isGranted) {
+        return true;
+      }
+    }
+    if (permType == 'location') {
+      final status = await locationPermission.request();
+
+      if (status.isGranted) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   Future<void> pickImage() async {
     ImagePicker picker = ImagePicker();
-    XFile? file = await picker.pickImage(source: ImageSource.camera);
+    bool permResult = await checkPerms('camera');
+    XFile? file;
+
+    if (permResult == true) {
+      file = await picker.pickImage(source: ImageSource.camera);
+    } else {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) => AlertDialog(
+            title: const Text('Camera Access Denied'),
+            content: const Text('Please enable camera access so that we can'
+                'use your camera to take a picture of a hazard to submit. '
+                'You can change this later in app settings'),
+            actions: <Widget> [
+              TextButton(
+                  onPressed: () {
+                    file = null;
+                    Navigator.pop(context, 'Cancel');
+                  },
+                  child: const Text('Cancel')
+              ),
+              TextButton(
+                  onPressed: () {
+                    openAppSettings();
+                    Navigator.pop(context, 'Ok');
+                  },
+                  child: const Text('Ok')
+              ),
+            ],
+          )
+      );
+    }
+
+    //XFile? file = await picker.pickImage(source: ImageSource.camera);
 
     if (file == null) {
       return;
@@ -87,6 +152,47 @@ class _ReportFormState extends State<ReportForm> {
     }
 
     imageUrls.add(imageUrl);
+    bool permResult = await checkPerms('location');
+    var currentLat = 0.0;
+    var currentLong = 0.0;
+    if (permResult == true) {
+      final position = await Geolocator.getCurrentPosition();
+      currentLat = position.latitude;
+      currentLong = position.longitude;
+    } else {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) => AlertDialog(
+            title: const Text('Location Access Denied'),
+            content: const Text('Please enable location access so we can'
+                'properly record the location of the hazard. Otherwise a'
+                'default location will be used, and this could adversely'
+                'affect individuals and first responders near the hazard. '
+                'You can change this later in app settings.'),
+            actions: <Widget> [
+              TextButton(
+                  onPressed: () {
+                    currentLat = 28.544331;
+                    currentLong = -81.191931;
+                    Navigator.pop(context, 'Cancel');
+                  },
+                  child: const Text('Cancel')
+              ),
+              TextButton(
+                  onPressed: () {
+                    openAppSettings();
+                    if (currentLat == 0.0 && currentLong == 0.0) {
+                      currentLat = 28.544331;
+                      currentLong = -81.191931;
+                    }
+                    Navigator.pop(context, 'Ok');
+                  },
+                  child: const Text('Ok')
+              ),
+            ],
+          )
+      );
+    }
 
     Map<String, dynamic> submissionData = {
       'description': descriptionCon.text,
@@ -94,8 +200,8 @@ class _ReportFormState extends State<ReportForm> {
       'images': imageUrls,
       'title': titleCon.text,
       'eventType': selectedCategory,
-      'latitude': 28.544331,
-      'longitude': -81.191931,
+      'latitude': currentLat,
+      'longitude': currentLong,
       'time': DateTime.now(),
     };
 

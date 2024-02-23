@@ -47,6 +47,8 @@ dependencies:
   flutter_map_marker_cluster: any
   image_picker: ^1.0.7
   firebase_storage: ^11.6.0
+  permission_handler: ^11.1.0
+  geolocator: ^10.1.0
 
 dev_dependencies:
   flutter_test:
