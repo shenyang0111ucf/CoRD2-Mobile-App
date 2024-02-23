@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cord2_mobile_app/main.dart';
+import 'package:cord2_mobile_app/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/button_list.dart';
@@ -34,8 +35,7 @@ class _SignOnPageState extends State<SignOnPage> {
   void initState() {
     super.initState();
     // Update the stored user
-    _googleSignIn.onCurrentUserChanged
-        .listen((GoogleSignInAccount? account) => handleGoogleUser(account));
+    _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount? account) => handleGoogleUser(account));
     // Attempt to log in a previously authorized user
     _googleSignIn.signInSilently();
   }
@@ -54,6 +54,8 @@ class _SignOnPageState extends State<SignOnPage> {
       OAuthCredential credential = GoogleAuthProvider.credential(
           accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken
       );
       UserCredential firebaseCred = await FirebaseAuth.instance.signInWithCredential(credential);
 
@@ -61,7 +63,7 @@ class _SignOnPageState extends State<SignOnPage> {
       // Found a user account
       if (doc.exists) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        //homePage();
+        homePage(firebaseCred.user?.uid);
       } else {
         // Need to create a new account
         users
@@ -72,7 +74,7 @@ class _SignOnPageState extends State<SignOnPage> {
           'events': [],
           'chats': []
         })
-            .then((value) => print("Successfully added user!"))
+            .then((value) => homePage(firebaseCred.user?.uid))
             .catchError((err) => print("Failed to add user $err"));
       }
       //homePage();
@@ -104,6 +106,7 @@ class _SignOnPageState extends State<SignOnPage> {
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
           email: emailController.text, password: passController.text
+          email: emailController.text, password: passController.text
       );
 
       users
@@ -114,6 +117,8 @@ class _SignOnPageState extends State<SignOnPage> {
         'events': [],
         'chats': []
       })
+          .then((value) => print("Successfully added user!"))
+          .catchError((err) => print("Failed to add user $err"));
           .then((value) => print("Successfully added user!"))
           .catchError((err) => print("Failed to add user $err"));
     } on FirebaseAuthException catch (e) {
@@ -140,7 +145,7 @@ class _SignOnPageState extends State<SignOnPage> {
           email: emailController.text,
           password: passController.text
       );
-      homePage();
+      homePage(credential.user?.uid);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         setError("No user found for that email");
@@ -152,9 +157,9 @@ class _SignOnPageState extends State<SignOnPage> {
     }
   }
 
-  void homePage() {
+  void homePage(String? userId) {
     Navigator.pushAndRemoveUntil(
-        context, MaterialPageRoute(builder: (context) => HomePage()), (Route route) => false);
+        context, MaterialPageRoute(builder: (context) => HomePage(userId: userId)), (Route route) => false);
   }
 
   FractionallySizedBox createButton(String text, onPressed) {

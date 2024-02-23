@@ -1,4 +1,5 @@
 import 'package:cord2_mobile_app/pages/map.dart';
+import 'package:cord2_mobile_app/pages/report.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
@@ -12,9 +13,33 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(MyApp());
+  runApp(MyApp());
 }
 
+
 class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      home: SignOnPage(),
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  String? userId;
+
+  HomePage({required this.userId});// Track the current page
+
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  String get currentUserId => widget.userId ?? ""; // Using "currentUserId" instead of "userId"
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  String currentPage = "Map";
   const MyApp({super.key});
 
   @override
@@ -34,7 +59,6 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String currentPage = "Map"; // Track the current page
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
