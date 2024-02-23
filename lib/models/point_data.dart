@@ -4,6 +4,7 @@ class PointData {
   final String description;
   final String title;
   final String eventType;
+  final String imageURL;
   final String formattedDate;
   final String creator;
 
@@ -13,6 +14,7 @@ class PointData {
       this.description,
       this.title,
       this.eventType,
+      this.imageURL,
       this.formattedDate,
       this.creator
       );

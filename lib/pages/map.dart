@@ -191,6 +191,7 @@ class DisplayMapPageState extends State<DisplayMap> {
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
       String username = data['name'];
       DateTime time = point['time'].toDate();
+      String imageURL = point['images'].toString();
 
       // if active show/add, otherwise dont show
       if (point['active'] == true) {
@@ -200,6 +201,7 @@ class DisplayMapPageState extends State<DisplayMap> {
             point['description'],
             point['title'],
             point['eventType'],
+            imageURL.substring(1, imageURL.length -1),
             DateFormat.yMEd().add_jms().format(time),
             username);
 
@@ -290,9 +292,11 @@ class DisplayMapPageState extends State<DisplayMap> {
                           Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Center(
-                                child: Text(
-                                  'Insert Image Here'
-                                ),
+                                child: Image.network(
+                                    pointData.imageURL,
+                                  width: 250,
+                                  height: 250,
+                                )
                             ),
                           ),
                           Padding(
