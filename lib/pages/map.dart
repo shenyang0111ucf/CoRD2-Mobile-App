@@ -33,23 +33,26 @@ class DisplayMapPageState extends State<DisplayMap> {
   CollectionReference users = FirebaseFirestore.instance.collection('users');
   String permType = '';
 
-  // changed to zoom to users current position and refresh any new data
+  // zooms closer to users current position
   void pinpointUser(lat, long) async {
     //mapController.move(LatLng(28.538336, -81.379234), 9.0);
     mapController.move(LatLng(lat, long), 15.0);
-    createMarkers();
+    //createMarkers();
   }
 
+  // zooms closer to selected search result
   void zoomTo(double lat, double lon) {
     mapController.move(LatLng(lat, lon), 15.0);
+  }
+
+  // reloads submitted reports from database
+  void refreshMap() async {
+    createMarkers();
   }
 
   // takes in type of permission need/want
   // returns true/false if have/need perm
   Future<bool> checkPerms(String permType) async {
-    if (permType == 'cameraPerm') {
-      // logic for camera permission here
-    }
     if (permType == 'locationPerm') {
       final status = await permissionLocation.request();
 
@@ -284,9 +287,13 @@ class DisplayMapPageState extends State<DisplayMap> {
                                         ),
                                     'Submitted by: ${pointData.creator}')),
                           ),
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.all(8.0),
-                            child: Center(child: Text('[Insert Image Here]')),
+                            child: Center(
+                                child: Text(
+                                  'Insert Image Here'
+                                ),
+                            ),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -412,6 +419,7 @@ class DisplayMapPageState extends State<DisplayMap> {
           var permResult = await checkPerms('locationPerm');
           if (permResult == true) {
             final position = await Geolocator.getCurrentPosition();
+            refreshMap();
             pinpointUser(position.latitude, position.longitude);
           } else {
             showDialog(
@@ -422,12 +430,16 @@ class DisplayMapPageState extends State<DisplayMap> {
                         'change this later in app settings.'),
                     actions: <Widget> [
                       TextButton(
-                        onPressed: () => Navigator.pop(context, 'Cancel'),
+                        onPressed: () {
+                          refreshMap();
+                          Navigator.pop(context, 'Cancel');
+                        },
                         child: const Text('Cancel'),
                       ),
                       TextButton(
                         onPressed: () {
                           openAppSettings();
+                          refreshMap();
                           Navigator.pop(context, 'OK');
                         },
                         child: const Text('OK'),
