@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cord2_mobile_app/pages/search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_geojson/flutter_map_geojson.dart';
@@ -6,25 +7,58 @@ import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 
+import '../models/point_data.dart';
 
 class DisplayMap extends StatefulWidget {
-  const DisplayMap({super.key});
-
   @override
-  State<DisplayMap> createState() => _DisplayMapPageState();
+  State<DisplayMap> createState() => DisplayMapPageState();
 }
 
-class _DisplayMapPageState extends State<DisplayMap> {
+class DisplayMapPageState extends State<DisplayMap> {
   final double latitude = 28.5384;
   final double longitude = -81.3789;
+  final permissionLocation = Permission.location;
   late List<Marker> _markers = [];
+  late List<PointData> _data = [];
   // related to lotis data
   late List<Marker> school_markers = [];
   late List<Marker> sunrail_markers = [];
   late List<Marker> transit_markers = [];
+  late MapController mapController;
   CollectionReference events = FirebaseFirestore.instance.collection('events');
   CollectionReference users = FirebaseFirestore.instance.collection('users');
+  String permType = '';
+
+  // changed to zoom to users current position and refresh any new data
+  void pinpointUser(lat, long) async {
+    //mapController.move(LatLng(28.538336, -81.379234), 9.0);
+    mapController.move(LatLng(lat, long), 15.0);
+    createMarkers();
+  }
+
+  void zoomTo(double lat, double lon) {
+    mapController.move(LatLng(lat, lon), 15.0);
+  }
+
+  // takes in type of permission need/want
+  // returns true/false if have/need perm
+  Future<bool> checkPerms(String permType) async {
+    if (permType == 'cameraPerm') {
+      // logic for camera permission here
+    }
+    if (permType == 'locationPerm') {
+      final status = await permissionLocation.request();
+
+      if (status.isGranted) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 
   // instantiate parser, use the defaults
   GeoJsonParser geoJsonParser = GeoJsonParser(
@@ -66,17 +100,15 @@ class _DisplayMapPageState extends State<DisplayMap> {
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(20.0)
-                            ),
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(20.0)),
                             color: Colors.grey[300],
-
                           ),
                           child: Center(
                             child: Text(map['FID'].toString(), // all have
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
                                 )),
                           ),
                         ),
@@ -85,10 +117,12 @@ class _DisplayMapPageState extends State<DisplayMap> {
                             color: Colors.grey[300],
                           ),
                           child: Center(
-                            // transit/sunrail both have NAME, school has School_Nam
-                            child: map['NAME'] != null ?
-                            Text(map['NAME'], style: TextStyle(fontSize: 12)) :
-                            Text(map['School_Nam'], style: TextStyle(fontSize: 12)),
+                            // transit/sunrail both have StrName, school has School_Nam
+                            child: map['School_Nam'] != null
+                                ? Text(map['School_Nam'],
+                                    style: TextStyle(fontSize: 12))
+                                : Text(map['StrName'],
+                                    style: TextStyle(fontSize: 12)),
                           ),
                         ),
                         Container(
@@ -97,32 +131,27 @@ class _DisplayMapPageState extends State<DisplayMap> {
                           ),
                           child: Center(
                             // transit/sunrail both have City, school has School_Dst
-                            child: map['City'] != null ?
-                            Text(map['City'], style: TextStyle(fontSize: 12)) :
-                            Text(map['School_Dst'], style: TextStyle(fontSize: 12)),
+                            child: map['City'] != null
+                                ? Text(map['City'],
+                                    style: TextStyle(fontSize: 12))
+                                : Text(map['School_Dst'],
+                                    style: TextStyle(fontSize: 12)),
                           ),
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.vertical(
-                                bottom: Radius.circular(20.0)
-                            ),
+                            borderRadius: const BorderRadius.vertical(
+                                bottom: Radius.circular(20.0)),
                             color: Colors.grey[300],
                           ),
                           child: Center(
                             // transit/sunrail have Type, school has School_Typ
-                            child: map['School_Typ'] != null ?
-                            Text(map['School_Typ'], style: TextStyle(fontSize: 12)) :
-                            Text(map['Type'], style: TextStyle(fontSize: 12)),
+                            child: map['School_Typ'] != null
+                                ? Text(map['School_Typ'],
+                                    style: TextStyle(fontSize: 12))
+                                : Text(map['Type'],
+                                    style: TextStyle(fontSize: 12)),
                           ),
-                        ),
-                        Container(
-                          child: map['School_Typ'] != null && map['School_Typ'].isNotEmpty ?
-                          Text(map['School_Typ'], style: TextStyle(fontSize: 12)) :
-                          map['Type'] != null && map['Type'].isNotEmpty ?
-                          Text(map['Type'], style: TextStyle(fontSize: 12)) :
-                          Text('No Data Available'), // Or display a placeholder text if both values are empty
-
                         ),
                       ],
                     ),
@@ -132,16 +161,22 @@ class _DisplayMapPageState extends State<DisplayMap> {
         });
   }
 
-  void createMarkers() async{
+  // shows user submitted reports
+  void createMarkers() async {
     List<Marker> markers = [];
+    List<PointData> points = [];
     // Get docs from collection reference
     QuerySnapshot querySnapshot = await events.get();
     // Get data from docs and convert map to List
-    final allData = querySnapshot.docs.map((doc) => doc.data()as Map<String, dynamic>).toList();
-
+    final allData = querySnapshot.docs
+        .map((doc) => doc.data() as Map<String, dynamic>)
+        .toList();
 
     QuerySnapshot userSnapshot = await users.get();
-    final allUsers = userSnapshot.docs.map((doc) => doc.data()as Map<String, dynamic>).toList();
+    // Get data from docs and convert map to List
+    final allUsers = userSnapshot.docs
+        .map((doc) => doc.data() as Map<String, dynamic>)
+        .toList();
 
     // loop through allData and add markers there
     for (var point in allData) {
@@ -150,164 +185,157 @@ class _DisplayMapPageState extends State<DisplayMap> {
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
       String username = data['name'];
       DateTime time = point['time'].toDate();
-      // troubleshoot delete later
 
       // if active show/add, otherwise dont show
       if (point['active'] == true) {
-        //print('DANGER ZONE!');
+        var pointData = PointData(
+            point['latitude'] as double,
+            point['longitude'] as double,
+            point['description'],
+            point['title'],
+            point['eventType'],
+            DateFormat.yMEd().add_jms().format(time),
+            username);
+
         markers.add(Marker(
-            point: LatLng(point['latitude'] as double, point['longitude'] as double),
+            point: LatLng(
+                point['latitude'] as double, point['longitude'] as double),
             width: 56,
             height: 56,
-            child: customMarker(
-              point['title'],
-              username,
-              point['description'],
-              point['latitude']as double,
-              point['longitude'] as double,
-              point['eventType'],
-              //time,
-              DateFormat.yMEd().add_jms().format(time),
-              //point['time'],
-            )
+            child: customMarker(pointData)
         ));
+        points.add(pointData);
       }
     }
 
-  setState(() {
-    _markers = markers;
-  });
-
+    setState(() {
+      _markers = markers;
+      _data = points;
+    });
   }
 
-  MouseRegion customMarker(title, user, desc, lat, lon, eType, timeSub) {
+  MouseRegion customMarker(PointData pointData) {
     return MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
-            onTap: () => _showInfoScreen(context, title, user, desc, lat, lon, eType, timeSub),
-            child: const Icon(Icons.person_pin_circle_rounded)
-        )
-    );
+            onTap: () => _showInfoScreen(
+                context, pointData),
+            child: const Icon(Icons.person_pin_circle_rounded)));
   }
 
   // shows user submitted points
-  void _showInfoScreen(context, title, user, desc, lat, lon, eType, timeSub) {
-    showModalBottomSheet(useRootNavigator: true, context: context, builder: (BuildContext bc) {
-      return Container(
-        decoration:  BoxDecoration(
-          color: Colors.blue[300],
-          borderRadius: BorderRadius.all(Radius.circular(25)),
-        ),
-        child: SizedBox(
-            height: MediaQuery.of(context).size.height * 0.6,
-            width: MediaQuery.of(context).size.width * 1,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.redAccent,
-                      borderRadius: BorderRadius.all(Radius.circular(25)),
+  void _showInfoScreen(BuildContext context, PointData pointData) {
+    showModalBottomSheet(
+        useRootNavigator: true,
+        context: context,
+        builder: (BuildContext bc) {
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.blue[300],
+              borderRadius: BorderRadius.all(Radius.circular(25)),
+            ),
+            child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.6,
+                width: MediaQuery.of(context).size.width * 1,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.redAccent,
+                          borderRadius: BorderRadius.all(Radius.circular(25)),
+                        ),
+                        child: CloseButton(
+                          color: Colors.white,
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ),
                     ),
-                    child: CloseButton(
-                      color: Colors.white,
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.all(25.0),
-                  decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.all(Radius.circular(25)),
-                  ),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Center(
-                            child: Text(
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                '$title')
-                        ),
+                    Container(
+                      margin: const EdgeInsets.all(25.0),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(25)),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Center(
-                            child: Text(
-                                style: const TextStyle(
-                                  //fontSize: 24,
-                                  //fontWeight: FontWeight.bold,
-                                ),
-                                'Submitted by: $user')
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Center(
-                            child: Text('[Insert Image Here]')
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Center(
-                            child: Text(
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                ),
-                                "$desc")
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Row(
-                              children: [
-                                const Text('Coordinates: '),
-                                Text(
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Center(
+                                child: Text(
                                     style: const TextStyle(
+                                      fontSize: 24,
                                       fontWeight: FontWeight.bold,
                                     ),
-                                    '($lat, $lon)'),
-                              ],
-                            ),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            Row(
-                              children: [
-                                const Text('Hazard: '),
-                                Text(
+                                    pointData.title)),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Center(
+                                child: Text(
                                     style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
+                                        //fontSize: 24,
+                                        //fontWeight: FontWeight.bold,
+                                        ),
+                                    'Submitted by: ${pointData.creator}')),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Center(child: Text('[Insert Image Here]')),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Center(
+                                child: Text(
+                                    style: const TextStyle(
+                                      fontSize: 16,
                                     ),
-                                    '$eType'),
+                                    pointData.description)),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Text('Coordinates: '),
+                                    Text(
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        '(${pointData.latitude}, ${pointData.longitude})'),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  width: 5,
+                                ),
+                                Row(
+                                  children: [
+                                    const Text('Hazard: '),
+                                    Text(
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        pointData.eventType),
+                                  ],
+                                ),
                               ],
                             ),
-                          ],
-                        ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Center(child: Text(pointData.formattedDate)),
+                          ),
+                        ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Center(
-                            child: Text('$timeSub')
-                        ),
-                      ),
-
-                    ],
-                  ),
-                )
-              ],
-            )
-        ),
-      );
-    });
+                    )
+                  ],
+                )),
+          );
+        });
   }
 
   Future<void> processData() async {
@@ -336,65 +364,107 @@ class _DisplayMapPageState extends State<DisplayMap> {
   }
 
   @override
-  void initState(){
+  void initState() {
     geoJsonParser.setDefaultMarkerTapCallback(onTapMarkerFunction);
+    mapController = MapController();
     processData();
     createMarkers();
 
     super.initState();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget buildMap() {
     return FlutterMap(
-        options: MapOptions(
-            initialCenter: LatLng(latitude, longitude),
-            initialZoom: 7.0
+      mapController: mapController,
+      options: MapOptions(
+          initialCenter: LatLng(latitude, longitude), initialZoom: 9.0),
+      children: [
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: "com.app.demo",
         ),
-        children: [
-          TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            userAgentPackageName: "com.app.demo",
-          ),
-          // replaced with MarkerCLusterLayerWidget
-          /*MarkerLayer(
+        // replaced with MarkerCLusterLayerWidget
+        /*MarkerLayer(
             markers: _markers,
           ),*/
-          _buildClusterLayer(_markers, Colors.blue),
-          _buildClusterLayer(school_markers, Colors.green),
-          _buildClusterLayer(sunrail_markers, Colors.yellow),
-          _buildClusterLayer(transit_markers, Colors.red),
-        ]
+        _buildClusterLayer(_markers, Colors.blue),
+        _buildClusterLayer(school_markers, Colors.green),
+        _buildClusterLayer(sunrail_markers, Colors.yellow),
+        _buildClusterLayer(transit_markers, Colors.red),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Search(
+          map: buildMap(),
+          data: _data,
+          onSelect: _showInfoScreen,
+          mapContext: context,
+          zoomTo: zoomTo),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          var permResult = await checkPerms('locationPerm');
+          if (permResult == true) {
+            final position = await Geolocator.getCurrentPosition();
+            pinpointUser(position.latitude, position.longitude);
+          } else {
+            showDialog(
+                context: context,
+                builder: (BuildContext context) => AlertDialog(
+                    title: const Text('Location Access Denied'),
+                    content: const Text('Please enable Location Access, you can'
+                        'change this later in app settings.'),
+                    actions: <Widget> [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, 'Cancel'),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          openAppSettings();
+                          Navigator.pop(context, 'OK');
+                        },
+                        child: const Text('OK'),
+                      )
+                    ]
+                )
+            );
+            // use default location or insist on current position?
+            //pinpointUser(latitude, longitude);
+          }
+        },
+        child: const Icon(Icons.location_searching_rounded),
+      ),
     );
   }
 
   // handles clustering of points
-  MarkerClusterLayerWidget _buildClusterLayer(List<Marker> markers, Color color) {
+  MarkerClusterLayerWidget _buildClusterLayer(
+      List<Marker> markers, Color color) {
     return MarkerClusterLayerWidget(
-            options: MarkerClusterLayerOptions(
-              maxClusterRadius: 50,
-              size: const Size(40, 40),
-              alignment: Alignment.center,
-              padding: const EdgeInsets.all(50),
-              markers: markers,
-              builder: (context, markers) {
-                return Container(
+        options: MarkerClusterLayerOptions(
+            maxClusterRadius: 75,
+            size: const Size(40, 40),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.all(50),
+            markers: markers,
+            builder: (context, markers) {
+              return Container(
                   alignment: Alignment.center,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
                     color: color,
                   ),
-                  child: Text(
-                    markers.length.toString(),
-                    style:  const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      decoration: TextDecoration.none,
-                    )
-                  )
-                );
-              }
-            ));
+                  child: Text(markers.length.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        decoration: TextDecoration.none,
+                      )));
+            }));
   }
 }

@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:firebase_core/firebase_core.dart';
-
 import 'firebase_options.dart';
 
 void main() async {
@@ -16,6 +15,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
@@ -35,6 +36,7 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String currentPage = "Map"; // Track the current page
 
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,7 +48,7 @@ class _HomePageState extends State<HomePage> {
               currentPage), // Show content based on the current page
           // Circular menu button
           Positioned(
-            top: 30.0,
+            top: 50.0,
             left: 10.0,
             child: InkWell(
               onTap: () {
@@ -98,7 +100,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-      ),
+      )
     );
   }
 
@@ -117,7 +119,7 @@ class _HomePageState extends State<HomePage> {
     // Return the respective page content based on the selected page
     switch (pageName) {
       case "Map":
-        return const Center(child: DisplayMap());
+        return Center(child: DisplayMap());
       case "Report":
         return const Center(child: Text('Report Content'));
       case "Chat":
@@ -136,3 +138,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 }
+
+
+
