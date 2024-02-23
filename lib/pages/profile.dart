@@ -29,9 +29,14 @@ class _ProfilePage extends State<ProfilePage> {
   late final UserReportList _userReportList = UserReportList();
   late List<EventModel>? events;
   late ScrollController _reportScrollController;
+  final ScrollController _profileScrollController = ScrollController();
   Color primary = const Color(0xff5f79BA);
   Color secondary = const Color(0xffD0DCF4);
   Color highlight = const Color(0xff20297A);
+  bool _isLoadingMore = false;
+  bool _noMoreReports = false;
+  String? _lastUsedDocID;
+  final int _reportLimit = 2;
 
   _ProfilePage() {
     reports = UserReportsTable(_userData);
@@ -40,25 +45,9 @@ class _ProfilePage extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _reportScrollController = ScrollController()
-      ..addListener(() {
-        _loadMoreReports();
-      });
+    _reportScrollController = ScrollController()..addListener(_loadMoreReports);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      setUserReports();
-    });
-    // setUserReports();
-  }
-
-  Future<void> _loadMoreReports() async {
-    print("Loaded more reports");
-  }
-
-  Future<void> setUserReports() async {
-    List<EventModel>? reportData = await UserData.getUserReports();
-
-    setState(() {
-      userReports = reportData;
+      _loadReports();
     });
   }
 
@@ -72,12 +61,20 @@ class _ProfilePage extends State<ProfilePage> {
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
           child: RefreshIndicator(
+            triggerMode: RefreshIndicatorTriggerMode.anywhere,
             onRefresh: () async {
-              // (reports as UserReportsTable).refreshData();
-              userReports = await UserData.getUserReports();
-              setState(() {/* Refresh list of user's reports */});
+              // userReports = await UserData.getUserReports();
+              _noMoreReports = false;
+              _lastUsedDocID = null;
+              _isLoadingMore = false;
+              await _loadReports();
+              setState(() {
+                /* Refresh list of user's reports */
+              });
+              // Ensure user authentication status is valid
               try {
                 await FirebaseAuth.instance.currentUser?.reload();
+                // Allow user to login and reauthenticate
               } on FirebaseAuthException catch (e) {
                 if (e.code == "user-token-expired") {
                   SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
@@ -89,88 +86,133 @@ class _ProfilePage extends State<ProfilePage> {
                   signOutUser();
                 }
               }
-
-              //setState(() {});
               return;
             },
-            child: ListView(
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    const Padding(padding: EdgeInsets.only(top: 50)),
-                    Text(
-                      "Profile",
-                      style: TextStyle(
-                          color: primary, fontSize: pageHeadingfontSize),
+            child: SingleChildScrollView(
+              controller: _reportScrollController,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const Padding(padding: EdgeInsets.only(top: 50)),
+                  Text(
+                    "Profile",
+                    style: TextStyle(
+                        color: primary, fontSize: pageHeadingfontSize),
+                  ),
+                  const Padding(padding: EdgeInsets.only(top: 20)),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.only(
+                          topLeft: Radius.elliptical(40, 40),
+                          topRight: Radius.elliptical(40, 40)),
+                      color: secondary,
                     ),
-                    const Padding(padding: EdgeInsets.only(top: 20)),
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.only(
-                            topLeft: Radius.elliptical(40, 40),
-                            topRight: Radius.elliptical(40, 40)),
-                        color: secondary,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Icon(
-                            CupertinoIcons.person_crop_circle,
-                            size: 90,
-                            color: primary,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Icon(
+                          CupertinoIcons.person_crop_circle,
+                          size: 90,
+                          color: primary,
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          child: Text(
+                            "Report Statuses",
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
                           ),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 10),
-                            child: Text(
-                              "Report Statuses",
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          // displayReports(),
-                          displayReportList(),
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                userReports?.clear();
-                              });
-                            },
-                            child: const Text("click"),
-                          ),
-                          displayUserData(),
-                          displayResetPasswordButton(),
-                          displayChangeEmailButton(context),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            child: ElevatedButton(
-                              onPressed: () => signOutUser(),
-                              style: ButtonStyle(
-                                  backgroundColor:
-                                      MaterialStateProperty.all<Color>(
-                                          highlight)),
-                              child: Container(
-                                alignment: Alignment.center,
-                                width: 200,
-                                child: const Text(
-                                  "Logout",
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 16),
-                                ),
+                        ),
+                        displayReportList(),
+                        // ElevatedButton(
+                        //   onPressed: () {
+                        //     setState(() {
+                        //       userReports?.clear();
+                        //     });
+                        //   },
+                        //   child: const Text("click"),
+                        // ),
+                        displayUserData(),
+                        displayResetPasswordButton(),
+                        displayChangeEmailButton(context),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          child: ElevatedButton(
+                            onPressed: () => signOutUser(),
+                            style: ButtonStyle(
+                                backgroundColor:
+                                    MaterialStateProperty.all<Color>(
+                                        highlight)),
+                            child: Container(
+                              alignment: Alignment.center,
+                              width: 200,
+                              child: const Text(
+                                "Logout",
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 16),
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _loadReports() async {
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    userReports =
+        await UserData.getUserReportsWithLimit(_reportLimit, _lastUsedDocID);
+    setState(() {
+      _isLoadingMore = false;
+      _lastUsedDocID = userReports?.last.id;
+      if (userReports != null && userReports!.length < _reportLimit) {
+        _noMoreReports = true;
+      }
+    });
+  }
+
+  Future<void> _loadMoreReports() async {
+    // All reports have been retrieved
+    if (_noMoreReports || _isLoadingMore) return;
+
+    // Bottom of list reached, so load more reports
+    if (_reportScrollController.position.atEdge &&
+        _reportScrollController.position.pixels != 0) {
+      print("Tried loading more reports");
+      if (!_isLoadingMore) {
+        print("Loading more reports");
+        setState(() {
+          _isLoadingMore = true;
+        });
+        print("last used docID $_lastUsedDocID");
+        List<EventModel>? newReports = await UserData.getUserReportsWithLimit(
+            _reportLimit, _lastUsedDocID);
+        print(userReports);
+        print("got reports");
+        setState(() {
+          // Add new reports to the report list
+          if (newReports != null && newReports.isNotEmpty) {
+            userReports?.addAll(newReports);
+            _lastUsedDocID = newReports.last.id;
+            // No more reports left
+          } else if (newReports != null && newReports.length < _reportLimit) {
+            _noMoreReports = true;
+          }
+          _isLoadingMore = false;
+        });
+      }
+    }
   }
 
   // Displays all of the necessary personal data to the user
@@ -394,93 +436,20 @@ class _ProfilePage extends State<ProfilePage> {
         child: Card(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: ListView.builder(
-                controller: _reportScrollController,
-                itemCount: userReports?.length,
-                itemBuilder: (context, index) {
-                  return showFullReport(index);
-                  // return Container(
-                  //     color: Colors.white,
-                  //     child: Row(
-                  //       children: [
-                  //         Text(userReports![index].title),
-                  //       ],
-                  //     ));
-                }),
+            child: Container(
+              height: 150,
+              child: ListView.builder(
+                  shrinkWrap: true,
+                  // physics: ClampingScrollPhysics(),
+                  // controller: _reportScrollController,
+                  itemCount: userReports?.length,
+                  itemBuilder: (context, index) {
+                    return showFullReport(index);
+                  }),
+            ),
           ),
         ),
       ),
-      // FutureBuilder(
-      //     future: UserData.getUserReports(),
-      //     builder: (context, snapshot) {
-      //       if (snapshot.hasError) {
-      //         return const Center(
-      //           child: Column(
-      //             children: [
-      //               Text("An error occured loading reports."),
-      //               Text("Try again later..."),
-      //             ],
-      //           ),
-      //         );
-      //       }
-
-      //       switch (snapshot.connectionState) {
-      //         case ConnectionState.waiting:
-      //         case ConnectionState.none:
-      //           return const CircularProgressIndicator();
-
-      //         case ConnectionState.active:
-      //         case ConnectionState.done:
-      //           if (snapshot.hasError) {
-      //             return const Center(
-      //               child: Text("An error occured while retrieving data."),
-      //             );
-      //           } else if (!snapshot.hasData) {
-      //             return const Text("No reports available.");
-      //           }
-
-      //           userReports = snapshot.data;
-
-      //           // Display table with reports
-      //           return Theme(
-      //             data: Theme.of(context).copyWith(
-      //               dividerColor: Colors.transparent,
-      //               dividerTheme: const DividerThemeData(
-      //                 color: Colors.transparent,
-      //                 space: 0,
-      //                 thickness: 0,
-      //                 indent: 0,
-      //                 endIndent: 0,
-      //               ),
-      //               cardTheme: CardTheme(
-      //                 color: primary,
-      //                 elevation: 4,
-      //                 margin: const EdgeInsets.symmetric(horizontal: 20),
-      //                 shape: RoundedRectangleBorder(
-      //                   borderRadius: BorderRadius.circular(16),
-      //                 ),
-      //               ),
-      //             ),
-      //             child: Card(
-      //               child: Padding(
-      //                 padding: const EdgeInsets.all(16.0),
-      //                 child: ListView.builder(
-      //                     itemCount: userReports?.length,
-      //                     itemBuilder: (context, index) {
-      //                       return showFullReport(index);
-      //                       // return Container(
-      //                       //     color: Colors.white,
-      //                       //     child: Row(
-      //                       //       children: [
-      //                       //         Text(userReports![index].title),
-      //                       //       ],
-      //                       //     ));
-      //                     }),
-      //               ),
-      //             ),
-      //           );
-      //       }
-      //     }),
     );
   }
 
