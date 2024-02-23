@@ -100,7 +100,6 @@ class CustomSearchDelegate extends SearchDelegate<String> {
   @override
   Widget buildSuggestions(BuildContext context) {
     List<PointData> suggestionList = [];
-
     if (query.isEmpty) {
       suggestionList = data;
     } else {

@@ -1,3 +1,4 @@
+import 'package:cord2_mobile_app/pages/chat.dart';
 import 'package:cord2_mobile_app/pages/map.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,6 @@ void main() async {
   runApp(MyApp());
 }
 
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -26,6 +26,8 @@ class MyApp extends StatelessWidget {
 }
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -119,11 +121,11 @@ class _HomePageState extends State<HomePage> {
       case "Map":
         return Center(child: DisplayMap());
       case "Report":
-        return Center(child: Text('Report Content'));
+        return const Center(child: Text('Report Content'));
       case "Chat":
-        return Center(child: Text('Chat Content'));
+        return const Center(child: ChatPage());
       case "Profile":
-        return Center(child: Text('Profile Content'));
+        return const Center(child: Text('Profile Content'));
       default:
         return Container(); // Default empty container
     }

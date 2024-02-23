@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cord2_mobile_app/pages/search.dart';
 import 'package:flutter/material.dart';
-import 'dart:math';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_geojson/flutter_map_geojson.dart';
 import 'package:intl/intl.dart';
@@ -173,8 +172,6 @@ class DisplayMapPageState extends State<DisplayMap> {
         .map((doc) => doc.data() as Map<String, dynamic>)
         .toList();
 
-    // get user
-    // Get docs from collection reference
     QuerySnapshot userSnapshot = await users.get();
     // Get data from docs and convert map to List
     final allUsers = userSnapshot.docs
@@ -352,17 +349,17 @@ class DisplayMapPageState extends State<DisplayMap> {
     ];
 
     // gets geojson from assets
-    String geoJsonData = await rootBundle.loadString(paths[0]);
+    // String geoJsonData = await rootBundle.loadString(paths[0]);
     String geoJsonData2 = await rootBundle.loadString(paths[1]);
-    String geoJsonData3 = await rootBundle.loadString(paths[2]);
+    // String geoJsonData3 = await rootBundle.loadString(paths[2]);
 
     setState(() {
-      geoJsonParser.parseGeoJsonAsString(geoJsonData);
-      sunrail_markers = geoJsonParser.markers;
+      // geoJsonParser.parseGeoJsonAsString(geoJsonData);
+      // sunrail_markers = geoJsonParser.markers;
       geoJsonParser.parseGeoJsonAsString(geoJsonData2);
       school_markers = geoJsonParser.markers;
-      geoJsonParser.parseGeoJsonAsString(geoJsonData3);
-      transit_markers = geoJsonParser.markers;
+      // geoJsonParser.parseGeoJsonAsString(geoJsonData3);
+      // transit_markers = geoJsonParser.markers;
     });
   }
 
