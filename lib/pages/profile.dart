@@ -28,6 +28,7 @@ class _ProfilePage extends State<ProfilePage> {
   bool _noMoreReports = false;
   String? _lastUsedDocID;
   final int _reportLimit = 2;
+  late double _reportSectionPadding;
 
   @override
   void initState() {
@@ -40,7 +41,12 @@ class _ProfilePage extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    double pageHeadingfontSize = 28;
+    // Change style based on device orientation
+    if (MediaQuery.of(context).orientation == Orientation.portrait) {
+      _reportSectionPadding = 0;
+    } else {
+      _reportSectionPadding = 48;
+    }
 
     return Material(
       child: SafeArea(
@@ -83,8 +89,7 @@ class _ProfilePage extends State<ProfilePage> {
                   const Padding(padding: EdgeInsets.only(top: 50)),
                   Text(
                     "Profile",
-                    style: TextStyle(
-                        color: primary, fontSize: pageHeadingfontSize),
+                    style: TextStyle(color: primary, fontSize: 28),
                   ),
                   const Padding(padding: EdgeInsets.only(top: 20)),
                   Container(
@@ -111,7 +116,11 @@ class _ProfilePage extends State<ProfilePage> {
                                 fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                         ),
-                        displayReportList(),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: _reportSectionPadding),
+                          child: displayReportList(),
+                        ),
                         displayUserData(),
                         displayResetPasswordButton(),
                         displayChangeEmailButton(context),
@@ -334,7 +343,6 @@ class _ProfilePage extends State<ProfilePage> {
                 ScrollMetrics scrollMetrics = notification.metrics;
                 // Load more reports when user is near the end of the list
                 if (scrollMetrics.maxScrollExtent - scrollMetrics.pixels < 30) {
-                  print("yes");
                   _loadMoreReports();
                 }
                 return true;
@@ -343,13 +351,105 @@ class _ProfilePage extends State<ProfilePage> {
               child: ListView.builder(
                   itemCount: userReports?.length,
                   itemBuilder: (context, index) {
-                    return showFullReport(index);
+                    return Row(
+                      children: [
+                        Expanded(child: showFullReport(index)),
+                        displayReportDeleteButton(index)
+                      ],
+                    );
                   }),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Widget displayReportDeleteButton(int index) {
+    return IconButton(
+      onPressed: () async => {
+        await showDialog(
+          context: context,
+          useSafeArea: true,
+          builder: (context) {
+            return AlertDialog(
+              actionsAlignment: MainAxisAlignment.center,
+              title: Text(
+                "Delete Report",
+                style: TextStyle(
+                  color: highlight,
+                ),
+              ),
+              elevation: 10,
+              content: const SizedBox(
+                width: 50,
+                child: Text(
+                  "This report will be permanently deleted. Would you like to continue?",
+                  style: TextStyle(
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+              actions: [
+                ElevatedButton(
+                    style: ButtonStyle(
+                        fixedSize: MaterialStateProperty.resolveWith(
+                            (states) => const Size.fromWidth(125)),
+                        backgroundColor: MaterialStateColor.resolveWith(
+                            (states) => highlight)),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      deleteReport([userReports![index].id]);
+                      userReports!.removeAt(index);
+                      print("Delete");
+                    },
+                    child: const Text(
+                      "Delete",
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    )),
+                const SizedBox(
+                  width: 50,
+                ),
+                ElevatedButton(
+                    style: ButtonStyle(
+                        fixedSize: MaterialStateProperty.resolveWith(
+                            (states) => const Size.fromWidth(125)),
+                        backgroundColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.white12)),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      "Back",
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    )),
+              ],
+            );
+          },
+        ),
+      },
+      icon: const Icon(
+        CupertinoIcons.trash,
+        color: Colors.white,
+      ),
+    );
+  }
+
+  void deleteReport(List<String> reportID) async {
+    print(reportID);
+    bool deletedSuccessfully = await UserData.deleteUserReports(reportID);
+
+    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+      if (!deletedSuccessfully) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("An error occured deleting the event."),
+            backgroundColor: Colors.red));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Successfully deleted"),
+            backgroundColor: Colors.red));
+      }
+    });
   }
 
   // Displays the full report that was tapped on in the data table
