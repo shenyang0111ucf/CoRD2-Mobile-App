@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:animations/animations.dart';
-import 'package:cord2_mobile_app/classes/user_report_list.dart';
 import 'package:cord2_mobile_app/models/event_model.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
-import 'package:cord2_mobile_app/classes/user_report_table.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +9,6 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
-import 'package:paginated_list/paginated_list.dart';
 
 import '../classes/user_data.dart';
 
@@ -23,13 +20,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePage extends State<ProfilePage> {
-  final UserData _userData = UserData();
-  late DataTableSource reports;
   late List<EventModel>? userReports = [];
-  late final UserReportList _userReportList = UserReportList();
-  late List<EventModel>? events;
-  late ScrollController _reportScrollController;
-  final ScrollController _profileScrollController = ScrollController();
   Color primary = const Color(0xff5f79BA);
   Color secondary = const Color(0xffD0DCF4);
   Color highlight = const Color(0xff20297A);
@@ -38,14 +29,10 @@ class _ProfilePage extends State<ProfilePage> {
   String? _lastUsedDocID;
   final int _reportLimit = 2;
 
-  _ProfilePage() {
-    reports = UserReportsTable(_userData);
-  }
-
   @override
   void initState() {
     super.initState();
-    _reportScrollController = ScrollController()..addListener(_loadMoreReports);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadReports();
     });
@@ -89,8 +76,8 @@ class _ProfilePage extends State<ProfilePage> {
               return;
             },
             child: SingleChildScrollView(
-              controller: _reportScrollController,
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   const Padding(padding: EdgeInsets.only(top: 50)),
@@ -108,6 +95,7 @@ class _ProfilePage extends State<ProfilePage> {
                       color: secondary,
                     ),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Icon(
@@ -124,14 +112,6 @@ class _ProfilePage extends State<ProfilePage> {
                           ),
                         ),
                         displayReportList(),
-                        // ElevatedButton(
-                        //   onPressed: () {
-                        //     setState(() {
-                        //       userReports?.clear();
-                        //     });
-                        //   },
-                        //   child: const Text("click"),
-                        // ),
                         displayUserData(),
                         displayResetPasswordButton(),
                         displayChangeEmailButton(context),
@@ -187,31 +167,28 @@ class _ProfilePage extends State<ProfilePage> {
     if (_noMoreReports || _isLoadingMore) return;
 
     // Bottom of list reached, so load more reports
-    if (_reportScrollController.position.atEdge &&
-        _reportScrollController.position.pixels != 0) {
-      print("Tried loading more reports");
-      if (!_isLoadingMore) {
-        print("Loading more reports");
-        setState(() {
-          _isLoadingMore = true;
-        });
-        print("last used docID $_lastUsedDocID");
-        List<EventModel>? newReports = await UserData.getUserReportsWithLimit(
-            _reportLimit, _lastUsedDocID);
-        print(userReports);
-        print("got reports");
-        setState(() {
-          // Add new reports to the report list
-          if (newReports != null && newReports.isNotEmpty) {
-            userReports?.addAll(newReports);
-            _lastUsedDocID = newReports.last.id;
-            // No more reports left
-          } else if (newReports != null && newReports.length < _reportLimit) {
-            _noMoreReports = true;
-          }
-          _isLoadingMore = false;
-        });
-      }
+    print("Tried loading more reports");
+    if (!_isLoadingMore) {
+      print("Loading more reports");
+      setState(() {
+        _isLoadingMore = true;
+      });
+      print("last used docID $_lastUsedDocID");
+      List<EventModel>? newReports =
+          await UserData.getUserReportsWithLimit(_reportLimit, _lastUsedDocID);
+      print(userReports);
+      print("got reports");
+      setState(() {
+        // Add new reports to the report list
+        if (newReports != null && newReports.isNotEmpty) {
+          userReports?.addAll(newReports);
+          _lastUsedDocID = newReports.last.id;
+          // No more reports left
+        } else if (newReports != null && newReports.length < _reportLimit) {
+          _noMoreReports = true;
+        }
+        _isLoadingMore = false;
+      });
     }
   }
 
@@ -327,90 +304,6 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
-  // Displays all reports the current user has made
-  Widget displayReports() {
-    TextStyle columnTitle = const TextStyle(color: Colors.white, fontSize: 18);
-    double columnSpacing = 20;
-    UserReportsTable userTable = reports as UserReportsTable;
-    userTable.setContext(context);
-
-    return Theme(
-      data: Theme.of(context).copyWith(
-        dividerColor: Colors.transparent,
-        dividerTheme: const DividerThemeData(
-          color: Colors.transparent,
-          space: 0,
-          thickness: 0,
-          indent: 0,
-          endIndent: 0,
-        ),
-        cardTheme: CardTheme(
-          color: primary,
-          elevation: 4,
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-      ),
-      // Retrieve user's reports
-      child: FutureBuilder<List<EventModel>?>(
-        future: UserData.getUserReports(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const Column(
-              children: [
-                Text("An error occured."),
-                Text("Try again later..."),
-              ],
-            );
-          }
-          // set the data table's report data
-          userTable.events = snapshot.data;
-          switch (snapshot.connectionState) {
-            case ConnectionState.waiting:
-            case ConnectionState.none:
-              return const CircularProgressIndicator();
-
-            case ConnectionState.active:
-            case ConnectionState.done:
-              if (!snapshot.hasData) {
-                return const Text("No reports available.");
-              }
-              // Display table with reports
-              return PaginatedDataTable(
-                source: reports,
-                rowsPerPage: (reports as UserReportsTable).getMaxRowsPerPage(),
-                arrowHeadColor: Colors.white,
-                showFirstLastButtons: true,
-                showCheckboxColumn: false,
-                columnSpacing: columnSpacing,
-                horizontalMargin: 25,
-                columns: [
-                  DataColumn(
-                    label: Expanded(
-                      child: Center(
-                        child: Text(
-                          "Report Name",
-                          style: columnTitle,
-                        ),
-                      ),
-                    ),
-                  ),
-                  DataColumn(
-                    label: Text(
-                      "",
-                      style: columnTitle,
-                    ),
-                  ),
-                ],
-              );
-          }
-        },
-      ),
-    );
-  }
-
   Widget displayReportList() {
     return SizedBox(
       height: 300,
@@ -436,12 +329,18 @@ class _ProfilePage extends State<ProfilePage> {
         child: Card(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Container(
-              height: 150,
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                ScrollMetrics scrollMetrics = notification.metrics;
+                // Load more reports when user is near the end of the list
+                if (scrollMetrics.maxScrollExtent - scrollMetrics.pixels < 30) {
+                  print("yes");
+                  _loadMoreReports();
+                }
+                return true;
+              },
+              // Build reports to display
               child: ListView.builder(
-                  shrinkWrap: true,
-                  // physics: ClampingScrollPhysics(),
-                  // controller: _reportScrollController,
                   itemCount: userReports?.length,
                   itemBuilder: (context, index) {
                     return showFullReport(index);
