@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cord2_mobile_app/pages/messages.dart';
 import 'package:cord2_mobile_app/pages/search.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_geojson/flutter_map_geojson.dart';
@@ -9,7 +12,9 @@ import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:uuid/uuid.dart';
 
+import '../models/chat_model.dart';
 import '../models/point_data.dart';
 
 class DisplayMap extends StatefulWidget {
@@ -182,6 +187,7 @@ class DisplayMapPageState extends State<DisplayMap> {
     for (var point in allData) {
       String theUser;
       DocumentSnapshot doc = await users.doc(point['creator'].toString()).get();
+      if (!mounted) return;
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
       String username = data['name'];
       DateTime time = point['time'].toDate();
@@ -195,7 +201,9 @@ class DisplayMapPageState extends State<DisplayMap> {
             point['title'],
             point['eventType'],
             DateFormat.yMEd().add_jms().format(time),
-            username);
+            username,
+            point['creator']
+        );
 
         markers.add(Marker(
             point: LatLng(
@@ -209,6 +217,7 @@ class DisplayMapPageState extends State<DisplayMap> {
     }
 
     setState(() {
+      if (!mounted) return;
       _markers = markers;
       _data = points;
     });
@@ -329,6 +338,23 @@ class DisplayMapPageState extends State<DisplayMap> {
                             padding: const EdgeInsets.only(bottom: 8.0),
                             child: Center(child: Text(pointData.formattedDate)),
                           ),
+                          Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Center(
+                                  child: GestureDetector(
+                                      onTap: () {
+                                        handleUserChat(pointData.creatorId);
+                                      },
+                                      child: Text(
+                                        "Chat with this user",
+                                        style: TextStyle(
+                                            decoration: TextDecoration.underline,
+                                            fontSize: 24
+                                        ),
+                                      )
+                                  )
+                              )
+                          ),
                         ],
                       ),
                     )
@@ -336,6 +362,55 @@ class DisplayMapPageState extends State<DisplayMap> {
                 )),
           );
         });
+  }
+
+  void handleUserChat(String uid) async {
+    DatabaseReference ref = FirebaseDatabase.instance.ref('chats/${FirebaseAuth.instance.currentUser?.uid}');
+    DataSnapshot snapshot = await ref.get();
+    for (DataSnapshot val in snapshot.children) {
+      final map = val.value as Map?;
+      List<String> participants = map?['participants'].map<String>((val) => val.toString()).toList();
+      bool match = false;
+      for (Object? part in map?['participants']) {
+        Map<String, String> participant = {};
+        if (part.toString() == uid) {
+          match = true;
+          DocumentSnapshot doc = await users.doc(part.toString()).get();
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          participant['name'] = data['name'];
+          participant['uid'] = part.toString();
+          DateTime lastUpdate = DateTime.parse(map!['lastUpdate'].toString());
+          ChatModel chat = ChatModel(participant, participants, lastUpdate, val.key);
+          Navigator.push(context, MaterialPageRoute(builder: (context) => MessagePage(chat: chat)));
+        }
+      }
+      if (match) return;
+    }
+    var chatId = Uuid().v4();
+    DatabaseReference newChat = FirebaseDatabase.instance.ref('chats/${uid}/$chatId');
+    var res = await newChat.update({
+      "lastUpdate": DateTime.now().toString(),
+      "participants": ["${uid}", "${FirebaseAuth.instance.currentUser?.uid}"]
+    });
+    ref = FirebaseDatabase.instance.ref('chats/${FirebaseAuth.instance.currentUser?.uid}/$chatId');
+    res = await ref.update({
+      "lastUpdate": DateTime.now().toString(),
+      "participants": ["${uid}", "${FirebaseAuth.instance.currentUser?.uid}"]
+    });
+    DatabaseReference newMsg = FirebaseDatabase.instance.ref('msgs');
+    res = await newMsg.update({
+      chatId: []
+    });
+    Map<String, String> participant = {};
+    DocumentSnapshot doc = await users.doc(uid).get();
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    participant['name'] = data['name'];
+    participant['uid'] = uid;
+    List<String> participants = [uid, FirebaseAuth.instance.currentUser!.uid];
+    DateTime lastUpdate = DateTime.now();
+
+    ChatModel chat = ChatModel(participant, participants, lastUpdate, chatId);
+    Navigator.push(context, MaterialPageRoute(builder: (context) => MessagePage(chat: chat)));
   }
 
   Future<void> processData() async {

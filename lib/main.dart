@@ -48,7 +48,7 @@ class _HomePageState extends State<HomePage> {
               currentPage), // Show content based on the current page
           // Circular menu button
           Positioned(
-            top: 50.0,
+            top: 35.0,
             left: 10.0,
             child: InkWell(
               onTap: () {
@@ -92,10 +92,11 @@ class _HomePageState extends State<HomePage> {
             const Divider(),
             ListTile(
               title: const Text('Log Out'),
-              onTap: () async {
-                await FirebaseAuth.instance.signOut();
-                Navigator.pushAndRemoveUntil(
-                    context, MaterialPageRoute(builder: (context) => SignOnPage()), (Route route) => false);
+              onTap: () {
+                FirebaseAuth.instance.signOut().then((_) =>
+                  Navigator.pushAndRemoveUntil(
+                    context, MaterialPageRoute(builder: (context) => const SignOnPage()), (Route route) => false)
+                );
               },
             ),
           ],

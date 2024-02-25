@@ -39,6 +39,11 @@ class _MessagePageState extends State<MessagePage> {
     getMessages();
   }
 
+  @override
+  void dispose() {
+    _msgSubscription.cancel();
+  }
+
   void getMessages() {
     setState(() {
       _messages = [];
