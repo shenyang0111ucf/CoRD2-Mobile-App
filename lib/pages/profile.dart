@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:animations/animations.dart';
 import 'package:cord2_mobile_app/models/event_model.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
+import 'package:cord2_mobile_app/classes/user_data.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +10,6 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
-
-import '../classes/user_data.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -26,9 +25,16 @@ class _ProfilePage extends State<ProfilePage> {
   Color highlight = const Color(0xff20297A);
   bool _isLoadingMore = false;
   bool _noMoreReports = false;
+  bool _sortByRecent = true;
   String? _lastUsedDocID;
-  final int _reportLimit = 2;
+  final int _reportLimit = 15;
   late double _reportSectionPadding;
+  // List of sort options for report section
+  static const List<String> _dropdownItems = [
+    "Most Recent",
+    "Oldest First",
+  ];
+  String? _dropdownValue = _dropdownItems.first;
 
   @override
   void initState() {
@@ -160,8 +166,8 @@ class _ProfilePage extends State<ProfilePage> {
       _isLoadingMore = true;
     });
 
-    userReports =
-        await UserData.getUserReportsWithLimit(_reportLimit, _lastUsedDocID);
+    userReports = await UserData.getUserReportsWithLimit(
+        _reportLimit, _lastUsedDocID, _sortByRecent);
     setState(() {
       _isLoadingMore = false;
       _lastUsedDocID = userReports?.last.id;
@@ -183,8 +189,8 @@ class _ProfilePage extends State<ProfilePage> {
         _isLoadingMore = true;
       });
       print("last used docID $_lastUsedDocID");
-      List<EventModel>? newReports =
-          await UserData.getUserReportsWithLimit(_reportLimit, _lastUsedDocID);
+      List<EventModel>? newReports = await UserData.getUserReportsWithLimit(
+          _reportLimit, _lastUsedDocID, _sortByRecent);
       print(userReports);
       print("got reports");
       setState(() {
@@ -315,7 +321,7 @@ class _ProfilePage extends State<ProfilePage> {
 
   Widget displayReportList() {
     return SizedBox(
-      height: 300,
+      height: 450,
       child: Theme(
         data: Theme.of(context).copyWith(
           dividerColor: Colors.transparent,
@@ -338,26 +344,41 @@ class _ProfilePage extends State<ProfilePage> {
         child: Card(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: NotificationListener<ScrollNotification>(
-              onNotification: (notification) {
-                ScrollMetrics scrollMetrics = notification.metrics;
-                // Load more reports when user is near the end of the list
-                if (scrollMetrics.maxScrollExtent - scrollMetrics.pixels < 30) {
-                  _loadMoreReports();
-                }
-                return true;
-              },
-              // Build reports to display
-              child: ListView.builder(
-                  itemCount: userReports?.length,
-                  itemBuilder: (context, index) {
-                    return Row(
-                      children: [
-                        Expanded(child: showFullReport(index)),
-                        displayReportDeleteButton(index)
-                      ],
-                    );
-                  }),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [dropdownSortButton()],
+                ),
+                Container(
+                  constraints:
+                      const BoxConstraints(maxHeight: 370, minHeight: 370),
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      ScrollMetrics scrollMetrics = notification.metrics;
+                      // Load more reports when user is near the end of the list
+                      if (scrollMetrics.maxScrollExtent - scrollMetrics.pixels <
+                          30) {
+                        _loadMoreReports();
+                      }
+                      return true;
+                    },
+                    // Build reports to display
+                    child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: userReports?.length,
+                        itemBuilder: (context, index) {
+                          return Row(
+                            children: [
+                              Expanded(child: showFullReport(index)),
+                              displayReportDeleteButton(index)
+                            ],
+                          );
+                        }),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -365,8 +386,46 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
+  DropdownButton<String> dropdownSortButton() {
+    return DropdownButton<String>(
+      dropdownColor: highlight,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+        letterSpacing: 1,
+      ),
+      iconEnabledColor: secondary,
+      value: _dropdownValue,
+      items: _dropdownItems.map<DropdownMenuItem<String>>((String sortName) {
+        return DropdownMenuItem<String>(
+          value: sortName,
+          child: Text(sortName),
+        );
+      }).toList(),
+      onChanged: (String? value) async {
+        print(value);
+        setState(() {
+          _dropdownValue = value;
+          _lastUsedDocID = null;
+        });
+        // Sort by most recent
+        if (value == _dropdownItems[0]) {
+          _sortByRecent = true;
+          // Sort by oldest first
+        } else if (value == _dropdownItems[1]) {
+          _sortByRecent = false;
+        }
+        print(_sortByRecent);
+        await _loadReports();
+        print("done");
+      },
+    );
+  }
+
   Widget displayReportDeleteButton(int index) {
     return IconButton(
+      padding: EdgeInsets.all(0),
       onPressed: () async => {
         await showDialog(
           context: context,
@@ -457,11 +516,15 @@ class _ProfilePage extends State<ProfilePage> {
     return OpenContainer(
       closedShape:
           RoundedRectangleBorder(borderRadius: calculateRowBorderRadius(index)),
+      closedElevation: 8,
       transitionType: ContainerTransitionType.fadeThrough,
       closedColor: Colors.white,
       openElevation: 4.0,
       closedBuilder: (context, action) => Container(
-        decoration: tableDataColumnDecoration(index),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: calculateRowBorderRadius(index),
+        ),
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -606,25 +669,6 @@ class _ProfilePage extends State<ProfilePage> {
     }
 
     return borderRadius;
-  }
-
-  Widget tableDataColumnBackground(int index, Widget data) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: calculateRowBorderRadius(index),
-      ),
-      child: Center(
-        child: data,
-      ),
-    );
-  }
-
-  Decoration? tableDataColumnDecoration(int index) {
-    return BoxDecoration(
-      color: Colors.white,
-      borderRadius: calculateRowBorderRadius(index),
-    );
   }
 
   // Displays the user's username
@@ -856,7 +900,7 @@ class _ProfilePage extends State<ProfilePage> {
                   );
                 },
                 child: const SizedBox(
-                  width: 132,
+                  width: 190,
                   child: Center(
                     child: Text(
                       "Update",
