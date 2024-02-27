@@ -424,72 +424,75 @@ class _ProfilePage extends State<ProfilePage> {
   }
 
   Widget displayReportDeleteButton(int index) {
-    return IconButton(
-      padding: EdgeInsets.all(0),
-      onPressed: () async => {
-        await showDialog(
-          context: context,
-          useSafeArea: true,
-          builder: (context) {
-            return AlertDialog(
-              actionsAlignment: MainAxisAlignment.center,
-              title: Text(
-                "Delete Report",
-                style: TextStyle(
-                  color: highlight,
-                ),
-              ),
-              elevation: 10,
-              content: const SizedBox(
-                width: 50,
-                child: Text(
-                  "This report will be permanently deleted. Would you like to continue?",
+    return SizedBox(
+      height: 30,
+      child: IconButton(
+        padding: EdgeInsets.all(0),
+        onPressed: () async => {
+          await showDialog(
+            context: context,
+            useSafeArea: true,
+            builder: (context) {
+              return AlertDialog(
+                actionsAlignment: MainAxisAlignment.center,
+                title: Text(
+                  "Delete Report",
                   style: TextStyle(
-                    fontSize: 18,
+                    color: highlight,
                   ),
                 ),
-              ),
-              actions: [
-                ElevatedButton(
-                    style: ButtonStyle(
-                        fixedSize: MaterialStateProperty.resolveWith(
-                            (states) => const Size.fromWidth(125)),
-                        backgroundColor: MaterialStateColor.resolveWith(
-                            (states) => highlight)),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      deleteReport([userReports![index].id]);
-                      userReports!.removeAt(index);
-                      print("Delete");
-                    },
-                    child: const Text(
-                      "Delete",
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    )),
-                const SizedBox(
+                elevation: 10,
+                content: const SizedBox(
                   width: 50,
+                  child: Text(
+                    "This report will be permanently deleted. Would you like to continue?",
+                    style: TextStyle(
+                      fontSize: 18,
+                    ),
+                  ),
                 ),
-                ElevatedButton(
-                    style: ButtonStyle(
-                        fixedSize: MaterialStateProperty.resolveWith(
-                            (states) => const Size.fromWidth(125)),
-                        backgroundColor: MaterialStateColor.resolveWith(
-                            (states) => Colors.white12)),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text(
-                      "Back",
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    )),
-              ],
-            );
-          },
+                actions: [
+                  ElevatedButton(
+                      style: ButtonStyle(
+                          fixedSize: MaterialStateProperty.resolveWith(
+                              (states) => const Size.fromWidth(125)),
+                          backgroundColor: MaterialStateColor.resolveWith(
+                              (states) => highlight)),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        deleteReport([userReports![index].id]);
+                        userReports!.removeAt(index);
+                        print("Delete");
+                      },
+                      child: const Text(
+                        "Delete",
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      )),
+                  const SizedBox(
+                    width: 50,
+                  ),
+                  ElevatedButton(
+                      style: ButtonStyle(
+                          fixedSize: MaterialStateProperty.resolveWith(
+                              (states) => const Size.fromWidth(125)),
+                          backgroundColor: MaterialStateColor.resolveWith(
+                              (states) => Colors.white12)),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        "Back",
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      )),
+                ],
+              );
+            },
+          ),
+        },
+        icon: const Icon(
+          CupertinoIcons.trash,
+          color: Colors.white,
         ),
-      },
-      icon: const Icon(
-        CupertinoIcons.trash,
-        color: Colors.white,
       ),
     );
   }
@@ -516,104 +519,120 @@ class _ProfilePage extends State<ProfilePage> {
     return OpenContainer(
       closedShape:
           RoundedRectangleBorder(borderRadius: calculateRowBorderRadius(index)),
-      closedElevation: 8,
+      closedElevation: 8.0,
       transitionType: ContainerTransitionType.fadeThrough,
       closedColor: Colors.white,
-      openElevation: 4.0,
+      openElevation: 9.0,
       closedBuilder: (context, action) => Container(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: calculateRowBorderRadius(index),
         ),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Text(userReports![index].title, style: dataStyle)),
+        child: SizedBox(
+          height: 52,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Text(userReports![index].title, style: dataStyle)),
+            ),
           ),
         ),
       ),
       openBuilder: (context, action) {
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.vertical,
-              child: Theme(
-                data: ThemeData(),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const BackButton(),
-                    Text(
-                      userReports![index].title,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        wordSpacing: 2,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    DataTable(
-                      columnSpacing: 40,
-                      dataTextStyle: dataStyle,
-                      dataRowMinHeight: 30,
-                      dataRowMaxHeight: double.infinity,
-                      headingRowHeight: 2,
-                      columns: [
-                        DataColumn(label: Container()),
-                        DataColumn(label: Container()),
-                      ],
-                      rows: [
-                        DataRow(
-                          cells: [
-                            const DataCell(Text("Type")),
-                            DataCell(
-                              Flex(
-                                direction: Axis.horizontal,
-                                children: [
-                                  SizedBox(
-                                    child: Text(userReports![index].type),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              FilledButton(
+                  style: ButtonStyle(
+                      backgroundColor: MaterialStateColor.resolveWith(
+                          (states) => Colors.transparent)),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Icon(
+                    CupertinoIcons.back,
+                    color: Colors.black,
+                  )),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: Theme(
+                    data: ThemeData(),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userReports![index].title,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            wordSpacing: 2,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        DataTable(
+                          columnSpacing: 40,
+                          dataTextStyle: dataStyle,
+                          dataRowMinHeight: 30,
+                          dataRowMaxHeight: double.infinity,
+                          headingRowHeight: 2,
+                          columns: [
+                            DataColumn(label: Container()),
+                            DataColumn(label: Container()),
+                          ],
+                          rows: [
+                            DataRow(
+                              cells: [
+                                const DataCell(Text("Type")),
+                                DataCell(
+                                  Flex(
+                                    direction: Axis.horizontal,
+                                    children: [
+                                      SizedBox(
+                                        child: Text(userReports![index].type),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            )
+                                )
+                              ],
+                            ),
+                            DataRow(
+                              cells: [
+                                const DataCell(Text("Description")),
+                                DataCell(Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Text(userReports![index].description),
+                                ))
+                              ],
+                            ),
+                            DataRow(cells: [
+                              const DataCell(Text("Date Created")),
+                              DataCell(
+                                Text(
+                                    "${DateFormat.yMMMd().add_jmz().format(userReports![index].time.toDate())} ${userReports![index].time.toDate().timeZoneName}"),
+                              )
+                            ]),
+                            DataRow(cells: [
+                              const DataCell(Text("Active")),
+                              DataCell(
+                                setStatus(userReports![index].active),
+                              )
+                            ]),
                           ],
-                        ),
-                        DataRow(
-                          cells: [
-                            const DataCell(Text("Description")),
-                            DataCell(Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 8.0),
-                              child: Text(userReports![index].description),
-                            ))
-                          ],
-                        ),
-                        DataRow(cells: [
-                          const DataCell(Text("Date Created")),
-                          DataCell(
-                            Text(
-                                "${DateFormat.yMMMd().add_jmz().format(userReports![index].time.toDate())} ${userReports![index].time.toDate().timeZoneName}"),
-                          )
-                        ]),
-                        DataRow(cells: [
-                          const DataCell(Text("Active")),
-                          DataCell(
-                            setStatus(userReports![index].active),
-                          )
-                        ]),
+                        )
                       ],
-                    )
-                  ],
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         );
       },

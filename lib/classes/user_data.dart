@@ -21,14 +21,14 @@ class UserData {
       if (sortByRecent) {
         userDataSnapshot = await _events
             .where('creator', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-            .orderBy('time')
+            .orderBy('time', descending: true)
             .limit(limit)
             .get();
         // Retrieves the first limit of oldest dated events
       } else {
         userDataSnapshot = await _events
             .where('creator', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-            .orderBy('time', descending: true)
+            .orderBy('time')
             .limit(limit)
             .get();
       }
@@ -40,7 +40,7 @@ class UserData {
           userDataSnapshot = await _events
               .where('creator',
                   isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-              .orderBy('time')
+              .orderBy('time', descending: true)
               .startAfterDocument(lastUsedDoc)
               .limit(limit)
               .get();
@@ -51,7 +51,7 @@ class UserData {
           userDataSnapshot = await _events
               .where('creator',
                   isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-              .orderBy('time', descending: true)
+              .orderBy('time')
               .startAfterDocument(lastUsedDoc)
               .limit(limit)
               .get();
@@ -73,30 +73,6 @@ class UserData {
 
     return reports;
   }
-
-  // // Get the current user's email
-  // static Future<String?> getUserEmail() async {
-  //   DocumentSnapshot userDataSnapshot =
-  //       await _users.doc(FirebaseAuth.instance.currentUser?.uid).get();
-
-  //   if (!userDataSnapshot.exists) return null;
-
-  //   // Return user's email
-  //   return (userDataSnapshot.data() as Map<String, dynamic>)["email"];
-  // }
-
-  // // Set the current user's email
-  // static Future<FirebaseAuthException?> setUserEmail(String newEmail) async {
-  //   FirebaseAuthException? error;
-  //   await _users
-  //       .doc(FirebaseAuth.instance.currentUser?.uid)
-  //       .update({'email': newEmail}).catchError((e) {
-  //     print('Error updating: $e');
-  //     error = e;
-  //   });
-
-  //   return error;
-  // }
 
   // Get a user's list of reports that they have made
   static Future<List<EventModel>?> getUserReports() async {
