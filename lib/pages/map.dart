@@ -48,6 +48,7 @@ class DisplayMapPageState extends State<DisplayMap> {
   // reloads submitted reports from database
   void refreshMap() async {
     createMarkers();
+    mapController.move(LatLng(latitude, longitude), 9.0);
   }
 
   // takes in type of permission need/want
@@ -418,44 +419,55 @@ class DisplayMapPageState extends State<DisplayMap> {
           onSelect: _showInfoScreen,
           mapContext: context,
           zoomTo: zoomTo),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          var permResult = await checkPerms('locationPerm');
-          if (permResult == true) {
-            final position = await Geolocator.getCurrentPosition();
-            refreshMap();
-            pinpointUser(position.latitude, position.longitude);
-          } else {
-            showDialog(
-                context: context,
-                builder: (BuildContext context) => AlertDialog(
-                    title: const Text('Location Access Denied'),
-                    content: const Text('Please enable Location Access, you can'
-                        'change this later in app settings.'),
-                    actions: <Widget> [
-                      TextButton(
-                        onPressed: () {
-                          refreshMap();
-                          Navigator.pop(context, 'Cancel');
-                        },
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          openAppSettings();
-                          refreshMap();
-                          Navigator.pop(context, 'OK');
-                        },
-                        child: const Text('OK'),
-                      )
-                    ]
-                )
-            );
-            // use default location or insist on current position?
-            //pinpointUser(latitude, longitude);
-          }
-        },
-        child: const Icon(Icons.location_searching_rounded),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: <Widget> [
+          FloatingActionButton(
+            onPressed: () {
+              refreshMap();
+            },
+            child: Icon(Icons.refresh),
+          ),
+          SizedBox(
+            height: 10,
+          ),
+          FloatingActionButton(
+            onPressed: () async {
+              var permResult = await checkPerms('locationPerm');
+              if (permResult == true) {
+                final position = await Geolocator.getCurrentPosition();
+                pinpointUser(position.latitude, position.longitude);
+              } else {
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) => AlertDialog(
+                        title: const Text('Location Access Denied'),
+                        content: const Text('Please enable Location Access, you can'
+                            'change this later in app settings.'),
+                        actions: <Widget> [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context, 'Cancel');
+                            },
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              openAppSettings();
+                              Navigator.pop(context, 'OK');
+                            },
+                            child: const Text('OK'),
+                          )
+                        ]
+                    )
+                );
+                // use default location or insist on current position?
+                //pinpointUser(latitude, longitude);
+              }
+            },
+            child: const Icon(Icons.location_searching_rounded),
+          ),
+        ],
       ),
     );
   }
