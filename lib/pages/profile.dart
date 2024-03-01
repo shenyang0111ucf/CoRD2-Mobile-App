@@ -408,6 +408,7 @@ class _ProfilePage extends State<ProfilePage> {
         setState(() {
           _dropdownValue = value;
           _lastUsedDocID = null;
+          _noMoreReports = false;
         });
         // Sort by most recent
         if (value == _dropdownItems[0]) {
