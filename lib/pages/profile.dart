@@ -19,7 +19,8 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePage extends State<ProfilePage> {
-  late List<EventModel>? userReports = [];
+  List<EventModel>? _userReports = [];
+  late List<EventModel>? _filteredReports = [];
   Color primary = const Color(0xff5f79BA);
   Color secondary = const Color(0xffD0DCF4);
   Color highlight = const Color(0xff20297A);
@@ -29,6 +30,13 @@ class _ProfilePage extends State<ProfilePage> {
   String? _lastUsedDocID;
   final int _reportLimit = 15;
   late double _reportSectionPadding;
+  // Search utility vars
+  final TextEditingController _searchTextField = TextEditingController();
+  String _previousSearchText = "";
+  int? _previousReportsLength;
+  int _numOfNewlyAddedReports = 0;
+  bool _isFiltering = false;
+
   // List of sort options for report section
   static const List<String> _dropdownItems = [
     "Most Recent",
@@ -53,7 +61,7 @@ class _ProfilePage extends State<ProfilePage> {
     } else {
       _reportSectionPadding = 48;
     }
-
+    // print(_searchTextField.text);
     return Material(
       child: SafeArea(
         child: SizedBox(
@@ -62,10 +70,13 @@ class _ProfilePage extends State<ProfilePage> {
           child: RefreshIndicator(
             triggerMode: RefreshIndicatorTriggerMode.anywhere,
             onRefresh: () async {
-              // userReports = await UserData.getUserReports();
+              // _userReports = await UserData.getUserReports();
               _noMoreReports = false;
               _lastUsedDocID = null;
               _isLoadingMore = false;
+              setState(() {
+                _searchTextField.text = "";
+              });
               await _loadReports();
               setState(() {
                 /* Refresh list of user's reports */
@@ -165,15 +176,18 @@ class _ProfilePage extends State<ProfilePage> {
     setState(() {
       _isLoadingMore = true;
     });
-
-    userReports = await UserData.getUserReportsWithLimit(
+    print("Search text: ${_searchTextField.text}");
+    _userReports = await UserData.getUserReportsWithLimit(
         _reportLimit, _lastUsedDocID, _sortByRecent);
     setState(() {
       _isLoadingMore = false;
-      _lastUsedDocID = userReports?.last.id;
-      if (userReports != null && userReports!.length < _reportLimit) {
+      if (_userReports != null && (_userReports?.isNotEmpty ?? false)) {
+        _lastUsedDocID = _userReports?.last.id;
+      }
+      if (_userReports != null && _userReports!.length < _reportLimit) {
         _noMoreReports = true;
       }
+      _filteredReports = _userReports;
     });
   }
 
@@ -191,19 +205,21 @@ class _ProfilePage extends State<ProfilePage> {
       print("last used docID $_lastUsedDocID");
       List<EventModel>? newReports = await UserData.getUserReportsWithLimit(
           _reportLimit, _lastUsedDocID, _sortByRecent);
-      print(userReports);
+      print(_userReports);
       print("got reports");
       setState(() {
         // Add new reports to the report list
         if (newReports != null && newReports.isNotEmpty) {
-          userReports?.addAll(newReports);
+          _userReports?.addAll(newReports);
           _lastUsedDocID = newReports.last.id;
           // No more reports left
         } else if (newReports != null && newReports.length < _reportLimit) {
+          print("No more reports left");
           _noMoreReports = true;
         }
         _isLoadingMore = false;
       });
+      filterLazyLoadedReport(_searchTextField.text);
     }
   }
 
@@ -321,7 +337,7 @@ class _ProfilePage extends State<ProfilePage> {
 
   Widget displayReportList() {
     return SizedBox(
-      height: 450,
+      height: 456,
       child: Theme(
         data: Theme.of(context).copyWith(
           dividerColor: Colors.transparent,
@@ -349,11 +365,32 @@ class _ProfilePage extends State<ProfilePage> {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
-                  children: [dropdownSortButton()],
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        decoration: const InputDecoration(
+                          fillColor: Colors.white,
+                          filled: true,
+                          hintText: "Search reports",
+                        ),
+                        controller: _searchTextField,
+                        onChanged: (value) async {
+                          filterLoadedReports(value);
+                        },
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    dropdownSortButton()
+                  ],
+                ),
+                const SizedBox(
+                  height: 12,
                 ),
                 Container(
                   constraints:
-                      const BoxConstraints(maxHeight: 370, minHeight: 370),
+                      const BoxConstraints(maxHeight: 400, minHeight: 0),
                   child: NotificationListener<ScrollNotification>(
                     onNotification: (notification) {
                       ScrollMetrics scrollMetrics = notification.metrics;
@@ -367,7 +404,7 @@ class _ProfilePage extends State<ProfilePage> {
                     // Build reports to display
                     child: ListView.builder(
                         shrinkWrap: true,
-                        itemCount: userReports?.length,
+                        itemCount: _filteredReports?.length,
                         itemBuilder: (context, index) {
                           return Row(
                             children: [
@@ -386,11 +423,100 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
+  filterLoadedReports(String? search) {
+    // if (searchText == null) return;
+    if (search == null || search.isEmpty || _userReports == null) {
+      setState(() {
+        _filteredReports = _userReports;
+        _previousSearchText = search ?? '';
+      });
+      _previousReportsLength = null;
+      return;
+    }
+
+    String searchText = search.toLowerCase();
+    List<EventModel>? newReports = [];
+    // Filter based on all reports
+    if (searchText.length < _previousSearchText.length ||
+        searchText.length == 1) {
+      _userReports?.forEach((report) {
+        if (report.title.toLowerCase().contains(searchText)) {
+          newReports.add(report);
+        }
+        print("Filtered by all");
+      });
+      // setState(() {
+      //   _filteredReports = newReports;
+      // });
+      // Filter based on the last search
+    } else {
+      print("Filtered by last search");
+      // _userReports?.skip(_previousReportsLength as int)
+      _filteredReports?.forEach((report) {
+        if (report.title.toLowerCase().contains(searchText)) {
+          newReports.add(report);
+        }
+      });
+    }
+
+    setState(() {
+      _filteredReports = newReports;
+      _previousSearchText = searchText;
+      _previousReportsLength = _userReports?.length;
+    });
+    // Ensure there is enough reports being displayed on first search
+    // if (newReports.length < _reportLimit) {
+    //   _loadMoreReports();
+    //   print("attemping new report load");
+    // }
+  }
+
+  filterLazyLoadedReport(String? search) async {
+    if (search == null ||
+            search.isEmpty ||
+            _filteredReports == null ||
+            _filteredReports!.isEmpty ||
+            _previousReportsLength == null ||
+            _isLoadingMore ||
+            _isFiltering
+        // ||_noMoreReports
+        ) return;
+    print("Entered filter");
+    setState(() {
+      _isFiltering = true;
+    });
+    int oldNumOfReports = _filteredReports!.length;
+    List<EventModel>? newReports = [];
+    _userReports!.skip(_previousReportsLength as int).forEach((report) {
+      if (report.title.toLowerCase().contains(search)) {
+        newReports.add(report);
+        _numOfNewlyAddedReports++;
+        print("added ${report.title}");
+      }
+    });
+    print("finished adding");
+    setState(() {
+      print("SETTING FILTERED REPORTS");
+      _filteredReports!.addAll(newReports);
+    });
+
+    // if (!_noMoreReports && numOfNewReports < _reportLimit) {
+    //   print("not enough loaded: $numOfNewReports loaded");
+    //   _previousReportsLength = _userReports!.length;
+    //   await _loadMoreReports();
+    // }
+    _previousReportsLength = _userReports!.length;
+    setState(() {
+      // Update reports list
+      _isFiltering = false;
+    });
+  }
+
   DropdownButton<String> dropdownSortButton() {
     return DropdownButton<String>(
       dropdownColor: highlight,
       style: const TextStyle(
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: FontWeight.bold,
         color: Colors.white,
         letterSpacing: 1,
@@ -398,13 +524,17 @@ class _ProfilePage extends State<ProfilePage> {
       iconEnabledColor: secondary,
       value: _dropdownValue,
       items: _dropdownItems.map<DropdownMenuItem<String>>((String sortName) {
+        // print(sortName);
         return DropdownMenuItem<String>(
           value: sortName,
           child: Text(sortName),
         );
       }).toList(),
       onChanged: (String? value) async {
-        print(value);
+        // Same option was chosen, so don't load new reports
+        if (value == _dropdownValue) return;
+        // print(value);
+        // Initialize for a new list of reports
         setState(() {
           _dropdownValue = value;
           _lastUsedDocID = null;
@@ -428,7 +558,7 @@ class _ProfilePage extends State<ProfilePage> {
     return SizedBox(
       height: 30,
       child: IconButton(
-        padding: EdgeInsets.all(0),
+        padding: const EdgeInsets.all(0),
         onPressed: () async => {
           await showDialog(
             context: context,
@@ -461,9 +591,9 @@ class _ProfilePage extends State<ProfilePage> {
                               (states) => highlight)),
                       onPressed: () {
                         Navigator.pop(context);
-                        deleteReport([userReports![index].id]);
-                        userReports!.removeAt(index);
-                        print("Delete");
+                        deleteReport([_filteredReports![index].id]);
+                        _userReports!.removeAt(index);
+                        print("Deleted");
                       },
                       child: const Text(
                         "Delete",
@@ -536,7 +666,8 @@ class _ProfilePage extends State<ProfilePage> {
               padding: const EdgeInsets.all(8.0),
               child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
-                  child: Text(userReports![index].title, style: dataStyle)),
+                  child:
+                      Text(_filteredReports![index].title, style: dataStyle)),
             ),
           ),
         ),
@@ -569,7 +700,7 @@ class _ProfilePage extends State<ProfilePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          userReports![index].title,
+                          _filteredReports![index].title,
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -596,7 +727,8 @@ class _ProfilePage extends State<ProfilePage> {
                                     direction: Axis.horizontal,
                                     children: [
                                       SizedBox(
-                                        child: Text(userReports![index].type),
+                                        child:
+                                            Text(_filteredReports![index].type),
                                       ),
                                     ],
                                   ),
@@ -609,7 +741,8 @@ class _ProfilePage extends State<ProfilePage> {
                                 DataCell(Padding(
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: Text(userReports![index].description),
+                                  child: Text(
+                                      _filteredReports![index].description),
                                 ))
                               ],
                             ),
@@ -617,13 +750,13 @@ class _ProfilePage extends State<ProfilePage> {
                               const DataCell(Text("Date Created")),
                               DataCell(
                                 Text(
-                                    "${DateFormat.yMMMd().add_jmz().format(userReports![index].time.toDate())} ${userReports![index].time.toDate().timeZoneName}"),
+                                    "${DateFormat.yMMMd().add_jmz().format(_filteredReports![index].time.toDate())} ${_filteredReports![index].time.toDate().timeZoneName}"),
                               )
                             ]),
                             DataRow(cells: [
                               const DataCell(Text("Active")),
                               DataCell(
-                                setStatus(userReports![index].active),
+                                setStatus(_filteredReports![index].active),
                               )
                             ]),
                           ],
@@ -670,7 +803,7 @@ class _ProfilePage extends State<ProfilePage> {
     //if (events == null) return null;
 
     // There is only a single row on a page, so create a full border radius
-    if (userReports!.length == 1) {
+    if (_filteredReports!.length == 1) {
       borderRadius = const BorderRadius.all(Radius.circular(10));
     }
     // Starting row has a top border radius
@@ -679,7 +812,7 @@ class _ProfilePage extends State<ProfilePage> {
           topLeft: Radius.circular(10), topRight: Radius.circular(10));
     }
     // Last row has a bottom border radius
-    else if (index == userReports!.length - 1) {
+    else if (index == _filteredReports!.length - 1) {
       borderRadius = const BorderRadius.only(
           bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10));
     }

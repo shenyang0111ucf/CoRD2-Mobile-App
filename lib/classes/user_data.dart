@@ -15,60 +15,41 @@ class UserData {
   static Future<List<EventModel>?> getUserReportsWithLimit(
       int limit, String? lastUsedDocID, bool sortByRecent) async {
     QuerySnapshot? userDataSnapshot;
-    // First time retrieving reports
+    // Retrieves the first limit of events
     if (lastUsedDocID == null) {
-      // Retrieves the first limit of most recent dated events
-      if (sortByRecent) {
-        userDataSnapshot = await _events
-            .where('creator', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-            .orderBy('time', descending: true)
-            .limit(limit)
-            .get();
-        // Retrieves the first limit of oldest dated events
-      } else {
-        userDataSnapshot = await _events
-            .where('creator', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-            .orderBy('time')
-            .limit(limit)
-            .get();
-      }
+      userDataSnapshot = await _events
+          .where('creator', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+          // 'descending' determines whether the list retrieved is sorted
+          // by most recent or oldest.
+          .orderBy('time', descending: sortByRecent)
+          .limit(limit)
+          .get();
       // Retrieves reports from the last document retrieved
     } else {
-      // Retrieves most recent dated events from last document
-      if (sortByRecent) {
-        await _events.doc(lastUsedDocID).get().then((lastUsedDoc) async {
-          userDataSnapshot = await _events
-              .where('creator',
-                  isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-              .orderBy('time', descending: true)
-              .startAfterDocument(lastUsedDoc)
-              .limit(limit)
-              .get();
-        });
-        // Retrieves oldest dated events from last document
-      } else {
-        await _events.doc(lastUsedDocID).get().then((lastUsedDoc) async {
-          userDataSnapshot = await _events
-              .where('creator',
-                  isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-              .orderBy('time')
-              .startAfterDocument(lastUsedDoc)
-              .limit(limit)
-              .get();
-        });
-      }
+      await _events.doc(lastUsedDocID).get().then((lastUsedDoc) async {
+        userDataSnapshot = await _events
+            .where('creator', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+            .orderBy('time', descending: sortByRecent)
+            .startAfterDocument(lastUsedDoc)
+            .limit(limit)
+            .get();
+      }).onError((error, stackTrace) async {
+        print(error);
+      });
     }
     // No reports found
     if (userDataSnapshot?.docs == null) return null;
 
     List<EventModel>? reports = [];
 
-    // Find reports and store them in a list sorting by most recent
+    // Create a list of reports
     for (QueryDocumentSnapshot<Object?> doc in userDataSnapshot!.docs) {
       Map<String, dynamic> eventData = doc.data() as Map<String, dynamic>;
+      print(eventData["title"]);
+      // Get reports that contain the searched text
       eventData["id"] = doc.id;
-      print(eventData["id"]);
       reports.add(EventModel.fromJson(eventData));
+      print(eventData["id"]);
     }
 
     return reports;
