@@ -6,6 +6,7 @@ class PointData {
   final String eventType;
   final String formattedDate;
   final String creator;
+  final String creatorId;
 
   PointData(
       this.latitude,
@@ -14,7 +15,8 @@ class PointData {
       this.title,
       this.eventType,
       this.formattedDate,
-      this.creator
+      this.creator,
+      this.creatorId
       );
 
 }
