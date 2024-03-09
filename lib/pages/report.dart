@@ -8,6 +8,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 //import 'firebase_options.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 import 'dart:io';
 
 import 'package:permission_handler/permission_handler.dart';
@@ -32,9 +33,11 @@ class _ReportFormState extends State<ReportForm> {
   final cameraPermission = Permission.camera;
   final locationPermission = Permission.location;
   String? permType;
+  late MapController mapController;
 
   @override
   void initState() {
+    mapController = MapController();
     super.initState();
     print(currentUserId);
   }
@@ -43,6 +46,8 @@ class _ReportFormState extends State<ReportForm> {
   TextEditingController titleCon = TextEditingController();
   String selectedCategory = 'Hurricane';
   String _error = "";
+  var chooseLat = 0.0;
+  var chooseLng = 0.0;
 
   // takes in type of permission need/want
   // returns true/false if have/need perm
@@ -76,7 +81,12 @@ class _ReportFormState extends State<ReportForm> {
     XFile? file;
 
     if (permResult == true) {
-      file = await picker.pickImage(source: ImageSource.camera);
+      file = await picker.pickImage(
+          source: ImageSource.camera,
+          maxHeight: 640,
+          maxWidth: 640,
+          imageQuality: 50,
+      );
     } else {
       showDialog(
           context: context,
@@ -117,6 +127,65 @@ class _ReportFormState extends State<ReportForm> {
 
   }
 
+  Future<void> pickLocation() async {
+    bool permResult = await checkPerms('location');
+    var currentLat = 0.0;
+    var currentLong = 0.0;
+    if (permResult == true) {
+      final position = await Geolocator.getCurrentPosition();
+      currentLat = position.latitude;
+      currentLong = position.longitude;
+      showModalBottomSheet(
+          context: context,
+          builder: (context) => chooseLocationModal(context, currentLat, currentLong)
+      );
+    } else {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) => AlertDialog(
+            title: const Text('Location Access Denied'),
+            content: const Text('Please enable location access so we can'
+                'get your current location. Otherwise you will need to find'
+                'the location on the map from a generic location. You can '
+                'change this later in app settings.'),
+            actions: <Widget> [
+              TextButton(
+                  onPressed: () {
+                    //currentLat = 28.544331;
+                    //currentLong = -81.191931;
+                    showModalBottomSheet(
+                        context: context,
+                        builder: (context) => chooseLocationModal(
+                            context, 28.544331, -81.191931
+                        )
+                    );
+                    Navigator.pop(context, 'Cancel');
+                  },
+                  child: const Text('Cancel')
+              ),
+              TextButton(
+                  onPressed: () {
+                    openAppSettings();
+                    if (currentLat == 0.0 && currentLong == 0.0) {
+                      //currentLat = 28.544331;
+                      //currentLong = -81.191931;
+                      showModalBottomSheet(
+                          context: context,
+                          builder: (context) => chooseLocationModal(
+                              context, 28.544331, -81.191931
+                          )
+                      );
+                    }
+                    Navigator.pop(context, 'Ok');
+                  },
+                  child: const Text('Ok')
+              ),
+            ],
+          )
+      );
+    }
+  }
+
   void setError(String msg) {
     setState(() {
       _error = msg;
@@ -138,6 +207,14 @@ class _ReportFormState extends State<ReportForm> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please upload an image!")));
       return;
     }
+    if(chooseLat == 0.0 && chooseLng == 0.0){
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Please choose a location for the hazard!")
+          )
+      );
+      return;
+    }
 
     String uniqueFileName = DateTime.now().millisecondsSinceEpoch.toString();
     Reference referenceImageToUpload = referenceDirImages.child(uniqueFileName);
@@ -152,7 +229,8 @@ class _ReportFormState extends State<ReportForm> {
     }
 
     imageUrls.add(imageUrl);
-    bool permResult = await checkPerms('location');
+    // moved to own function
+    /*bool permResult = await checkPerms('location');
     var currentLat = 0.0;
     var currentLong = 0.0;
     if (permResult == true) {
@@ -192,7 +270,7 @@ class _ReportFormState extends State<ReportForm> {
             ],
           )
       );
-    }
+    }*/
 
     Map<String, dynamic> submissionData = {
       'description': descriptionCon.text,
@@ -200,8 +278,8 @@ class _ReportFormState extends State<ReportForm> {
       'images': imageUrls,
       'title': titleCon.text,
       'eventType': selectedCategory,
-      'latitude': currentLat,
-      'longitude': currentLong,
+      'latitude': chooseLat,
+      'longitude': chooseLng,
       'time': DateTime.now(),
     };
 
@@ -221,6 +299,8 @@ class _ReportFormState extends State<ReportForm> {
       print('Error saving submission: $e');
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -333,6 +413,15 @@ class _ReportFormState extends State<ReportForm> {
                         },
                         child: Text('Pick Image'),
                     ),
+                    ElevatedButton(
+                        onPressed: () {
+                          /*showModalBottomSheet(
+                              context: context,
+                              builder: (context) => buildMapModal(context)
+                          );*/
+                          pickLocation();
+                        },
+                        child: const Text('Choose Location')),
                   /*  if(imageUrl.isNotEmpty){
 
                     }*/
@@ -341,7 +430,7 @@ class _ReportFormState extends State<ReportForm> {
                         submitReport(currentUserId);
                       },
                       child: Text('Submit a report.'),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -350,4 +439,70 @@ class _ReportFormState extends State<ReportForm> {
         ),
       );
   }
+
+  Widget chooseLocationModal(BuildContext context, var lat, var lng) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      decoration: BoxDecoration(
+        color: Colors.blue,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(25),
+          topRight: Radius.circular(25),
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Column(
+        children: [
+          Container(
+              padding: EdgeInsets.all(10),
+              child:  FloatingActionButton(
+                backgroundColor: Colors.red,
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Icon(Icons.close),
+              )
+          ),
+          SizedBox(height: 5,),
+          const Text(
+            'Pick a location from the map',
+            style: TextStyle(
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 5,),
+          Container(
+            height: MediaQuery.of(context).size.height * 0.4,
+            width: MediaQuery.of(context).size.width * 0.8,
+            child: FlutterMap(
+              mapController: mapController,
+              options: MapOptions(
+                  initialCenter: LatLng(lat, lng),
+                  initialZoom: 17.0,
+                  onTap: (tapPosition, point) => {
+                    print(point.toString()),
+                    // create a chooseLat/lng and have setstate set them here
+                    // otherwise use user's current location?
+                    setState(() {
+                      chooseLat = point.latitude;
+                      print('CHOSEN LAT: ${chooseLat}');
+                      chooseLng = point.longitude;
+                      print('CHOSEN LNG: ${chooseLng}');
+                      Navigator.pop(context);
+                    })
+                  }
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 }
