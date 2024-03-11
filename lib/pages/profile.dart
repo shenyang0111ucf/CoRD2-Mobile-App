@@ -423,45 +423,52 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
-  filterLoadedReports(String? search) {
-    // if (searchText == null) return;
-    if (search == null || search.isEmpty || _userReports == null) {
+  void filterLoadedReports(String? searchText) {
+    if (searchText == null || searchText.isEmpty || _userReports == null) {
       setState(() {
         _filteredReports = _userReports;
-        _previousSearchText = search ?? '';
+        _previousSearchText = searchText ?? '';
       });
       _previousReportsLength = null;
       return;
     }
 
-    String searchText = search.toLowerCase();
+    List<EventModel>? curFilteredReports = _filteredReports;
+    String search = searchText.toLowerCase();
     List<EventModel>? newReports = [];
+
     // Filter based on all reports
-    if (searchText.length < _previousSearchText.length ||
-        searchText.length == 1) {
+    if (search.length < _previousSearchText.length || search.length == 1) {
       _userReports?.forEach((report) {
-        if (report.title.toLowerCase().contains(searchText)) {
+        if (report.title.toLowerCase().contains(search) ||
+            report.type.toLowerCase().contains(search) ||
+            report.description.toLowerCase().contains(search)) {
           newReports.add(report);
         }
         print("Filtered by all");
       });
-      // setState(() {
-      //   _filteredReports = newReports;
-      // });
       // Filter based on the last search
     } else {
       print("Filtered by last search");
-      // _userReports?.skip(_previousReportsLength as int)
-      _filteredReports?.forEach((report) {
-        if (report.title.toLowerCase().contains(searchText)) {
+      curFilteredReports?.forEach((report) {
+        if (report.title.toLowerCase().contains(search) ||
+            report.type.toLowerCase().contains(search) ||
+            report.description.toLowerCase().contains(search)) {
           newReports.add(report);
+          // update the filtered list after we process a decent number of reports
+          if (newReports.length % _reportLimit == 0) {
+            setState(() {
+              _filteredReports = newReports;
+              print("displaying filtered reports. not finished...");
+            });
+          }
         }
       });
     }
 
     setState(() {
       _filteredReports = newReports;
-      _previousSearchText = searchText;
+      _previousSearchText = search;
       _previousReportsLength = _userReports?.length;
     });
     // Ensure there is enough reports being displayed on first search
@@ -471,7 +478,7 @@ class _ProfilePage extends State<ProfilePage> {
     // }
   }
 
-  filterLazyLoadedReport(String? search) async {
+  void filterLazyLoadedReport(String? search) async {
     if (search == null ||
             search.isEmpty ||
             _filteredReports == null ||
@@ -485,10 +492,11 @@ class _ProfilePage extends State<ProfilePage> {
     setState(() {
       _isFiltering = true;
     });
-    int oldNumOfReports = _filteredReports!.length;
     List<EventModel>? newReports = [];
     _userReports!.skip(_previousReportsLength as int).forEach((report) {
-      if (report.title.toLowerCase().contains(search)) {
+      if (report.title.toLowerCase().contains(search) ||
+          report.type.toLowerCase().contains(search) ||
+          report.description.toLowerCase().contains(search)) {
         newReports.add(report);
         _numOfNewlyAddedReports++;
         print("added ${report.title}");
