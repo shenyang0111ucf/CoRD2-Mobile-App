@@ -10,7 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'dart:io';
-
+import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ReportForm extends StatefulWidget {
@@ -21,7 +21,6 @@ class ReportForm extends StatefulWidget {
   @override
   State<ReportForm> createState() => _ReportFormState();
 }
-
 
 class _ReportFormState extends State<ReportForm> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -92,9 +91,9 @@ class _ReportFormState extends State<ReportForm> {
           context: context,
           builder: (BuildContext context) => AlertDialog(
             title: const Text('Camera Access Denied'),
-            content: const Text('Please enable camera access so that we can'
-                'use your camera to take a picture of a hazard to submit. '
-                'You can change this later in app settings'),
+            content: const Text('Please enable camera access in order to\n'
+                'to submit a taken picture. '
+                'You may change this later in the app\'s settings.'),
             actions: <Widget> [
               TextButton(
                   onPressed: () {
@@ -300,31 +299,30 @@ class _ReportFormState extends State<ReportForm> {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return
       Container(
-        padding: const EdgeInsets.only(top: 0),
         color: Colors.white,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'Submit a Report',
-              style: TextStyle(
-                fontSize: 25.0,
+             Text(
+              'Report',
+              style: GoogleFonts.jost(
+                textStyle: const TextStyle(
+                fontSize: 35,
                 fontWeight: FontWeight.w400,
-                color: Colors.black,
-              ),
+                color: Color(0xff060C3E),
+              )),
             ),
             const SizedBox(height: 50),
             Container(
+              height:600,
               //   height: MediaQuery.of(context).size.height-200,
-              padding: const EdgeInsets.only(top: 30),
+              padding: const EdgeInsets.only(top: 30, bottom:40),
               decoration: const BoxDecoration(
-                color: Colors.blue,
+                color: Color(0xff85aeff),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(30.0),
                   topRight: Radius.circular(30.0),
@@ -333,32 +331,74 @@ class _ReportFormState extends State<ReportForm> {
               //  width: double.infinity,
               child: SingleChildScrollView(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                Padding(
+                padding: const EdgeInsets.only(top: 10, left: 25, right: 25),
+                   child:
+                   Text(
+                      'Title',
+                     style: GoogleFonts.jost(
+                       textStyle: const
+                      TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.normal,
+                        color: Color(0xff060C3E),
+                      )),
+                    )),
                     Padding(
-                        padding: const EdgeInsets.only(
-                            top: 20, bottom: 30, right: 30, left: 30),
-                        child:
-                        TextField(
-                          controller: titleCon,
-                          decoration: const InputDecoration(
-                            filled: true,
-                            fillColor: Colors.white,
-                            // Set your desired background color
-                            labelText: 'Add a title.',
+                      padding: const EdgeInsets.only(top: 10, left: 25, right: 25), // Adjust spacing as needed
+                      child: Container(
+                        height:55,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10), // Set rounded corners
+                          color: Colors.white, // Set your desired background color
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 10), // Adjust padding as needed
+                          child: TextField(
+                            controller: titleCon,
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              hintText: 'Add a title',
+                              hintStyle: TextStyle(
+                                fontSize: 22,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            style: GoogleFonts.jost(
+                              textStyle: const
+                              TextStyle(
+                              fontSize: 16, // Set your desired font size for input text
+                              color: Colors.black, // Set your desired color for input text
+                            )),
                           ),
-                        )),
-                    const Text(
-                      'Category',
-                      style: TextStyle(
-                        fontSize: 24.0,
-                        fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 20.0),
+                    Padding(
+                        padding: const EdgeInsets.only(top: 25, left: 25, right: 25, bottom:5),
+                        child:
+                        Text(
+                          'Category',
+                          style: GoogleFonts.jost(
+                              textStyle: const
+                              TextStyle(
+                                fontSize: 25,
+                                fontWeight: FontWeight.normal,
+                                color: Color(0xff060C3E),
+                              )),
+                        )),
+                    const SizedBox(height: 10.0),
+              Padding(
+                padding: const EdgeInsets.only(left: 25, right: 25),
+                child:
                     Container(
                         decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(10)),
+                        height:60,
+                        width:400,
                         padding: EdgeInsets.only(right: 10, left: 10),
                         child:
                         DropdownButton<String>(
@@ -367,6 +407,10 @@ class _ReportFormState extends State<ReportForm> {
                           ),
                           dropdownColor: Colors.white,
                           value: selectedCategory,
+                          underline: Container(),
+                          icon: Icon(Icons.arrow_drop_down), // Set the default arrow icon
+                          iconSize: 35, // Set the size of the icon
+                          isExpanded: true,
                           onChanged: (String? newValue) {
                             setState(() {
                               selectedCategory = newValue!;
@@ -382,69 +426,158 @@ class _ReportFormState extends State<ReportForm> {
                               .map<DropdownMenuItem<String>>((String value) {
                             return DropdownMenuItem<String>(
                               value: value,
-                              child: Text(value),
-                            );
+                              child: Container( // Wrap the child in a Container
+                            decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10), // Set rounded corners
+                            color: Colors.white), // Set your desired background color
+                            child:
+                              Padding(
+                                padding: const EdgeInsets.only(left: 5, top:10),
+                              child:
+                                Text(value,  style: GoogleFonts.jost(
+                                textStyle: const
+                                TextStyle(fontSize: 22,
+                                  fontWeight: FontWeight.normal,
+                                  color: Color(0xff060C3E),))),
+                            )));
                           }).toList(),
-                        )),
-                    const SizedBox(height: 40.0),
-                    const Text(
+                        ))),
+                    const SizedBox(height: 30.0),
+              Padding(
+                padding: const EdgeInsets.only(left: 25, right: 25),
+                     child:
+                     Text(
                       'Description',
-                      style: TextStyle(
-                        fontSize: 24.0,
-                        fontWeight: FontWeight.bold,
-                      ),
+                        style: GoogleFonts.jost(
+                            textStyle: const
+                            TextStyle(fontSize: 25,
+                              fontWeight: FontWeight.normal,
+                              color: Color(0xff060C3E))))),
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top:10, right:20),
+                child:
+                Container(
+                height:55,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10), // Set rounded corners
+                  color: Colors.white, // Set your desired background color
+                ),child: Padding(
+                padding: const EdgeInsets.only(left: 10), // Adjust padding as needed
+                child: TextField(
+                  controller: descriptionCon,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    hintText: 'Please write a description.',
+                    hintStyle: TextStyle(
+                      fontSize: 20,
+                      color: Colors.grey,
                     ),
+                  ),
+                  style: GoogleFonts.jost(
+                      textStyle: const
+                      TextStyle(
+                        fontSize: 16, // Set your desired font size for input text
+                        color: Colors.black, // Set your desired color for input text
+                      )),
+                ),
+              ))),
                     Padding(
-                        padding: const EdgeInsets.only(
-                            top: 20, bottom: 30, right: 30, left: 30),
+                        padding: const EdgeInsets.only(left: 25, top:25, ),
                         child:
-                        TextField(
-                          controller: descriptionCon,
-                          decoration: const InputDecoration(
-                            filled: true,
-                            fillColor: Colors.white,
-                            // Set your desired background color
-                            labelText: 'Please provide more information.',
-                          ),
-                        )),
-                    ElevatedButton(
-                        onPressed: () {
-                          pickImage();
-                        },
-                        child: Text('Pick Image'),
+                        Text(
+                            'Image',
+                            style: GoogleFonts.jost(
+                                textStyle: const
+                                TextStyle(fontSize: 25,
+                                    fontWeight: FontWeight.normal,
+                                    color: Color(0xff060C3E))))),
+                GestureDetector(
+                  onTap: (){
+                    pickImage();
+                    },
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 40, top:15, bottom:10),
+                    child:
+                  Container(
+                    width: 330,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    ElevatedButton(
+                    child:  Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.file_upload,
+                          size: 80,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Upload File',
+                            style: GoogleFonts.jost(
+                                textStyle: const
+                                TextStyle(fontSize: 25,
+                                    fontWeight: FontWeight.normal,
+                                    color: Color(0xff060C3E)))
+                        ),
+                      ],
+                    ),
+                  )),
+                ),
+                SizedBox(height:30),
+                    Center(
+                      child: ElevatedButton(
                         onPressed: () {
                           /*showModalBottomSheet(
-                              context: context,
-                              builder: (context) => buildMapModal(context)
-                          );*/
+          context: context,
+          builder: (context) => buildMapModal(context)
+      );*/
                           pickLocation();
                         },
-                        child: const Text('Choose Location')),
-                  /*  if(imageUrl.isNotEmpty){
-
-                    }*/
-                    ElevatedButton(
-                      onPressed: () {
-                        submitReport(currentUserId);
-                      },
-                      child: Text('Submit a report.'),
+                        style: ButtonStyle(
+                          minimumSize: MaterialStateProperty.all(Size(200, 50)), // Set the size here
+                        ),
+                        child:  Text('Choose Location',
+                          style: GoogleFonts.jost(
+                            textStyle: const
+                            TextStyle(fontSize: 20,
+                                fontWeight: FontWeight.normal,
+                                color: Color(0xff060C3E)))),
+                      ),
                     ),
-                  ],
-                ),
-              ),
-            )
-          ],
-        ),
-      );
+                    SizedBox(height:30),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          submitReport(currentUserId);
+                        },
+                        style: ButtonStyle(
+                          minimumSize: MaterialStateProperty.all(Size(200, 50)), // Set the size here
+                        ),
+                        child:  Text('Submit Report',
+                            style: GoogleFonts.jost(
+                                textStyle: const
+                                TextStyle(fontSize: 20,
+                                    fontWeight: FontWeight.normal,
+                                    color: Color(0xff060C3E)))),
+                      ),
+                    ),
+            ],
+            ),
+          ),
+        )
+      ],
+    ),
+  );
   }
 
   Widget chooseLocationModal(BuildContext context, var lat, var lng) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
-      decoration: BoxDecoration(
-        color: Colors.blue,
+      decoration: const BoxDecoration(
+        color: Color(0xff85aeff),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(25),
           topRight: Radius.circular(25),
@@ -456,7 +589,7 @@ class _ReportFormState extends State<ReportForm> {
           Container(
               padding: EdgeInsets.all(10),
               child:  FloatingActionButton(
-                backgroundColor: Colors.red,
+                backgroundColor: Colors.white,
                 onPressed: () {
                   Navigator.pop(context);
                 },
@@ -464,14 +597,15 @@ class _ReportFormState extends State<ReportForm> {
               )
           ),
           SizedBox(height: 5,),
-          const Text(
+           Text(
             'Pick a location from the map',
-            style: TextStyle(
-              fontSize: 24.0,
-              fontWeight: FontWeight.bold,
-            ),
+              style: GoogleFonts.jost(
+                  textStyle: const
+                  TextStyle(fontSize: 25,
+                      fontWeight: FontWeight.normal,
+                      color: Color(0xff060C3E)))
           ),
-          SizedBox(height: 5,),
+          SizedBox(height: 15),
           Container(
             height: MediaQuery.of(context).size.height * 0.4,
             width: MediaQuery.of(context).size.width * 0.8,
