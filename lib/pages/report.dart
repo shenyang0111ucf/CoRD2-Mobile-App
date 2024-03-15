@@ -29,6 +29,7 @@ class _ReportFormState extends State<ReportForm> {
   List<String> imageUrls = [];
   Reference referenceDirImages = FirebaseStorage.instance.ref().child('images');
   XFile? _imageFile;
+  File? _selectedImage;
   final cameraPermission = Permission.camera;
   final locationPermission = Permission.location;
   String? permType;
@@ -112,6 +113,11 @@ class _ReportFormState extends State<ReportForm> {
             ],
           )
       );
+      if (file != null) {
+        setState(() {
+          _selectedImage = File(file!.path); // Store the selected image
+        });
+      }
     }
 
     //XFile? file = await picker.pickImage(source: ImageSource.camera);
@@ -228,48 +234,6 @@ class _ReportFormState extends State<ReportForm> {
     }
 
     imageUrls.add(imageUrl);
-    // moved to own function
-    /*bool permResult = await checkPerms('location');
-    var currentLat = 0.0;
-    var currentLong = 0.0;
-    if (permResult == true) {
-      final position = await Geolocator.getCurrentPosition();
-      currentLat = position.latitude;
-      currentLong = position.longitude;
-    } else {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) => AlertDialog(
-            title: const Text('Location Access Denied'),
-            content: const Text('Please enable location access so we can'
-                'properly record the location of the hazard. Otherwise a'
-                'default location will be used, and this could adversely'
-                'affect individuals and first responders near the hazard. '
-                'You can change this later in app settings.'),
-            actions: <Widget> [
-              TextButton(
-                  onPressed: () {
-                    currentLat = 28.544331;
-                    currentLong = -81.191931;
-                    Navigator.pop(context, 'Cancel');
-                  },
-                  child: const Text('Cancel')
-              ),
-              TextButton(
-                  onPressed: () {
-                    openAppSettings();
-                    if (currentLat == 0.0 && currentLong == 0.0) {
-                      currentLat = 28.544331;
-                      currentLong = -81.191931;
-                    }
-                    Navigator.pop(context, 'Ok');
-                  },
-                  child: const Text('Ok')
-              ),
-            ],
-          )
-      );
-    }*/
 
     Map<String, dynamic> submissionData = {
       'description': descriptionCon.text,
@@ -302,23 +266,43 @@ class _ReportFormState extends State<ReportForm> {
   @override
   Widget build(BuildContext context) {
     return
-      Container(
-        color: Colors.white,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-             Text(
-              'Report',
-              style: GoogleFonts.jost(
-                textStyle: const TextStyle(
-                fontSize: 35,
-                fontWeight: FontWeight.w400,
-                color: Color(0xff060C3E),
-              )),
+      Scaffold(
+        resizeToAvoidBottomInset: true, // Set this to true
+        body: CustomScrollView(
+          slivers: [
+        // SliverAppBar with fixed "Report" text
+        SliverAppBar(
+            expandedHeight: 130,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Padding(
+                  padding: EdgeInsets.only(right: 45.0),
+  child:Text(
+        'Report',
+          style: GoogleFonts.jost(
+            textStyle: const TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.w400,
+              color: Color(0xff060C3E),
             ),
-            const SizedBox(height: 50),
+          ),
+        //  textAlign: TextAlign.center,
+        )),centerTitle: true,),
+       // centerTitle: true,
+        floating: true,
+        pinned: true,
+        snap: false,
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
+    // SliverList for the scrolling content
+    SliverList(
+    delegate: SliverChildListDelegate(
+    [
+    // Padding for spacing
+    const SizedBox(height: 20),
+
             Container(
-              height:600,
+          //    height:600,
               //   height: MediaQuery.of(context).size.height-200,
               padding: const EdgeInsets.only(top: 30, bottom:40),
               decoration: const BoxDecoration(
@@ -457,7 +441,7 @@ class _ReportFormState extends State<ReportForm> {
                 padding: const EdgeInsets.only(left: 20, top:10, right:20),
                 child:
                 Container(
-                height:55,
+                height:150,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10), // Set rounded corners
                   color: Colors.white, // Set your desired background color
@@ -465,6 +449,7 @@ class _ReportFormState extends State<ReportForm> {
                 padding: const EdgeInsets.only(left: 10), // Adjust padding as needed
                 child: TextField(
                   controller: descriptionCon,
+                  maxLines: null,
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     hintText: 'Please write a description.',
@@ -491,6 +476,30 @@ class _ReportFormState extends State<ReportForm> {
                                 TextStyle(fontSize: 25,
                                     fontWeight: FontWeight.normal,
                                     color: Color(0xff060C3E))))),
+                    if (_selectedImage != null)
+                      GestureDetector(
+                        onTap: () {
+                          pickImage();
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 40, top: 15, bottom: 10),
+                          child: Container(
+                            width: 330,
+                            height: 300,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Image.file(
+                              _selectedImage!,
+                              width: double.infinity,
+                              height: double.infinity,
+                              fit: BoxFit.fill,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
                 GestureDetector(
                   onTap: (){
                     pickImage();
@@ -568,9 +577,9 @@ class _ReportFormState extends State<ReportForm> {
             ),
           ),
         )
-      ],
+    ]
     ),
-  );
+  )]));
   }
 
   Widget chooseLocationModal(BuildContext context, var lat, var lng) {

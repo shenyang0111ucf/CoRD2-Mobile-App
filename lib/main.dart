@@ -60,12 +60,15 @@ class _HomePageState extends State<HomePage> {
                 _scaffoldKey.currentState?.openDrawer();
               },
               child: Container(
+                height:55,
+                width:55,
                 padding: const EdgeInsets.all(8.0),
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.blue,
                 ),
                 child: const Icon(
+                  size:30,
                   Icons.menu,
                   color: Colors.white,
                 ),
