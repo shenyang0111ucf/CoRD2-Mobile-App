@@ -19,17 +19,18 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePage extends State<ProfilePage> {
-  List<EventModel>? _userReports = [];
-  late List<EventModel>? _filteredReports = [];
+  List<EventModel>? _userReports = []; // All retrieved reports
+  late List<EventModel>? _filteredReports = []; // displayed reports
   Color primary = const Color(0xff5f79BA);
   Color secondary = const Color(0xffD0DCF4);
   Color highlight = const Color(0xff20297A);
+  late double _reportSectionPadding;
+  // Pagination
   bool _isLoadingMore = false;
   bool _noMoreReports = false;
   bool _sortByRecent = true;
   String? _lastUsedDocID;
-  final int _reportLimit = 2;
-  late double _reportSectionPadding;
+  final int _reportLimit = 15;
   // Search utility vars
   final TextEditingController _searchTextField = TextEditingController();
   String _previousSearchText = "";
@@ -62,7 +63,7 @@ class _ProfilePage extends State<ProfilePage> {
     } else {
       _reportSectionPadding = 48;
     }
-    // print(_searchTextField.text);
+
     return Material(
       child: SafeArea(
         child: SizedBox(
@@ -173,16 +174,16 @@ class _ProfilePage extends State<ProfilePage> {
     return;
   }
 
+  // Loads the current user's reports the first time
   Future<void> _loadReports() async {
     setState(() {
       _isLoadingMore = true;
     });
-    print("Search text: ${_searchTextField.text}");
     _userReports = await UserData.getUserReportsWithLimit(
         _reportLimit, _lastUsedDocID, _sortByRecent);
     setState(() {
       _isLoadingMore = false;
-      if (_userReports != null && (_userReports?.isNotEmpty ?? false)) {
+      if (_userReports != null && _userReports!.isNotEmpty) {
         _lastUsedDocID = _userReports?.last.id;
       }
       if (_userReports != null && _userReports!.length < _reportLimit) {
@@ -192,25 +193,27 @@ class _ProfilePage extends State<ProfilePage> {
     });
   }
 
+  // Loads more of the current user's reports
+  // and filters it if there is a search
   Future<void> _loadMoreReports() async {
-    // All reports have been retrieved
-    if (_noMoreReports || _isLoadingMore) {
+    // All reports have been loaded
+    if (_noMoreReports) {
       _loadMore = false;
+      return;
+      // Only load more when not already loading more
+    } else if (_isLoadingMore) {
       return;
     }
 
     // Bottom of list reached, so load more reports
-    print("Tried loading more reports");
     if (!_isLoadingMore) {
-      print("Loading more reports");
       setState(() {
         _isLoadingMore = true;
       });
-      print("last used docID $_lastUsedDocID");
+
       List<EventModel>? newReports = await UserData.getUserReportsWithLimit(
           _reportLimit, _lastUsedDocID, _sortByRecent);
-      print(_userReports);
-      print("got reports");
+
       setState(() {
         // Add new reports to the report list
         if (newReports != null && newReports.isNotEmpty) {
@@ -218,7 +221,6 @@ class _ProfilePage extends State<ProfilePage> {
           _lastUsedDocID = newReports.last.id;
           // No more reports left
         } else if (newReports != null && newReports.length < _reportLimit) {
-          print("No more reports left");
           _noMoreReports = true;
         }
         _isLoadingMore = false;
@@ -274,6 +276,8 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
+  // Returns a button to allow the current user to reset their password.
+  // Also, displays a popup with the status of the sent email.
   Padding displayResetPasswordButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -394,14 +398,16 @@ class _ProfilePage extends State<ProfilePage> {
                 ),
                 Container(
                   constraints:
-                      const BoxConstraints(maxHeight: 400, minHeight: 0),
+                      const BoxConstraints(maxHeight: 364, minHeight: 0),
                   child: NotificationListener<ScrollNotification>(
                     onNotification: (notification) {
                       ScrollMetrics scrollMetrics = notification.metrics;
                       // Load more reports when user is near the end of the list
                       if (scrollMetrics.maxScrollExtent - scrollMetrics.pixels <
                           30) {
-                        if (!_isFiltering && !_noMoreReports) {
+                        if (!_isFiltering &&
+                            !_noMoreReports &&
+                            !_isLoadingMore) {
                           _loadMoreReports();
                         }
                       }
@@ -412,10 +418,26 @@ class _ProfilePage extends State<ProfilePage> {
                         shrinkWrap: true,
                         itemCount: _filteredReports?.length,
                         itemBuilder: (context, index) {
-                          return Row(
+                          return Column(
                             children: [
-                              Expanded(child: showFullReport(index)),
-                              displayReportDeleteButton(index)
+                              Row(
+                                children: [
+                                  Expanded(child: showFullReport(index)),
+                                  displayReportDeleteButton(index)
+                                ],
+                              ),
+                              // Show loading indicator at the end of the list
+                              // when more reports are being loaded
+                              _isLoadingMore &&
+                                      index + 1 == _filteredReports?.length
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(12.0),
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                        ),
+                                      ))
+                                  : Container(height: 0),
                             ],
                           );
                         }),
@@ -429,6 +451,8 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
+  // Filter the loaded reports on the first run of the search.
+  // Loads more reports if not enough were shown.
   void filterLoadedReports(String? searchText) {
     if (searchText == null || searchText.isEmpty || _userReports == null) {
       setState(() {
@@ -445,6 +469,7 @@ class _ProfilePage extends State<ProfilePage> {
 
     // Filter based on all reports
     if (search.length < _previousSearchText.length || search.length == 1) {
+      // Filter based on title, type, and description
       _userReports?.forEach((report) {
         if (report.title.toLowerCase().contains(search) ||
             report.type.toLowerCase().contains(search) ||
@@ -452,11 +477,10 @@ class _ProfilePage extends State<ProfilePage> {
           newReports.add(report);
           _numOfNewlyAddedReports++;
         }
-        print("Filtered by all");
       });
       // Filter based on the cached last search
     } else {
-      print("Filtered by last search");
+      // Filter based on title, type, and description
       curFilteredReports?.forEach((report) {
         if (report.title.toLowerCase().contains(search) ||
             report.type.toLowerCase().contains(search) ||
@@ -467,7 +491,6 @@ class _ProfilePage extends State<ProfilePage> {
           if (newReports.length % _reportLimit == 0) {
             setState(() {
               _filteredReports = newReports;
-              print("displaying filtered reports. not finished...");
             });
           }
         }
@@ -475,13 +498,15 @@ class _ProfilePage extends State<ProfilePage> {
     }
 
     setState(() {
+      // enough reports loaded
       if (_numOfNewlyAddedReports >= _reportLimit) {
-        print("enough loaded");
         _loadMore = false;
         _numOfNewlyAddedReports = 0;
+        // continue trying to load more reports
       } else {
         _loadMore = true;
       }
+      // update search filter data
       _filteredReports = newReports;
       _previousSearchText = search;
       _previousReportsLength = _userReports?.length;
@@ -489,11 +514,11 @@ class _ProfilePage extends State<ProfilePage> {
 
     // Ensure there is enough reports being displayed on first search
     if (_loadMore) {
-      print('$_loadMore, curNumLoaded: $_numOfNewlyAddedReports');
       _loadMoreReports();
     }
   }
 
+  // Filter and add new lazily loaded reports to the current filtered list
   Future<void> filterLazyLoadedReport(String? search) async {
     if (search == null ||
         search.isEmpty ||
@@ -507,15 +532,13 @@ class _ProfilePage extends State<ProfilePage> {
       _isFiltering = true;
     });
     List<EventModel>? newReports = [];
-    // Filter reports by search text
+    // Filter newly added reports based on title, type, and description
     _userReports!.skip(_previousReportsLength as int).forEach((report) {
       if (report.title.toLowerCase().contains(search) ||
           report.type.toLowerCase().contains(search) ||
           report.description.toLowerCase().contains(search)) {
         newReports.add(report);
-        setState(() {
-          _numOfNewlyAddedReports++;
-        });
+        _numOfNewlyAddedReports++;
       }
     });
 
@@ -569,26 +592,18 @@ class _ProfilePage extends State<ProfilePage> {
         // Update sort method
         setState(() {
           _dropdownValue = value;
-          // _lastUsedDocID = null;
-          // _noMoreReports = false;
+          _lastUsedDocID = null;
+          _noMoreReports = false;
         });
         // Sort by most recent
         if (value == _dropdownItems[0]) {
-          setState(() {
-            _sortByRecent = true;
-            _userReports?.sort((a, b) => b.time.compareTo(a.time));
-            _filteredReports?.sort((a, b) => b.time.compareTo(a.time));
-          });
+          _sortByRecent = true;
           // Sort by oldest first
         } else if (value == _dropdownItems[1]) {
-          setState(() {
-            _userReports?.sort((a, b) => a.time.compareTo(b.time));
-            _filteredReports?.sort((a, b) => a.time.compareTo(b.time));
-            _sortByRecent = false;
-          });
+          _sortByRecent = false;
         }
 
-        // await _loadReports();
+        await _loadReports();
       },
     );
   }
@@ -632,9 +647,13 @@ class _ProfilePage extends State<ProfilePage> {
                       // Delete the specified report
                       onPressed: () async {
                         Navigator.pop(context);
+                        // Delete report from database and
+                        // remove from userReports list
                         await deleteReport([_filteredReports![index].id]);
-                        // ignore: use_build_context_synchronously
-                        await refreshPage(context);
+                        // Delete report
+                        setState(() {
+                          _filteredReports!.removeAt(index);
+                        });
                       },
                       child: const Text(
                         "Delete",
@@ -669,20 +688,21 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
-  // Deletes the current user's reports with the specified ID
-  Future<void> deleteReport(List<String> reportID) async {
-    print(reportID);
-    bool deletedSuccessfully = await UserData.deleteUserReports(reportID);
+  // Deletes the current user's reports with the specified IDs
+  Future<void> deleteReport(List<String> reportIDs) async {
+    bool deletedSuccessfully = await UserData.deleteUserReports(reportIDs);
 
     SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
       if (!deletedSuccessfully) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("An error occured deleting the event."),
+            content: Text("An error occured deleting the report."),
             backgroundColor: Colors.red));
       } else {
+        _userReports?.removeWhere(
+            (userReport) => reportIDs.any((report) => report == userReport.id));
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Successfully deleted"),
-            backgroundColor: Colors.red));
+            backgroundColor: Colors.green));
       }
     });
   }
@@ -938,7 +958,8 @@ class _ProfilePage extends State<ProfilePage> {
         (route) => false);
   }
 
-  // Sends a password reset email to the current user
+  // Returns a string that the email sent was successful or an error occured.
+  // Sends a password reset email to the current user.
   Future resetUserPassword() async {
     String status;
     try {
@@ -950,20 +971,20 @@ class _ProfilePage extends State<ProfilePage> {
       print(e);
       status = "An error occured. Please try again.";
     }
-    print(status);
     return status;
   }
 
   Future<void> signInWithGoogle() async {
-    GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
+    GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
     try {
-      await _googleSignIn.signIn();
+      await googleSignIn.signIn();
     } catch (error) {
       print(error);
     }
   }
 
-  // Returns a form that allows the user to reset their email
+  // Returns a form that allows the user to reset their email.
+  // Displays the status of the sent email reset in an alert.
   Widget updateUserEmailForm() {
     TextEditingController emailController = TextEditingController();
 
@@ -1032,9 +1053,8 @@ class _ProfilePage extends State<ProfilePage> {
 
                               case ConnectionState.active:
                               case ConnectionState.done:
-                                print(snapshot.data);
+                                // handle error cases
                                 if (snapshot.data != null) {
-                                  // handle error cases
                                   switch (snapshot.data!.code) {
                                     case "requires-recent-login":
                                     case "user-token-expired":
@@ -1126,11 +1146,10 @@ class _ProfilePage extends State<ProfilePage> {
   // Updates the current user's email
   Future<FirebaseAuthException?> updateUserEmail(String newEmail) async {
     if (FirebaseAuth.instance.currentUser!.email?.compareTo(newEmail) == 0) {
-      print("Tried update with same email");
+      print("Tried update with same email.");
       return FirebaseAuthException(code: "same-email");
     }
 
-    print("attempted update for ${newEmail}");
     try {
       await FirebaseAuth.instance.currentUser
           ?.verifyBeforeUpdateEmail(newEmail);

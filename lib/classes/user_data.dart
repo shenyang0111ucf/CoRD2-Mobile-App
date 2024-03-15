@@ -105,6 +105,6 @@ class UserData {
             .update(updates);
       }
     }
-    return errorOccurred;
+    return !errorOccurred;
   }
 }
