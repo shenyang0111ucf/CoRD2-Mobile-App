@@ -17,6 +17,7 @@ enum Page { Login, Register, Forgot }
 
 class _SignOnPageState extends State<SignOnPage> {
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
+  final User? user = FirebaseAuth.instance.currentUser;
   CollectionReference users = FirebaseFirestore.instance.collection('users');
   Page current = Page.Login;
   TextEditingController emailController = TextEditingController();
@@ -30,9 +31,15 @@ class _SignOnPageState extends State<SignOnPage> {
   final int blurple = 0xff20297A;
   final TextStyle whiteText = const TextStyle(color: Colors.white);
 
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (user != null) {
+        homePage();
+      }
+    });
     // Update the stored user
     _googleSignIn.onCurrentUserChanged
         .listen((GoogleSignInAccount? account) => handleGoogleUser(account));
@@ -67,15 +74,17 @@ class _SignOnPageState extends State<SignOnPage> {
         users
             .doc(firebaseCred.user?.uid)
             .set({
-          'name': account.displayName,
-          'email': account.email,
-          'events': [],
-          'chats': []
-        })
+              'name': account.displayName,
+              'email': account.email,
+              'events': [],
+              'chats': [],
+              'isResponder': false
+            })
+
             .then((value) => print("Successfully added user!"))
             .catchError((err) => print("Failed to add user $err"));
       }
-      //homePage();
+      homePage();
     }
   }
 
@@ -112,7 +121,8 @@ class _SignOnPageState extends State<SignOnPage> {
         'name': displayNameController.text,
         'email': userCredential.user?.email,
         'events': [],
-        'chats': []
+        'chats': [],
+        'isResponder': false
       })
           .then((value) => print("Successfully added user!"))
           .catchError((err) => print("Failed to add user $err"));
