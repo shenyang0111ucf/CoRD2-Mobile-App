@@ -38,6 +38,11 @@ class _ChatPageState extends State<ChatPage> {
     getChatData();
   }
 
+  @override
+  void dispose() {
+    _chatSubscription.cancel();
+  }
+
   void getChatData() async {
     DatabaseReference chatRef = FirebaseDatabase.instance.ref('chats/${user?.uid}');
     _chatSubscription = chatRef.onValue.listen((DatabaseEvent event) async {

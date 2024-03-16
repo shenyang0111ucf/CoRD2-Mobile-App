@@ -2,6 +2,7 @@ import 'package:cord2_mobile_app/pages/chat.dart';
 import 'package:cord2_mobile_app/pages/map.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cord2_mobile_app/pages/profile.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -40,68 +41,70 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
-      body: Stack(
-        children: [
-          // Your content goes here
-          _getPageContent(
-              currentPage), // Show content based on the current page
-          // Circular menu button
-          Positioned(
-            top: 50.0,
-            left: 10.0,
-            child: InkWell(
-              onTap: () {
-                _scaffoldKey.currentState?.openDrawer();
-              },
-              child: Container(
-                padding: const EdgeInsets.all(8.0),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.blue,
-                ),
-                child: const Icon(
-                  Icons.menu,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+        key: _scaffoldKey,
+        body: Stack(
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-              ),
-              child: Text(
-                'CoRD2',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
+            // Your content goes here
+            _getPageContent(
+                currentPage), // Show content based on the current page
+            // Circular menu button
+            Positioned(
+              top: 35.0,
+              left: 10.0,
+              child: InkWell(
+                onTap: () {
+                  _scaffoldKey.currentState?.openDrawer();
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8.0),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.blue,
+                  ),
+                  child: const Icon(
+                    Icons.menu,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-            ),
-            _buildDrawerItem("Map"),
-            _buildDrawerItem("Report"),
-            _buildDrawerItem("Chat"),
-            _buildDrawerItem("Profile"),
-            const Divider(),
-            ListTile(
-              title: const Text('Log Out'),
-              onTap: () async {
-                await FirebaseAuth.instance.signOut();
-                Navigator.pushAndRemoveUntil(
-                    context, MaterialPageRoute(builder: (context) => SignOnPage()), (Route route) => false);
-              },
             ),
           ],
         ),
-      )
-    );
+        drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                ),
+                child: Text(
+                  'CoRD2',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                  ),
+                ),
+              ),
+              _buildDrawerItem("Map"),
+              _buildDrawerItem("Report"),
+              _buildDrawerItem("Chat"),
+              _buildDrawerItem("Profile"),
+              const Divider(),
+              ListTile(
+                title: const Text('Log Out'),
+                onTap: () {
+                  FirebaseAuth.instance.signOut().then((_) =>
+                      Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const SignOnPage()),
+                          (Route route) => false));
+                },
+              ),
+            ],
+          ),
+        ));
   }
 
   Widget _buildDrawerItem(String pageName) {
@@ -125,7 +128,7 @@ class _HomePageState extends State<HomePage> {
       case "Chat":
         return const Center(child: ChatPage());
       case "Profile":
-        return const Center(child: Text('Profile Content'));
+        return const Center(child: ProfilePage());
       default:
         return Container(); // Default empty container
     }
@@ -138,6 +141,3 @@ class _HomePageState extends State<HomePage> {
     });
   }
 }
-
-
-
