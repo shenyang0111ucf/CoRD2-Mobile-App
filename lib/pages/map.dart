@@ -202,16 +202,14 @@ class DisplayMapPageState extends State<DisplayMap> {
             point['eventType'],
             DateFormat.yMEd().add_jms().format(time),
             username,
-            point['creator']
-        );
+            point['creator']);
 
         markers.add(Marker(
             point: LatLng(
                 point['latitude'] as double, point['longitude'] as double),
             width: 56,
             height: 56,
-            child: customMarker(pointData)
-        ));
+            child: customMarker(pointData)));
         points.add(pointData);
       }
     }
@@ -227,8 +225,7 @@ class DisplayMapPageState extends State<DisplayMap> {
     return MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
-            onTap: () => _showInfoScreen(
-                context, pointData),
+            onTap: () => _showInfoScreen(context, pointData),
             child: const Icon(Icons.person_pin_circle_rounded)));
   }
 
@@ -348,13 +345,10 @@ class DisplayMapPageState extends State<DisplayMap> {
                                       child: Text(
                                         "Chat with this user",
                                         style: TextStyle(
-                                            decoration: TextDecoration.underline,
-                                            fontSize: 24
-                                        ),
-                                      )
-                                  )
-                              )
-                          ),
+                                            decoration:
+                                                TextDecoration.underline,
+                                            fontSize: 24),
+                                      )))),
                         ],
                       ),
                     )
@@ -365,11 +359,13 @@ class DisplayMapPageState extends State<DisplayMap> {
   }
 
   void handleUserChat(String uid) async {
-    DatabaseReference ref = FirebaseDatabase.instance.ref('chats/${FirebaseAuth.instance.currentUser?.uid}');
+    DatabaseReference ref = FirebaseDatabase.instance
+        .ref('chats/${FirebaseAuth.instance.currentUser?.uid}');
     DataSnapshot snapshot = await ref.get();
     for (DataSnapshot val in snapshot.children) {
       final map = val.value as Map?;
-      List<String> participants = map?['participants'].map<String>((val) => val.toString()).toList();
+      List<String> participants =
+          map?['participants'].map<String>((val) => val.toString()).toList();
       bool match = false;
       for (Object? part in map?['participants']) {
         Map<String, String> participant = {};
@@ -380,27 +376,29 @@ class DisplayMapPageState extends State<DisplayMap> {
           participant['name'] = data['name'];
           participant['uid'] = part.toString();
           DateTime lastUpdate = DateTime.parse(map!['lastUpdate'].toString());
-          ChatModel chat = ChatModel(participant, participants, lastUpdate, val.key);
-          Navigator.push(context, MaterialPageRoute(builder: (context) => MessagePage(chat: chat)));
+          ChatModel chat =
+              ChatModel(participant, participants, lastUpdate, val.key);
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => MessagePage(chat: chat)));
         }
       }
       if (match) return;
     }
     var chatId = Uuid().v4();
-    DatabaseReference newChat = FirebaseDatabase.instance.ref('chats/${uid}/$chatId');
+    DatabaseReference newChat =
+        FirebaseDatabase.instance.ref('chats/${uid}/$chatId');
     var res = await newChat.update({
       "lastUpdate": DateTime.now().toString(),
       "participants": ["${uid}", "${FirebaseAuth.instance.currentUser?.uid}"]
     });
-    ref = FirebaseDatabase.instance.ref('chats/${FirebaseAuth.instance.currentUser?.uid}/$chatId');
+    ref = FirebaseDatabase.instance
+        .ref('chats/${FirebaseAuth.instance.currentUser?.uid}/$chatId');
     res = await ref.update({
       "lastUpdate": DateTime.now().toString(),
       "participants": ["${uid}", "${FirebaseAuth.instance.currentUser?.uid}"]
     });
     DatabaseReference newMsg = FirebaseDatabase.instance.ref('msgs');
-    res = await newMsg.update({
-      chatId: []
-    });
+    res = await newMsg.update({chatId: []});
     Map<String, String> participant = {};
     DocumentSnapshot doc = await users.doc(uid).get();
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
@@ -410,7 +408,8 @@ class DisplayMapPageState extends State<DisplayMap> {
     DateTime lastUpdate = DateTime.now();
 
     ChatModel chat = ChatModel(participant, participants, lastUpdate, chatId);
-    Navigator.push(context, MaterialPageRoute(builder: (context) => MessagePage(chat: chat)));
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => MessagePage(chat: chat)));
   }
 
   Future<void> processData() async {
@@ -489,24 +488,23 @@ class DisplayMapPageState extends State<DisplayMap> {
             showDialog(
                 context: context,
                 builder: (BuildContext context) => AlertDialog(
-                    title: const Text('Location Access Denied'),
-                    content: const Text('Please enable Location Access, you can'
-                        'change this later in app settings.'),
-                    actions: <Widget> [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, 'Cancel'),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          openAppSettings();
-                          Navigator.pop(context, 'OK');
-                        },
-                        child: const Text('OK'),
-                      )
-                    ]
-                )
-            );
+                        title: const Text('Location Access Denied'),
+                        content:
+                            const Text('Please enable Location Access, you can'
+                                'change this later in app settings.'),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, 'Cancel'),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              openAppSettings();
+                              Navigator.pop(context, 'OK');
+                            },
+                            child: const Text('OK'),
+                          )
+                        ]));
             // use default location or insist on current position?
             //pinpointUser(latitude, longitude);
           }

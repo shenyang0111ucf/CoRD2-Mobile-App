@@ -3,14 +3,13 @@ import 'package:flutter/material.dart';
 import '../models/point_data.dart';
 
 class Search extends StatelessWidget {
-  Search({
-    Key? key,
-    required this.map,
-    required this.data,
-    required this.onSelect,
-    required this.mapContext,
-    required this.zoomTo
-  })
+  Search(
+      {Key? key,
+      required this.map,
+      required this.data,
+      required this.onSelect,
+      required this.mapContext,
+      required this.zoomTo})
       : super(key: key);
   final Widget map;
   final List<PointData> data;
@@ -59,12 +58,11 @@ class Search extends StatelessWidget {
 }
 
 class CustomSearchDelegate extends SearchDelegate<String> {
-  CustomSearchDelegate({
-    required this.data,
-    required this.onSelect,
-    required this.mapContext,
-    required this.zoomTo
-  });
+  CustomSearchDelegate(
+      {required this.data,
+      required this.onSelect,
+      required this.mapContext,
+      required this.zoomTo});
   final List<PointData> data;
   final BuildContext mapContext;
   final Function(BuildContext, PointData) onSelect;

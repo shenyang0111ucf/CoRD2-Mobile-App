@@ -8,15 +8,6 @@ class PointData {
   final String creator;
   final String creatorId;
 
-  PointData(
-      this.latitude,
-      this.longitude,
-      this.description,
-      this.title,
-      this.eventType,
-      this.formattedDate,
-      this.creator,
-      this.creatorId
-      );
-
+  PointData(this.latitude, this.longitude, this.description, this.title,
+      this.eventType, this.formattedDate, this.creator, this.creatorId);
 }
