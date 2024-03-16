@@ -37,23 +37,27 @@ class DisplayMapPageState extends State<DisplayMap> {
   CollectionReference users = FirebaseFirestore.instance.collection('users');
   String permType = '';
 
-  // changed to zoom to users current position and refresh any new data
+  // zooms closer to users current position
   void pinpointUser(lat, long) async {
     //mapController.move(LatLng(28.538336, -81.379234), 9.0);
     mapController.move(LatLng(lat, long), 15.0);
-    createMarkers();
+    //createMarkers();
   }
 
+  // zooms closer to selected search result
   void zoomTo(double lat, double lon) {
     mapController.move(LatLng(lat, lon), 15.0);
+  }
+
+  // reloads submitted reports from database
+  void refreshMap() async {
+    createMarkers();
+    mapController.move(LatLng(latitude, longitude), 9.0);
   }
 
   // takes in type of permission need/want
   // returns true/false if have/need perm
   Future<bool> checkPerms(String permType) async {
-    if (permType == 'cameraPerm') {
-      // logic for camera permission here
-    }
     if (permType == 'locationPerm') {
       final status = await permissionLocation.request();
 
@@ -191,6 +195,7 @@ class DisplayMapPageState extends State<DisplayMap> {
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
       String username = data['name'];
       DateTime time = point['time'].toDate();
+      String imageURL = point['images'].toString();
 
       // if active show/add, otherwise dont show
       if (point['active'] == true) {
@@ -200,6 +205,7 @@ class DisplayMapPageState extends State<DisplayMap> {
             point['description'],
             point['title'],
             point['eventType'],
+            imageURL.substring(1, imageURL.length -1),
             DateFormat.yMEd().add_jms().format(time),
             username,
             point['creator']);
@@ -287,9 +293,15 @@ class DisplayMapPageState extends State<DisplayMap> {
                                         ),
                                     'Submitted by: ${pointData.creator}')),
                           ),
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.all(8.0),
-                            child: Center(child: Text('[Insert Image Here]')),
+                            child: Center(
+                                child: Image.network(
+                                    pointData.imageURL,
+                                  width: 250,
+                                  height: 250,
+                                )
+                            ),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -478,23 +490,36 @@ class DisplayMapPageState extends State<DisplayMap> {
           onSelect: _showInfoScreen,
           mapContext: context,
           zoomTo: zoomTo),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          var permResult = await checkPerms('locationPerm');
-          if (permResult == true) {
-            final position = await Geolocator.getCurrentPosition();
-            pinpointUser(position.latitude, position.longitude);
-          } else {
-            showDialog(
-                context: context,
-                builder: (BuildContext context) => AlertDialog(
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: <Widget> [
+          FloatingActionButton(
+            onPressed: () {
+              refreshMap();
+            },
+            child: Icon(Icons.refresh),
+          ),
+          SizedBox(
+            height: 10,
+          ),
+          FloatingActionButton(
+            onPressed: () async {
+              var permResult = await checkPerms('locationPerm');
+              if (permResult == true) {
+                final position = await Geolocator.getCurrentPosition();
+                pinpointUser(position.latitude, position.longitude);
+              } else {
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) => AlertDialog(
                         title: const Text('Location Access Denied'),
-                        content:
-                            const Text('Please enable Location Access, you can'
-                                'change this later in app settings.'),
-                        actions: <Widget>[
+                        content: const Text('Please enable Location Access, you can'
+                            'change this later in app settings.'),
+                        actions: <Widget> [
                           TextButton(
-                            onPressed: () => Navigator.pop(context, 'Cancel'),
+                            onPressed: () {
+                              Navigator.pop(context, 'Cancel');
+                            },
                             child: const Text('Cancel'),
                           ),
                           TextButton(
@@ -504,12 +529,16 @@ class DisplayMapPageState extends State<DisplayMap> {
                             },
                             child: const Text('OK'),
                           )
-                        ]));
-            // use default location or insist on current position?
-            //pinpointUser(latitude, longitude);
-          }
-        },
-        child: const Icon(Icons.location_searching_rounded),
+                        ]
+                    )
+                );
+                // use default location or insist on current position?
+                //pinpointUser(latitude, longitude);
+              }
+            },
+            child: const Icon(Icons.location_searching_rounded),
+          ),
+        ],
       ),
     );
   }
