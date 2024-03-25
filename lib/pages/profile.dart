@@ -33,7 +33,6 @@ class _ProfilePage extends State<ProfilePage> {
   final int _reportLimit = 15;
   // Search utility vars
   final TextEditingController _searchTextField = TextEditingController();
-  String _previousSearchText = "";
   int? _previousReportsLength;
   int _numOfNewlyAddedReports = 0;
   bool _isFiltering = false;
@@ -225,7 +224,7 @@ class _ProfilePage extends State<ProfilePage> {
         }
         _isLoadingMore = false;
       });
-      await filterLazyLoadedReport(_searchTextField.text);
+      await filterLazyLoadedReports(_searchTextField.text);
     }
   }
 
@@ -383,7 +382,16 @@ class _ProfilePage extends State<ProfilePage> {
                         ),
                         controller: _searchTextField,
                         onChanged: (value) async {
-                          filterLoadedReports(value);
+                          bool searchAllReports = false;
+                          // Checks if a character was not appended or prepended
+                          // meaning that we need to search all reports and not
+                          // only the current filtered list.
+                          if (_searchTextField.selection.start != 1 &&
+                              _searchTextField.selection.start !=
+                                  (value.length)) {
+                            searchAllReports = true;
+                          }
+                          filterLoadedReports(value, searchAllReports);
                         },
                       ),
                     ),
@@ -453,11 +461,10 @@ class _ProfilePage extends State<ProfilePage> {
 
   // Filter the loaded reports on the first run of the search.
   // Loads more reports if not enough were shown.
-  void filterLoadedReports(String? searchText) {
+  void filterLoadedReports(String? searchText, bool searchAllReports) {
     if (searchText == null || searchText.isEmpty || _userReports == null) {
       setState(() {
         _filteredReports = _userReports;
-        _previousSearchText = searchText ?? '';
       });
       _previousReportsLength = null;
       return;
@@ -468,7 +475,7 @@ class _ProfilePage extends State<ProfilePage> {
     List<EventModel>? newReports = [];
 
     // Filter based on all reports
-    if (search.length < _previousSearchText.length || search.length == 1) {
+    if (searchAllReports) {
       // Filter based on title, type, and description
       _userReports?.forEach((report) {
         if (report.title.toLowerCase().contains(search) ||
@@ -508,7 +515,6 @@ class _ProfilePage extends State<ProfilePage> {
       }
       // update search filter data
       _filteredReports = newReports;
-      _previousSearchText = search;
       _previousReportsLength = _userReports?.length;
     });
 
@@ -519,7 +525,7 @@ class _ProfilePage extends State<ProfilePage> {
   }
 
   // Filter and add new lazily loaded reports to the current filtered list
-  Future<void> filterLazyLoadedReport(String? search) async {
+  Future<void> filterLazyLoadedReports(String? search) async {
     if (search == null ||
         search.isEmpty ||
         _filteredReports == null ||
@@ -609,7 +615,8 @@ class _ProfilePage extends State<ProfilePage> {
   }
 
   // Returns a delete button that will delete a report from
-  Widget displayReportDeleteButton(int index) {
+  Widget displayReportDeleteButton(int index,
+      {Color buttonColor = Colors.white}) {
     return SizedBox(
       height: 30,
       child: IconButton(
@@ -640,17 +647,18 @@ class _ProfilePage extends State<ProfilePage> {
                 actions: [
                   ElevatedButton(
                       style: ButtonStyle(
-                          fixedSize: MaterialStateProperty.resolveWith(
-                              (states) => const Size.fromWidth(125)),
-                          backgroundColor: MaterialStateColor.resolveWith(
-                              (states) => highlight)),
+                        fixedSize: MaterialStateProperty.resolveWith(
+                            (states) => const Size.fromWidth(125)),
+                        backgroundColor: MaterialStateColor.resolveWith(
+                            (states) => highlight),
+                      ),
                       // Delete the specified report
                       onPressed: () async {
                         Navigator.pop(context);
                         // Delete report from database and
                         // remove from userReports list
                         await deleteReport([_filteredReports![index].id]);
-                        // Delete report
+                        // Delete report locally
                         setState(() {
                           _filteredReports!.removeAt(index);
                         });
@@ -664,10 +672,11 @@ class _ProfilePage extends State<ProfilePage> {
                   ),
                   ElevatedButton(
                       style: ButtonStyle(
-                          fixedSize: MaterialStateProperty.resolveWith(
-                              (states) => const Size.fromWidth(125)),
-                          backgroundColor: MaterialStateColor.resolveWith(
-                              (states) => Colors.white12)),
+                        fixedSize: MaterialStateProperty.resolveWith(
+                            (states) => const Size.fromWidth(125)),
+                        backgroundColor: MaterialStateColor.resolveWith(
+                            (states) => Colors.grey.shade600),
+                      ),
                       onPressed: () {
                         Navigator.pop(context);
                       },
@@ -680,9 +689,9 @@ class _ProfilePage extends State<ProfilePage> {
             },
           ),
         },
-        icon: const Icon(
+        icon: Icon(
           CupertinoIcons.trash,
-          color: Colors.white,
+          color: buttonColor,
         ),
       ),
     );
@@ -707,8 +716,21 @@ class _ProfilePage extends State<ProfilePage> {
     });
   }
 
+  Widget createReportInfoDisplay({required Widget info}) {
+    return Material(
+      elevation: 3,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: info,
+      ),
+    );
+  }
+
   // Displays the report in more detail on another route
   Widget showFullReport(int index) {
+    TextStyle dataTitleStyle = TextStyle(
+        color: Colors.grey.shade800, fontSize: 22, fontWeight: FontWeight.bold);
+    TextStyle infoStyle = const TextStyle(color: Colors.black, fontSize: 16);
     return OpenContainer(
       closedShape:
           RoundedRectangleBorder(borderRadius: calculateRowBorderRadius(index)),
@@ -727,9 +749,12 @@ class _ProfilePage extends State<ProfilePage> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child:
-                      Text(_filteredReports![index].title, style: dataStyle)),
+                scrollDirection: Axis.horizontal,
+                child: Text(
+                  _filteredReports![index].title,
+                  style: const TextStyle(color: Colors.black, fontSize: 18),
+                ),
+              ),
             ),
           ),
         ),
@@ -740,14 +765,18 @@ class _ProfilePage extends State<ProfilePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               FilledButton(
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateColor.resolveWith(
-                          (states) => Colors.transparent)),
-                  onPressed: () => Navigator.pop(context),
-                  child: const Icon(
-                    CupertinoIcons.back,
-                    color: Colors.black,
-                  )),
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateColor.resolveWith(
+                      (states) => Colors.transparent),
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Icon(
+                  CupertinoIcons.back,
+                  color: Colors.black,
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16.0,
@@ -755,76 +784,81 @@ class _ProfilePage extends State<ProfilePage> {
                 ),
                 child: SingleChildScrollView(
                   scrollDirection: Axis.vertical,
-                  child: Theme(
-                    data: ThemeData(),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _filteredReports![index].title,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            wordSpacing: 2,
-                          ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _filteredReports![index].title,
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          wordSpacing: 2,
                         ),
-                        const SizedBox(height: 8),
-                        DataTable(
-                          columnSpacing: 40,
-                          dataTextStyle: dataStyle,
-                          dataRowMinHeight: 30,
-                          dataRowMaxHeight: double.infinity,
-                          headingRowHeight: 2,
-                          columns: [
-                            DataColumn(label: Container()),
-                            DataColumn(label: Container()),
-                          ],
-                          rows: [
-                            DataRow(
-                              cells: [
-                                const DataCell(Text("Type")),
-                                DataCell(
-                                  Flex(
-                                    direction: Axis.horizontal,
-                                    children: [
-                                      SizedBox(
-                                        child:
-                                            Text(_filteredReports![index].type),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              ],
-                            ),
-                            DataRow(
-                              cells: [
-                                const DataCell(Text("Description")),
-                                DataCell(Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: Text(
-                                      _filteredReports![index].description),
-                                ))
-                              ],
-                            ),
-                            DataRow(cells: [
-                              const DataCell(Text("Date Created")),
-                              DataCell(
-                                Text(
-                                    "${DateFormat.yMMMd().add_jmz().format(_filteredReports![index].time.toDate())} ${_filteredReports![index].time.toDate().timeZoneName}"),
-                              )
-                            ]),
-                            DataRow(cells: [
-                              const DataCell(Text("Active")),
-                              DataCell(
-                                setStatus(_filteredReports![index].active),
-                              )
-                            ]),
-                          ],
-                        )
-                      ],
-                    ),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Text(
+                        "Type",
+                        style: dataTitleStyle,
+                      ),
+                      const SizedBox(
+                        height: 8,
+                      ),
+                      createReportInfoDisplay(
+                        info: Text(
+                          _filteredReports![index].type,
+                          style: infoStyle,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 16,
+                      ),
+                      Text(
+                        "Description",
+                        style: dataTitleStyle,
+                      ),
+                      const SizedBox(
+                        height: 8,
+                      ),
+                      createReportInfoDisplay(
+                        info: Text(
+                          _filteredReports![index].description,
+                          style: infoStyle,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 16,
+                      ),
+                      Text(
+                        "Date Created",
+                        style: dataTitleStyle,
+                      ),
+                      const SizedBox(
+                        height: 8,
+                      ),
+                      createReportInfoDisplay(
+                        info: Text(
+                          "${DateFormat.yMMMd().add_jmz().format(_filteredReports![index].time.toDate())} ${_filteredReports![index].time.toDate().timeZoneName}",
+                          style: infoStyle,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 16,
+                      ),
+                      Text(
+                        "Active",
+                        style: dataTitleStyle,
+                      ),
+                      const SizedBox(
+                        height: 8,
+                      ),
+                      createReportInfoDisplay(
+                        info: setStatus(_filteredReports![index].active),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -855,9 +889,6 @@ class _ProfilePage extends State<ProfilePage> {
 
     return statusIcon;
   }
-
-  TextStyle dataStyle = const TextStyle(
-      color: Colors.black, fontSize: 18, fontWeight: FontWeight.w500);
 
   // Returns a border radius for a specified index row
   BorderRadiusGeometry calculateRowBorderRadius(int index) {
@@ -991,153 +1022,171 @@ class _ProfilePage extends State<ProfilePage> {
     return Container(
       color: secondary,
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 32),
-          child: Column(
-            children: [
-              const Row(
-                children: [BackButton()],
-              ),
-              Text(
-                "Change Email",
-                style: TextStyle(
-                    color: highlight,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: emailController,
-                style: const TextStyle(color: Colors.white, height: 1.0),
-                decoration: InputDecoration(
-                    isDense: true,
-                    hintStyle: const TextStyle(color: Colors.white),
-                    fillColor: primary,
-                    filled: true,
-                    border: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(15))),
-                    hintText: "New Email"),
-              ),
-              ElevatedButton(
-                style: ButtonStyle(
-                    backgroundColor:
-                        MaterialStateColor.resolveWith((states) => highlight)),
-                onPressed: () {
-                  if (emailController.text.isEmpty) return;
-
-                  showDialog(
-                    barrierDismissible: false,
-                    context: context,
-                    builder: (context) {
-                      // Attempt to update email
-                      return WillPopScope(
-                        onWillPop: () async {
-                          return false;
-                        },
-                        child: FutureBuilder(
-                          future: updateUserEmail(emailController.text),
-                          builder: (context, snapshot) {
-                            switch (snapshot.connectionState) {
-                              case ConnectionState.waiting:
-                              case ConnectionState.none:
-                                return const AlertDialog(
-                                  elevation: 10,
-                                  content: SizedBox(
-                                    width: 40,
-                                    height: 40,
-                                    child: Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  ),
-                                );
-
-                              case ConnectionState.active:
-                              case ConnectionState.done:
-                                // handle error cases
-                                if (snapshot.data != null) {
-                                  switch (snapshot.data!.code) {
-                                    case "requires-recent-login":
-                                    case "user-token-expired":
-                                      print("requires login");
-                                      return displayAlert(
-                                          "Reauthentication Needed",
-                                          "For security purposes, please login to verify your identity.",
-                                          actions: [
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                signOutUser();
-                                              },
-                                              child: const Text("Ok"),
-                                            )
-                                          ]);
-                                    case "invalid-email":
-                                      print("invalid email");
-                                      return displayAlert("Invalid Email",
-                                          "Please ensure your email is correct.");
-                                    case "same-email":
-                                      return displayAlert(
-                                          "Cannot Update to Same Email",
-                                          "You must update to a different email than your current email.");
-                                    // not working
-                                    case "email-already-exists":
-                                    case "email-already-in-use":
-                                      return displayAlert(
-                                          "Email Already in Use",
-                                          "This email is already taken. Please choose a different email.");
-                                    default:
-                                      print(snapshot.data!.code);
-                                      return displayAlert("Error Occured",
-                                          "Please try again later.");
-                                  }
-                                }
-
-                                // Email verification sent successfully, so prepare for reauthentication.
-                                return displayAlert(
-                                  "Verify New Email Address",
-                                  "A verification email has been sent to ${emailController.text}.",
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        signOutUser();
-                                      },
-                                      style: ButtonStyle(
-                                          backgroundColor:
-                                              MaterialStateColor.resolveWith(
-                                                  (states) => highlight)),
-                                      child: const Text("Ok"),
-                                    ),
-                                  ],
-                                );
-                            }
-                          },
-                        ),
-                      );
-                    },
-                  );
-                },
-                child: const SizedBox(
-                  width: 190,
-                  child: Center(
-                    child: Text(
-                      "Update",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                FilledButton(
+                  style: ButtonStyle(
+                      backgroundColor: MaterialStateColor.resolveWith(
+                          (states) => Colors.transparent)),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Icon(
+                    CupertinoIcons.back,
+                    color: Colors.black,
                   ),
                 ),
+              ],
+            ),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 32),
+              child: Column(
+                children: [
+                  Text(
+                    "Change Email",
+                    style: TextStyle(
+                        color: highlight,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: emailController,
+                    style: const TextStyle(color: Colors.white, height: 1.0),
+                    decoration: InputDecoration(
+                        isDense: true,
+                        hintStyle: const TextStyle(color: Colors.white),
+                        fillColor: primary,
+                        filled: true,
+                        border: const OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(15))),
+                        hintText: "New Email"),
+                  ),
+                  ElevatedButton(
+                    style: ButtonStyle(
+                        backgroundColor: MaterialStateColor.resolveWith(
+                            (states) => highlight)),
+                    onPressed: () {
+                      if (emailController.text.isEmpty) return;
+
+                      showDialog(
+                        barrierDismissible: false,
+                        context: context,
+                        builder: (context) {
+                          // Attempt to update email
+                          return WillPopScope(
+                            onWillPop: () async {
+                              return false;
+                            },
+                            child: FutureBuilder(
+                              future: updateUserEmail(emailController.text),
+                              builder: (context, snapshot) {
+                                switch (snapshot.connectionState) {
+                                  case ConnectionState.waiting:
+                                  case ConnectionState.none:
+                                    return const AlertDialog(
+                                      elevation: 10,
+                                      content: SizedBox(
+                                        width: 40,
+                                        height: 40,
+                                        child: Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      ),
+                                    );
+
+                                  case ConnectionState.active:
+                                  case ConnectionState.done:
+                                    // handle error cases
+                                    if (snapshot.data != null) {
+                                      switch (snapshot.data!.code) {
+                                        case "requires-recent-login":
+                                        case "user-token-expired":
+                                          print("requires login");
+                                          return displayAlert(
+                                              "Reauthentication Needed",
+                                              "For security purposes, please login to verify your identity.",
+                                              actions: [
+                                                ElevatedButton(
+                                                  onPressed: () {
+                                                    signOutUser();
+                                                  },
+                                                  child: const Text("Ok"),
+                                                )
+                                              ]);
+                                        case "invalid-email":
+                                          print("invalid email");
+                                          return displayAlert("Invalid Email",
+                                              "Please ensure your email is correct.");
+                                        case "same-email":
+                                          return displayAlert(
+                                              "Cannot Update to Same Email",
+                                              "You must update to a different email than your current email.");
+                                        // not working
+                                        case "email-already-exists":
+                                        case "email-already-in-use":
+                                          return displayAlert(
+                                              "Email Already in Use",
+                                              "This email is already taken. Please choose a different email.");
+                                        default:
+                                          print(snapshot.data!.code);
+                                          return displayAlert("Error Occured",
+                                              "Please try again later.");
+                                      }
+                                    }
+
+                                    // Email verification sent successfully, so prepare for reauthentication.
+                                    return displayAlert(
+                                      "Verify New Email Address",
+                                      "A verification email has been sent to ${emailController.text}.",
+                                      actions: [
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            signOutUser();
+                                          },
+                                          style: ButtonStyle(
+                                              backgroundColor:
+                                                  MaterialStateColor
+                                                      .resolveWith((states) =>
+                                                          highlight)),
+                                          child: const Text("Ok"),
+                                        ),
+                                      ],
+                                    );
+                                }
+                              },
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    child: const SizedBox(
+                      width: 190,
+                      child: Center(
+                        child: Text(
+                          "Update",
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text("OR",
+                      style: TextStyle(
+                          color: primary,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold)),
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 10.0),
+                    child: SignInButton(Buttons.Google,
+                        onPressed: signInWithGoogle),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
-              Text("OR",
-                  style: TextStyle(
-                      color: primary,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold)),
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 10.0),
-                child:
-                    SignInButton(Buttons.Google, onPressed: signInWithGoogle),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
