@@ -1,8 +1,9 @@
+import 'package:cord2_mobile_app/pages/chat.dart';
 import 'package:cord2_mobile_app/pages/map.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:cord2_mobile_app/pages/profile.dart';
+import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -26,6 +27,8 @@ class MyApp extends StatelessWidget {
 }
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -46,7 +49,7 @@ class _HomePageState extends State<HomePage> {
                 currentPage), // Show content based on the current page
             // Circular menu button
             Positioned(
-              top: 50.0,
+              top: 35.0,
               left: 10.0,
               child: InkWell(
                 onTap: () {
@@ -90,12 +93,13 @@ class _HomePageState extends State<HomePage> {
               const Divider(),
               ListTile(
                 title: const Text('Log Out'),
-                onTap: () async {
-                  await FirebaseAuth.instance.signOut();
-                  Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (context) => SignOnPage()),
-                      (Route route) => false);
+                onTap: () {
+                  FirebaseAuth.instance.signOut().then((_) =>
+                      Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const SignOnPage()),
+                          (Route route) => false));
                 },
               ),
             ],
@@ -120,11 +124,11 @@ class _HomePageState extends State<HomePage> {
       case "Map":
         return Center(child: DisplayMap());
       case "Report":
-        return Center(child: Text('Report Content'));
+        return const Center(child: Text('Report Content'));
       case "Chat":
-        return Center(child: Text('Chat Content'));
+        return const Center(child: ChatPage());
       case "Profile":
-        return const ProfilePage();
+        return const Center(child: ProfilePage());
       default:
         return Container(); // Default empty container
     }

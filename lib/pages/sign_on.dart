@@ -17,6 +17,7 @@ enum Page { Login, Register, Forgot }
 
 class _SignOnPageState extends State<SignOnPage> {
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
+  final User? user = FirebaseAuth.instance.currentUser;
   CollectionReference users = FirebaseFirestore.instance.collection('users');
   Page current = Page.Login;
   TextEditingController emailController = TextEditingController();
@@ -33,11 +34,14 @@ class _SignOnPageState extends State<SignOnPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (user != null) {
+        homePage();
+      }
+    });
     // Update the stored user
     _googleSignIn.onCurrentUserChanged
         .listen((GoogleSignInAccount? account) => handleGoogleUser(account));
-    // Attempt to log in a previously authorized user
-    _googleSignIn.signInSilently();
   }
 
   void setError(String msg) {
@@ -52,10 +56,9 @@ class _SignOnPageState extends State<SignOnPage> {
     if (isAuthorized) {
       GoogleSignInAuthentication googleAuth = await account.authentication;
       OAuthCredential credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken
-      );
-      UserCredential firebaseCred = await FirebaseAuth.instance.signInWithCredential(credential);
+          accessToken: googleAuth.accessToken, idToken: googleAuth.idToken);
+      UserCredential firebaseCred =
+          await FirebaseAuth.instance.signInWithCredential(credential);
 
       DocumentSnapshot doc = await users.doc(firebaseCred.user?.uid).get();
       // Found a user account
@@ -67,15 +70,16 @@ class _SignOnPageState extends State<SignOnPage> {
         users
             .doc(firebaseCred.user?.uid)
             .set({
-          'name': account.displayName,
-          'email': account.email,
-          'events': [],
-          'chats': []
-        })
+              'name': account.displayName,
+              'email': account.email,
+              'events': [],
+              'chats': [],
+              'isResponder': false
+            })
             .then((value) => print("Successfully added user!"))
             .catchError((err) => print("Failed to add user $err"));
       }
-      //homePage();
+      homePage();
     }
   }
 
@@ -95,25 +99,27 @@ class _SignOnPageState extends State<SignOnPage> {
       setError("Passwords don't match");
       return;
     }
-    if (passController.text.isEmpty || displayNameController.text.isEmpty ||
-        emailController.text.isEmpty || confirmPassController.text.isEmpty) {
+    if (passController.text.isEmpty ||
+        displayNameController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        confirmPassController.text.isEmpty) {
       setError("Please fill out all fields");
       return;
     }
     try {
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
-          email: emailController.text, password: passController.text
-      );
+              email: emailController.text, password: passController.text);
 
       users
           .doc(userCredential.user?.uid)
           .set({
-        'name': displayNameController.text,
-        'email': userCredential.user?.email,
-        'events': [],
-        'chats': []
-      })
+            'name': displayNameController.text,
+            'email': userCredential.user?.email,
+            'events': [],
+            'chats': [],
+            'isResponder': false
+          })
           .then((value) => print("Successfully added user!"))
           .catchError((err) => print("Failed to add user $err"));
     } on FirebaseAuthException catch (e) {
@@ -137,9 +143,7 @@ class _SignOnPageState extends State<SignOnPage> {
 
     try {
       final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: emailController.text,
-          password: passController.text
-      );
+          email: emailController.text, password: passController.text);
       homePage();
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
@@ -154,7 +158,9 @@ class _SignOnPageState extends State<SignOnPage> {
 
   void homePage() {
     Navigator.pushAndRemoveUntil(
-        context, MaterialPageRoute(builder: (context) => HomePage()), (Route route) => false);
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+        (Route route) => false);
   }
 
   FractionallySizedBox createButton(String text, onPressed) {
@@ -165,11 +171,9 @@ class _SignOnPageState extends State<SignOnPage> {
           style: ElevatedButton.styleFrom(
             backgroundColor: Color(blurple),
             shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(15))
-            ),
+                borderRadius: BorderRadius.all(Radius.circular(15))),
           ),
-          child: Text(text, style: whiteText)
-      ),
+          child: Text(text, style: whiteText)),
     );
   }
 
@@ -216,7 +220,8 @@ class _SignOnPageState extends State<SignOnPage> {
               hintStyle: const TextStyle(color: Colors.white),
               fillColor: Color(darkBlue),
               filled: true,
-              border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
+              border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(15))),
               hintText: "Email"),
         ),
       ),
@@ -229,7 +234,8 @@ class _SignOnPageState extends State<SignOnPage> {
               hintStyle: const TextStyle(color: Colors.white),
               fillColor: Color(darkBlue),
               filled: true,
-              border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
+              border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(15))),
               hintText: "Display Name"),
         ),
       ),
@@ -244,7 +250,8 @@ class _SignOnPageState extends State<SignOnPage> {
             hintStyle: const TextStyle(color: Colors.white),
             fillColor: Color(darkBlue),
             filled: true,
-            border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
+            border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(15))),
             hintText: "Password",
           ),
         ),
@@ -260,15 +267,15 @@ class _SignOnPageState extends State<SignOnPage> {
             hintStyle: const TextStyle(color: Colors.white),
             fillColor: Color(darkBlue),
             filled: true,
-            border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
+            border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(15))),
             hintText: "Confirm Password",
           ),
         ),
       ),
       Container(
           margin: const EdgeInsets.symmetric(vertical: 10.0),
-          child: createButton("Register", () => handleRegister())
-      ),
+          child: createButton("Register", () => handleRegister())),
       Text(_error, style: const TextStyle(color: Colors.red)),
       Text("Already have an account?", style: TextStyle(color: Color(blurple))),
       GestureDetector(
@@ -276,9 +283,7 @@ class _SignOnPageState extends State<SignOnPage> {
               style: TextStyle(
                   decoration: TextDecoration.underline,
                   color: Color(blurple),
-                  fontStyle: FontStyle.italic
-              )
-          ),
+                  fontStyle: FontStyle.italic)),
           onTap: () {
             switchPage(Page.Login);
           }),
@@ -289,8 +294,8 @@ class _SignOnPageState extends State<SignOnPage> {
     return [
       Container(
           margin: const EdgeInsets.symmetric(vertical: 15.0),
-          child: Text("Forgot Password?", style: TextStyle(color: Color(blurple), fontSize: 25.0))
-      ),
+          child: Text("Forgot Password?",
+              style: TextStyle(color: Color(blurple), fontSize: 25.0))),
       Container(
         margin: const EdgeInsets.symmetric(vertical: 10.0),
         child: TextField(
@@ -301,23 +306,21 @@ class _SignOnPageState extends State<SignOnPage> {
               hintStyle: const TextStyle(color: Colors.white),
               fillColor: Color(darkBlue),
               filled: true,
-              border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
+              border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(15))),
               hintText: "Enter Your Email"),
         ),
       ),
       Text(_error, style: const TextStyle(color: Colors.red)),
       Container(
           margin: const EdgeInsets.symmetric(vertical: 10.0),
-          child: createButton("Send Reset Email", () => handlePassReset())
-      ),
+          child: createButton("Send Reset Email", () => handlePassReset())),
       GestureDetector(
           child: Text("Login",
               style: TextStyle(
                   decoration: TextDecoration.underline,
                   color: Color(blurple),
-                  fontStyle: FontStyle.italic
-              )
-          ),
+                  fontStyle: FontStyle.italic)),
           onTap: () {
             switchPage(Page.Login);
           }),
@@ -328,7 +331,8 @@ class _SignOnPageState extends State<SignOnPage> {
     return [
       Container(
         margin: const EdgeInsets.symmetric(vertical: 15.0),
-        child: Text("Login", style: TextStyle(color: Color(blurple), fontSize: 25.0)),
+        child: Text("Login",
+            style: TextStyle(color: Color(blurple), fontSize: 25.0)),
       ),
       Container(
         margin: const EdgeInsets.symmetric(vertical: 10.0),
@@ -340,7 +344,8 @@ class _SignOnPageState extends State<SignOnPage> {
               hintStyle: const TextStyle(color: Colors.white),
               fillColor: Color(darkBlue),
               filled: true,
-              border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
+              border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(15))),
               hintText: "Email"),
         ),
       ),
@@ -355,23 +360,21 @@ class _SignOnPageState extends State<SignOnPage> {
             hintStyle: const TextStyle(color: Colors.white),
             fillColor: Color(darkBlue),
             filled: true,
-            border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
+            border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(15))),
             hintText: "Password",
           ),
         ),
       ),
       GestureDetector(
           child: Text("Forgot Password?",
-          style: TextStyle(
-            decoration: TextDecoration.underline,
-            color: Color(blurple),
-            fontStyle: FontStyle.italic
-          )
-        ),
-        onTap: () {
-          switchPage(Page.Forgot);
-        }
-      ),
+              style: TextStyle(
+                  decoration: TextDecoration.underline,
+                  color: Color(blurple),
+                  fontStyle: FontStyle.italic)),
+          onTap: () {
+            switchPage(Page.Forgot);
+          }),
       Text(_error, style: const TextStyle(color: Colors.red)),
       Container(
         margin: const EdgeInsets.symmetric(vertical: 10.0),
@@ -382,13 +385,10 @@ class _SignOnPageState extends State<SignOnPage> {
               style: TextStyle(
                   decoration: TextDecoration.underline,
                   color: Color(blurple),
-                  fontStyle: FontStyle.italic
-              )
-          ),
+                  fontStyle: FontStyle.italic)),
           onTap: () {
             switchPage(Page.Register);
-          }
-      ),
+          }),
       Container(
         margin: const EdgeInsets.symmetric(vertical: 10.0),
         child: SignInButton(Buttons.Google, onPressed: signInWithGoogle),

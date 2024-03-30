@@ -4,17 +4,11 @@ class PointData {
   final String description;
   final String title;
   final String eventType;
+  final String imageURL;
   final String formattedDate;
   final String creator;
+  final String creatorId;
 
-  PointData(
-      this.latitude,
-      this.longitude,
-      this.description,
-      this.title,
-      this.eventType,
-      this.formattedDate,
-      this.creator
-      );
-
+  PointData(this.latitude, this.longitude, this.description, this.title,
+      this.eventType, this.imageURL, this.formattedDate, this.creator, this.creatorId);
 }

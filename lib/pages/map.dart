@@ -1,14 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cord2_mobile_app/pages/messages.dart';
 import 'package:cord2_mobile_app/pages/search.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'dart:math';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_geojson/flutter_map_geojson.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:uuid/uuid.dart';
 
+import '../models/chat_model.dart';
 import '../models/point_data.dart';
 
 class DisplayMap extends StatefulWidget {
@@ -19,6 +25,7 @@ class DisplayMap extends StatefulWidget {
 class DisplayMapPageState extends State<DisplayMap> {
   final double latitude = 28.5384;
   final double longitude = -81.3789;
+  final permissionLocation = Permission.location;
   late List<Marker> _markers = [];
   late List<PointData> _data = [];
   // related to lotis data
@@ -28,14 +35,38 @@ class DisplayMapPageState extends State<DisplayMap> {
   late MapController mapController;
   CollectionReference events = FirebaseFirestore.instance.collection('events');
   CollectionReference users = FirebaseFirestore.instance.collection('users');
+  String permType = '';
 
-  void refreshMap() async {
-    mapController.move(LatLng(28.538336, -81.379234), 9.0);
-    createMarkers();
+  // zooms closer to users current position
+  void pinpointUser(lat, long) async {
+    //mapController.move(LatLng(28.538336, -81.379234), 9.0);
+    mapController.move(LatLng(lat, long), 15.0);
+    //createMarkers();
   }
 
+  // zooms closer to selected search result
   void zoomTo(double lat, double lon) {
     mapController.move(LatLng(lat, lon), 15.0);
+  }
+
+  // reloads submitted reports from database
+  void refreshMap() async {
+    createMarkers();
+    mapController.move(LatLng(latitude, longitude), 9.0);
+  }
+
+  // takes in type of permission need/want
+  // returns true/false if have/need perm
+  Future<bool> checkPerms(String permType) async {
+    if (permType == 'locationPerm') {
+      final status = await permissionLocation.request();
+
+      if (status.isGranted) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   // instantiate parser, use the defaults
@@ -150,8 +181,6 @@ class DisplayMapPageState extends State<DisplayMap> {
         .map((doc) => doc.data() as Map<String, dynamic>)
         .toList();
 
-    // get user
-    // Get docs from collection reference
     QuerySnapshot userSnapshot = await users.get();
     // Get data from docs and convert map to List
     final allUsers = userSnapshot.docs
@@ -162,9 +191,11 @@ class DisplayMapPageState extends State<DisplayMap> {
     for (var point in allData) {
       String theUser;
       DocumentSnapshot doc = await users.doc(point['creator'].toString()).get();
+      if (!mounted) return;
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
       String username = data['name'];
       DateTime time = point['time'].toDate();
+      String imageURL = point['images'].toString();
 
       // if active show/add, otherwise dont show
       if (point['active'] == true) {
@@ -174,21 +205,23 @@ class DisplayMapPageState extends State<DisplayMap> {
             point['description'],
             point['title'],
             point['eventType'],
+            imageURL.substring(1, imageURL.length -1),
             DateFormat.yMEd().add_jms().format(time),
-            username);
+            username,
+            point['creator']);
 
         markers.add(Marker(
             point: LatLng(
                 point['latitude'] as double, point['longitude'] as double),
             width: 56,
             height: 56,
-            child: customMarker(pointData)
-        ));
+            child: customMarker(pointData)));
         points.add(pointData);
       }
     }
 
     setState(() {
+      if (!mounted) return;
       _markers = markers;
       _data = points;
     });
@@ -198,8 +231,7 @@ class DisplayMapPageState extends State<DisplayMap> {
     return MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
-            onTap: () => _showInfoScreen(
-                context, pointData),
+            onTap: () => _showInfoScreen(context, pointData),
             child: const Icon(Icons.person_pin_circle_rounded)));
   }
 
@@ -261,9 +293,15 @@ class DisplayMapPageState extends State<DisplayMap> {
                                         ),
                                     'Submitted by: ${pointData.creator}')),
                           ),
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.all(8.0),
-                            child: Center(child: Text('[Insert Image Here]')),
+                            child: Center(
+                                child: Image.network(
+                                    pointData.imageURL,
+                                  width: 250,
+                                  height: 250,
+                                )
+                            ),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -309,6 +347,20 @@ class DisplayMapPageState extends State<DisplayMap> {
                             padding: const EdgeInsets.only(bottom: 8.0),
                             child: Center(child: Text(pointData.formattedDate)),
                           ),
+                          Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Center(
+                                  child: GestureDetector(
+                                      onTap: () {
+                                        handleUserChat(pointData.creatorId);
+                                      },
+                                      child: Text(
+                                        "Chat with this user",
+                                        style: TextStyle(
+                                            decoration:
+                                                TextDecoration.underline,
+                                            fontSize: 24),
+                                      )))),
                         ],
                       ),
                     )
@@ -316,6 +368,60 @@ class DisplayMapPageState extends State<DisplayMap> {
                 )),
           );
         });
+  }
+
+  void handleUserChat(String uid) async {
+    DatabaseReference ref = FirebaseDatabase.instance
+        .ref('chats/${FirebaseAuth.instance.currentUser?.uid}');
+    DataSnapshot snapshot = await ref.get();
+    for (DataSnapshot val in snapshot.children) {
+      final map = val.value as Map?;
+      List<String> participants =
+          map?['participants'].map<String>((val) => val.toString()).toList();
+      bool match = false;
+      for (Object? part in map?['participants']) {
+        Map<String, String> participant = {};
+        if (part.toString() == uid) {
+          match = true;
+          DocumentSnapshot doc = await users.doc(part.toString()).get();
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          participant['name'] = data['name'];
+          participant['uid'] = part.toString();
+          DateTime lastUpdate = DateTime.parse(map!['lastUpdate'].toString());
+          ChatModel chat =
+              ChatModel(participant, participants, lastUpdate, val.key);
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => MessagePage(chat: chat)));
+        }
+      }
+      if (match) return;
+    }
+    var chatId = Uuid().v4();
+    DatabaseReference newChat =
+        FirebaseDatabase.instance.ref('chats/${uid}/$chatId');
+    var res = await newChat.update({
+      "lastUpdate": DateTime.now().toString(),
+      "participants": ["${uid}", "${FirebaseAuth.instance.currentUser?.uid}"]
+    });
+    ref = FirebaseDatabase.instance
+        .ref('chats/${FirebaseAuth.instance.currentUser?.uid}/$chatId');
+    res = await ref.update({
+      "lastUpdate": DateTime.now().toString(),
+      "participants": ["${uid}", "${FirebaseAuth.instance.currentUser?.uid}"]
+    });
+    DatabaseReference newMsg = FirebaseDatabase.instance.ref('msgs');
+    res = await newMsg.update({chatId: []});
+    Map<String, String> participant = {};
+    DocumentSnapshot doc = await users.doc(uid).get();
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    participant['name'] = data['name'];
+    participant['uid'] = uid;
+    List<String> participants = [uid, FirebaseAuth.instance.currentUser!.uid];
+    DateTime lastUpdate = DateTime.now();
+
+    ChatModel chat = ChatModel(participant, participants, lastUpdate, chatId);
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => MessagePage(chat: chat)));
   }
 
   Future<void> processData() async {
@@ -329,17 +435,17 @@ class DisplayMapPageState extends State<DisplayMap> {
     ];
 
     // gets geojson from assets
-    String geoJsonData = await rootBundle.loadString(paths[0]);
+    // String geoJsonData = await rootBundle.loadString(paths[0]);
     String geoJsonData2 = await rootBundle.loadString(paths[1]);
-    String geoJsonData3 = await rootBundle.loadString(paths[2]);
+    // String geoJsonData3 = await rootBundle.loadString(paths[2]);
 
     setState(() {
-      geoJsonParser.parseGeoJsonAsString(geoJsonData);
-      sunrail_markers = geoJsonParser.markers;
+      // geoJsonParser.parseGeoJsonAsString(geoJsonData);
+      // sunrail_markers = geoJsonParser.markers;
       geoJsonParser.parseGeoJsonAsString(geoJsonData2);
       school_markers = geoJsonParser.markers;
-      geoJsonParser.parseGeoJsonAsString(geoJsonData3);
-      transit_markers = geoJsonParser.markers;
+      // geoJsonParser.parseGeoJsonAsString(geoJsonData3);
+      // transit_markers = geoJsonParser.markers;
     });
   }
 
@@ -384,9 +490,55 @@ class DisplayMapPageState extends State<DisplayMap> {
           onSelect: _showInfoScreen,
           mapContext: context,
           zoomTo: zoomTo),
-      floatingActionButton: FloatingActionButton(
-        onPressed: refreshMap,
-        child: const Icon(Icons.refresh),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: <Widget> [
+          FloatingActionButton(
+            onPressed: () {
+              refreshMap();
+            },
+            child: Icon(Icons.refresh),
+          ),
+          SizedBox(
+            height: 10,
+          ),
+          FloatingActionButton(
+            onPressed: () async {
+              var permResult = await checkPerms('locationPerm');
+              if (permResult == true) {
+                final position = await Geolocator.getCurrentPosition();
+                pinpointUser(position.latitude, position.longitude);
+              } else {
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) => AlertDialog(
+                        title: const Text('Location Access Denied'),
+                        content: const Text('Please enable Location Access, you can'
+                            'change this later in app settings.'),
+                        actions: <Widget> [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context, 'Cancel');
+                            },
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              openAppSettings();
+                              Navigator.pop(context, 'OK');
+                            },
+                            child: const Text('OK'),
+                          )
+                        ]
+                    )
+                );
+                // use default location or insist on current position?
+                //pinpointUser(latitude, longitude);
+              }
+            },
+            child: const Icon(Icons.location_searching_rounded),
+          ),
+        ],
       ),
     );
   }

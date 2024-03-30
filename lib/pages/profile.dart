@@ -731,6 +731,13 @@ class _ProfilePage extends State<ProfilePage> {
     TextStyle dataTitleStyle = TextStyle(
         color: Colors.grey.shade800, fontSize: 22, fontWeight: FontWeight.bold);
     TextStyle infoStyle = const TextStyle(color: Colors.black, fontSize: 16);
+    SizedBox itemPadding = const SizedBox(
+      height: 16,
+    );
+    SizedBox infoPadding = const SizedBox(
+      height: 8,
+    );
+
     return OpenContainer(
       closedShape:
           RoundedRectangleBorder(borderRadius: calculateRowBorderRadius(index)),
@@ -761,108 +768,123 @@ class _ProfilePage extends State<ProfilePage> {
       ),
       openBuilder: (context, action) {
         return SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FilledButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateColor.resolveWith(
-                      (states) => Colors.transparent),
-                ),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Icon(
-                  CupertinoIcons.back,
-                  color: Colors.black,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
-                ),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _filteredReports![index].title,
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          wordSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 20,
-                      ),
-                      Text(
-                        "Type",
-                        style: dataTitleStyle,
-                      ),
-                      const SizedBox(
-                        height: 8,
-                      ),
-                      createReportInfoDisplay(
-                        info: Text(
-                          _filteredReports![index].type,
-                          style: infoStyle,
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 16,
-                      ),
-                      Text(
-                        "Description",
-                        style: dataTitleStyle,
-                      ),
-                      const SizedBox(
-                        height: 8,
-                      ),
-                      createReportInfoDisplay(
-                        info: Text(
-                          _filteredReports![index].description,
-                          style: infoStyle,
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 16,
-                      ),
-                      Text(
-                        "Date Created",
-                        style: dataTitleStyle,
-                      ),
-                      const SizedBox(
-                        height: 8,
-                      ),
-                      createReportInfoDisplay(
-                        info: Text(
-                          "${DateFormat.yMMMd().add_jmz().format(_filteredReports![index].time.toDate())} ${_filteredReports![index].time.toDate().timeZoneName}",
-                          style: infoStyle,
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 16,
-                      ),
-                      Text(
-                        "Active",
-                        style: dataTitleStyle,
-                      ),
-                      const SizedBox(
-                        height: 8,
-                      ),
-                      createReportInfoDisplay(
-                        info: setStatus(_filteredReports![index].active),
-                      ),
-                    ],
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FilledButton(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateColor.resolveWith(
+                        (states) => Colors.transparent),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Icon(
+                    CupertinoIcons.back,
+                    color: Colors.black,
                   ),
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _filteredReports![index].title,
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            wordSpacing: 2,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        Text(
+                          "Type",
+                          style: dataTitleStyle,
+                        ),
+                        infoPadding,
+                        createReportInfoDisplay(
+                          info: Text(
+                            _filteredReports![index].type,
+                            style: infoStyle,
+                          ),
+                        ),
+                        itemPadding,
+                        Text(
+                          "Description",
+                          style: dataTitleStyle,
+                        ),
+                        infoPadding,
+                        createReportInfoDisplay(
+                          info: Text(
+                            _filteredReports![index].description,
+                            style: infoStyle,
+                          ),
+                        ),
+                        itemPadding,
+                        Text(
+                          "Date Created",
+                          style: dataTitleStyle,
+                        ),
+                        infoPadding,
+                        createReportInfoDisplay(
+                          info: Text(
+                            "${DateFormat.yMMMd().add_jmz().format(_filteredReports![index].time.toDate())} ${_filteredReports![index].time.toDate().timeZoneName}",
+                            style: infoStyle,
+                          ),
+                        ),
+                        itemPadding,
+                        Text(
+                          "Active",
+                          style: dataTitleStyle,
+                        ),
+                        infoPadding,
+                        createReportInfoDisplay(
+                          info: setStatus(_filteredReports![index].active),
+                        ),
+                        itemPadding,
+                        _filteredReports![index].images.isEmpty
+                            ? Container()
+                            : Text(
+                                "Images",
+                                style: dataTitleStyle,
+                              ),
+                        infoPadding,
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _filteredReports![index].images.length,
+                          itemBuilder: (context, imageIndex) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: createReportInfoDisplay(
+                                info: Image.network(
+                                  _filteredReports![index].images[imageIndex],
+                                  width: 250,
+                                  height: 250,
+                                  semanticLabel:
+                                      _filteredReports![index].description,
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

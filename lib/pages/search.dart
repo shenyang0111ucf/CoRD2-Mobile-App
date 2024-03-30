@@ -98,7 +98,6 @@ class CustomSearchDelegate extends SearchDelegate<String> {
   @override
   Widget buildSuggestions(BuildContext context) {
     List<PointData> suggestionList = [];
-
     if (query.isEmpty) {
       suggestionList = data;
     } else {
@@ -113,7 +112,7 @@ class CustomSearchDelegate extends SearchDelegate<String> {
       itemCount: suggestionList.length,
       itemBuilder: (listContext, index) {
         return ListTile(
-            title: Text(suggestionList[index].title),
+            title: Text(suggestionList[index].title ?? ''),
             onTap: () {
               var selected = suggestionList[index];
               Navigator.pop(listContext);
