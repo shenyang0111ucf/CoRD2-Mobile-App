@@ -306,7 +306,7 @@ class _ReportFormState extends State<ReportForm> {
               //   height: MediaQuery.of(context).size.height-200,
               padding: const EdgeInsets.only(top: 30, bottom:40),
               decoration: const BoxDecoration(
-                color: Color(0xff85aeff),
+                color: Color(0xff060C3E),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(30.0),
                   topRight: Radius.circular(30.0),
@@ -327,7 +327,7 @@ class _ReportFormState extends State<ReportForm> {
                       TextStyle(
                         fontSize: 25,
                         fontWeight: FontWeight.normal,
-                        color: Color(0xff060C3E),
+                        color: Colors.white,
                       )),
                     )),
                     Padding(
@@ -370,7 +370,7 @@ class _ReportFormState extends State<ReportForm> {
                               TextStyle(
                                 fontSize: 25,
                                 fontWeight: FontWeight.normal,
-                                color: Color(0xff060C3E),
+                                color: Colors.white,
                               )),
                         )),
                     const SizedBox(height: 10.0),
@@ -436,7 +436,7 @@ class _ReportFormState extends State<ReportForm> {
                             textStyle: const
                             TextStyle(fontSize: 25,
                               fontWeight: FontWeight.normal,
-                              color: Color(0xff060C3E))))),
+                              color: Colors.white)))),
               Padding(
                 padding: const EdgeInsets.only(left: 20, top:10, right:20),
                 child:
@@ -475,7 +475,7 @@ class _ReportFormState extends State<ReportForm> {
                                 textStyle: const
                                 TextStyle(fontSize: 25,
                                     fontWeight: FontWeight.normal,
-                                    color: Color(0xff060C3E))))),
+                                    color: Colors.white,)))),
                     if (_selectedImage != null)
                       GestureDetector(
                         onTap: () {
@@ -583,10 +583,10 @@ class _ReportFormState extends State<ReportForm> {
   }
 
   Widget chooseLocationModal(BuildContext context, var lat, var lng) {
-    return Container(
+    return SingleChildScrollView(child:Container(
       height: MediaQuery.of(context).size.height * 0.75,
       decoration: const BoxDecoration(
-        color: Color(0xff85aeff),
+        color: Color(0xff060C3E),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(25),
           topRight: Radius.circular(25),
@@ -596,7 +596,7 @@ class _ReportFormState extends State<ReportForm> {
       child: Column(
         children: [
           Container(
-              padding: EdgeInsets.all(10),
+              padding: EdgeInsets.all(15),
               child:  FloatingActionButton(
                 backgroundColor: Colors.white,
                 onPressed: () {
@@ -612,7 +612,7 @@ class _ReportFormState extends State<ReportForm> {
                   textStyle: const
                   TextStyle(fontSize: 25,
                       fontWeight: FontWeight.normal,
-                      color: Color(0xff060C3E)))
+                      color: Colors.white))
           ),
           SizedBox(height: 15),
           Container(
@@ -645,7 +645,7 @@ class _ReportFormState extends State<ReportForm> {
           ),
         ],
       ),
-    );
+    ));
   }
 
 }

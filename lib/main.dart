@@ -1,10 +1,14 @@
 import 'package:cord2_mobile_app/pages/map.dart';
+import 'package:cord2_mobile_app/pages/chat.dart';
+import 'package:cord2_mobile_app/pages/profile.dart';
 import 'package:cord2_mobile_app/pages/report.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'firebase_options.dart';
 
@@ -18,6 +22,7 @@ void main() async {
 
 
 class MyApp extends StatelessWidget {
+ // const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
@@ -65,7 +70,7 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.all(8.0),
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.blue,
+                  color: Color(0xff242C73),
                 ),
                 child: const Icon(
                   size:30,
@@ -78,28 +83,40 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       drawer: Drawer(
+        backgroundColor: Color(0xff060C3E),
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
+             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: Color(0xff060C3E),
               ),
-              child: Text(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                  children:[
+              Text(
                 'CoRD2',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
+                style: GoogleFonts.jost(
+                  textStyle: TextStyle(color: Colors.white, height: 1.0, fontSize: 25),
                 ),
               ),
-            ),
+                SizedBox(height:15),
+                Icon(
+                  CupertinoIcons.person_crop_circle,
+                  size: 70,
+                  color: Colors.white,
+                ),
+            ])),
+
             _buildDrawerItem("Map"),
             _buildDrawerItem("Report"),
             _buildDrawerItem("Chat"),
             _buildDrawerItem("Profile"),
             const Divider(),
             ListTile(
-              title: const Text('Log Out'),
+              title:  Text('Log Out', style: GoogleFonts.jost(
+                textStyle: TextStyle(color: Colors.white, height: 1.0, fontSize: 20),
+              )),
               onTap: () async {
                 await FirebaseAuth.instance.signOut();
                 Navigator.pushAndRemoveUntil(
@@ -114,7 +131,9 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildDrawerItem(String pageName) {
     return ListTile(
-      title: Text(pageName),
+      title: Text(pageName,  style: GoogleFonts.jost(
+        textStyle: TextStyle(color: Colors.white, height: 1.0, fontSize: 20),
+      ),),
       onTap: () {
         // Add navigation to the selected page
         Navigator.pop(_scaffoldKey.currentContext!); // Close the drawer
@@ -131,9 +150,9 @@ class _HomePageState extends State<HomePage> {
       case "Report":
         return Center(child: ReportForm(userId: currentUserId));
       case "Chat":
-        return Center(child: Text('Chat Content'));
+        return Center(child: ChatPage());
       case "Profile":
-        return Center(child: Text('Profile Content'));
+        return Center(child: ProfilePage());
       default:
         return Container(); // Default empty container
     }
