@@ -39,7 +39,7 @@ class Search extends StatelessWidget {
             );
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor:  Color(0xff242C73),
+            backgroundColor: const Color(0xff242C73),
           ),
           child:  Row(
             mainAxisSize: MainAxisSize.min,
