@@ -5,10 +5,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 // Allows access of the current logged in user's data
 class UserData {
   static final CollectionReference _users =
-  FirebaseFirestore.instance.collection('users');
+      FirebaseFirestore.instance.collection('users');
 
   static final CollectionReference _events =
-  FirebaseFirestore.instance.collection('events');
+      FirebaseFirestore.instance.collection('events');
 
   // Retrieves a specified limit of the
   // current user's reports sorted by most recent or oldest
@@ -19,8 +19,8 @@ class UserData {
     if (lastUsedDocID == null) {
       userDataSnapshot = await _events
           .where('creator', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-      // 'descending' determines whether the list retrieved is sorted
-      // by most recent or oldest.
+          // 'descending' determines whether the list retrieved is sorted
+          // by most recent or oldest.
           .orderBy('time', descending: sortByRecent)
           .limit(limit)
           .get();
@@ -58,12 +58,12 @@ class UserData {
   // Get a user's list of reports that they have made
   static Future<List<EventModel>?> getUserReports() async {
     DocumentSnapshot userDataSnapshot =
-    await _users.doc(FirebaseAuth.instance.currentUser?.uid).get();
+        await _users.doc(FirebaseAuth.instance.currentUser?.uid).get();
 
     if (!userDataSnapshot.exists) return null;
 
     Map<String, dynamic> userData =
-    userDataSnapshot.data() as Map<String, dynamic>;
+        userDataSnapshot.data() as Map<String, dynamic>;
     List reportIDs = userData["events"];
     List<EventModel>? reports = [];
 
@@ -71,7 +71,7 @@ class UserData {
     for (String reportID in reportIDs.reversed) {
       DocumentSnapshot eventsSnapshot = await _events.doc(reportID).get();
       Map<String, dynamic> eventData =
-      eventsSnapshot.data() as Map<String, dynamic>;
+          eventsSnapshot.data() as Map<String, dynamic>;
       eventData["id"] = reportID;
       print(eventData["id"]);
       reports.add(EventModel.fromJson(eventData));

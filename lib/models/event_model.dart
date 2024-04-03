@@ -30,14 +30,14 @@ class EventModel {
         id = json['id'] != null ? json['id'] as String : "";
 
   Map<String, dynamic> toJson() => {
-    'active': active,
-    'creator': creator,
-    'description': description,
-    'type': type,
-    'images': images,
-    'latitude': latitude,
-    'longitude': longitude,
-    'time': time,
-    'title': title
-  };
+        'active': active,
+        'creator': creator,
+        'description': description,
+        'type': type,
+        'images': images,
+        'latitude': latitude,
+        'longitude': longitude,
+        'time': time,
+        'title': title
+      };
 }

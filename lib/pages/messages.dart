@@ -25,7 +25,8 @@ class _MessagePageState extends State<MessagePage> {
   final int blurple = 0xff20297A;
   final TextStyle whiteText = const TextStyle(color: Colors.white);
   final User? user = FirebaseAuth.instance.currentUser;
-  final CollectionReference users = FirebaseFirestore.instance.collection('users');
+  final CollectionReference users =
+      FirebaseFirestore.instance.collection('users');
   late StreamSubscription<DatabaseEvent> _msgSubscription;
   late List<MessageModel> _messages = [];
   TextEditingController textController = TextEditingController();
@@ -34,7 +35,8 @@ class _MessagePageState extends State<MessagePage> {
   void initState() {
     super.initState();
     if (user == null) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const SignOnPage()));
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => const SignOnPage()));
     }
     getMessages();
   }
@@ -49,7 +51,8 @@ class _MessagePageState extends State<MessagePage> {
       _messages = [];
     });
     ChatModel chat = widget.chat;
-    DatabaseReference msgRef = FirebaseDatabase.instance.ref('msgs/${chat.id}').orderByKey().ref;
+    DatabaseReference msgRef =
+        FirebaseDatabase.instance.ref('msgs/${chat.id}').orderByKey().ref;
     _msgSubscription = msgRef.onValue.listen((DatabaseEvent event) async {
       List<MessageModel> newList = [];
       for (DataSnapshot val in event.snapshot.children) {
@@ -61,8 +64,7 @@ class _MessagePageState extends State<MessagePage> {
         DateTime sent = DateTime.parse(map!['time'].toString());
         String contents = map!['contents'].toString();
         newList.add(
-            MessageModel(contents, sent, map!['sender'].toString(), didSend)
-        );
+            MessageModel(contents, sent, map!['sender'].toString(), didSend));
         setState(() {
           _messages = newList;
         });
@@ -70,12 +72,10 @@ class _MessagePageState extends State<MessagePage> {
           _scrollController.animateTo(
               _scrollController.position.maxScrollExtent,
               duration: const Duration(milliseconds: 250),
-              curve: Curves.easeOut
-          );
+              curve: Curves.easeOut);
         });
       }
     });
-
   }
 
   ListView renderMessages() {
@@ -89,33 +89,29 @@ class _MessagePageState extends State<MessagePage> {
           return BubbleSpecialThree(
               text: item.contents,
               isSender: item.didSend,
-              tail: index == _messages.length - 1 ? true: false,
-              color: item.didSend ? const Color(0xFF1B97F3) : const Color(0xFFE8E8EE),
-              textStyle: TextStyle(
-                  color: item.didSend ? Colors.white : Colors.black
-              )
-          );
-        }
-    );
+              tail: index == _messages.length - 1 ? true : false,
+              color: item.didSend
+                  ? const Color(0xFF1B97F3)
+                  : const Color(0xFFE8E8EE),
+              textStyle:
+                  TextStyle(color: item.didSend ? Colors.white : Colors.black));
+        });
   }
 
   Widget renderTextScreen() {
-    return Column(
-        children: [
-          Expanded(
-              child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 1.0),
-                  child: renderMessages()
-              )
-          ),
-          renderTextBar()
-        ]
-    );
+    return Column(children: [
+      Expanded(
+          child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 1.0),
+              child: renderMessages())),
+      renderTextBar()
+    ]);
   }
 
   void sendMessage() async {
     if (textController.text.isEmpty) return;
-    DatabaseReference ref = FirebaseDatabase.instance.ref("msgs/${widget.chat.id}/${_messages.length}");
+    DatabaseReference ref = FirebaseDatabase.instance
+        .ref("msgs/${widget.chat.id}/${_messages.length}");
     await ref.set({
       "sender": user?.uid,
       "contents": textController.text,
@@ -136,38 +132,33 @@ class _MessagePageState extends State<MessagePage> {
   }
 
   Widget renderTextBar() {
-    return Row(
-        children: [
-          Expanded(
-            flex: 4,
-            child: TextField(
-              controller: textController,
-              style: const TextStyle(color: Colors.white, height: 1.0),
-              decoration: InputDecoration(
-                  isDense: true,
-                  hintStyle: const TextStyle(color: Colors.white),
-                  fillColor: Color(darkBlue),
-                  filled: true,
-                  border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
-                  hintText: "..."),
-            ),
-          ),
-          Expanded(
-              child: ElevatedButton(
-                  onPressed: sendMessage,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(blurple),
-                    shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(15))
-                    ),
-                  ),
-                  child: Text("send", style: whiteText)
-              )
-          )
-        ]
-    );
+    return Row(children: [
+      Expanded(
+        flex: 4,
+        child: TextField(
+          controller: textController,
+          style: const TextStyle(color: Colors.white, height: 1.0),
+          decoration: InputDecoration(
+              isDense: true,
+              hintStyle: const TextStyle(color: Colors.white),
+              fillColor: Color(darkBlue),
+              filled: true,
+              border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(15))),
+              hintText: "..."),
+        ),
+      ),
+      Expanded(
+          child: ElevatedButton(
+              onPressed: sendMessage,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(blurple),
+                shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(15))),
+              ),
+              child: Text("send", style: whiteText)))
+    ]);
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -178,18 +169,12 @@ class _MessagePageState extends State<MessagePage> {
         },
         child: Scaffold(
           resizeToAvoidBottomInset: true,
-          appBar: AppBar(
-              title: Text("${widget.chat.otherUser['name']}")
-          ),
+          appBar: AppBar(title: Text("${widget.chat.otherUser['name']}")),
           body: SafeArea(
             child: Container(
                 color: Color(lightBlue),
-                child: Center(
-                    child: renderTextScreen()
-                )
-            ),
+                child: Center(child: renderTextScreen())),
           ),
-        )
-    );
+        ));
   }
 }

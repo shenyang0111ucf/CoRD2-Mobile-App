@@ -20,9 +20,8 @@ void main() async {
   runApp(MyApp());
 }
 
-
 class MyApp extends StatelessWidget {
- // const MyApp({super.key});
+  // const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
@@ -35,14 +34,15 @@ class MyApp extends StatelessWidget {
 class HomePage extends StatefulWidget {
   String? userId;
 
-  HomePage({required this.userId});// Track the current page
+  HomePage({required this.userId}); // Track the current page
 
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  String get currentUserId => widget.userId ?? ""; // Using "currentUserId" instead of "userId"
+  String get currentUserId =>
+      widget.userId ?? ""; // Using "currentUserId" instead of "userId"
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String currentPage = "Map";
@@ -54,8 +54,8 @@ class _HomePageState extends State<HomePage> {
       body: Stack(
         children: [
           // Your content goes here
-          _getPageContent(
-              currentPage, currentUserId), // Show content based on the current page
+          _getPageContent(currentPage,
+              currentUserId), // Show content based on the current page
           // Circular menu button
           Positioned(
             top: 30.0,
@@ -65,15 +65,15 @@ class _HomePageState extends State<HomePage> {
                 _scaffoldKey.currentState?.openDrawer();
               },
               child: Container(
-                height:55,
-                width:55,
+                height: 55,
+                width: 55,
                 padding: const EdgeInsets.all(8.0),
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Color(0xff242C73),
                 ),
                 child: const Icon(
-                  size:30,
+                  size: 30,
                   Icons.menu,
                   color: Colors.white,
                 ),
@@ -87,40 +87,44 @@ class _HomePageState extends State<HomePage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-             DrawerHeader(
-              decoration: BoxDecoration(
-                color: Color(0xff060C3E),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                  children:[
-              Text(
-                'CoRD2',
-                style: GoogleFonts.jost(
-                  textStyle: TextStyle(color: Colors.white, height: 1.0, fontSize: 25),
+            DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Color(0xff060C3E),
                 ),
-              ),
-                SizedBox(height:15),
-                Icon(
-                  CupertinoIcons.person_crop_circle,
-                  size: 70,
-                  color: Colors.white,
-                ),
-            ])),
-
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'CoRD2',
+                        style: GoogleFonts.jost(
+                          textStyle: TextStyle(
+                              color: Colors.white, height: 1.0, fontSize: 25),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      Icon(
+                        CupertinoIcons.person_crop_circle,
+                        size: 70,
+                        color: Colors.white,
+                      ),
+                    ])),
             _buildDrawerItem("Map"),
             _buildDrawerItem("Report"),
             _buildDrawerItem("Chat"),
             _buildDrawerItem("Profile"),
             const Divider(),
             ListTile(
-              title:  Text('Log Out', style: GoogleFonts.jost(
-                textStyle: TextStyle(color: Colors.white, height: 1.0, fontSize: 20),
-              )),
+              title: Text('Log Out',
+                  style: GoogleFonts.jost(
+                    textStyle: TextStyle(
+                        color: Colors.white, height: 1.0, fontSize: 20),
+                  )),
               onTap: () async {
                 await FirebaseAuth.instance.signOut();
                 Navigator.pushAndRemoveUntil(
-                    context, MaterialPageRoute(builder: (context) => SignOnPage()), (Route route) => false);
+                    context,
+                    MaterialPageRoute(builder: (context) => SignOnPage()),
+                    (Route route) => false);
               },
             ),
           ],
@@ -131,9 +135,12 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildDrawerItem(String pageName) {
     return ListTile(
-      title: Text(pageName,  style: GoogleFonts.jost(
-        textStyle: TextStyle(color: Colors.white, height: 1.0, fontSize: 20),
-      ),),
+      title: Text(
+        pageName,
+        style: GoogleFonts.jost(
+          textStyle: TextStyle(color: Colors.white, height: 1.0, fontSize: 20),
+        ),
+      ),
       onTap: () {
         // Add navigation to the selected page
         Navigator.pop(_scaffoldKey.currentContext!); // Close the drawer

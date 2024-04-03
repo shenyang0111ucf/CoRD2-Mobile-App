@@ -129,9 +129,9 @@ class DisplayMapPageState extends State<DisplayMap> {
                             // transit/sunrail both have StrName, school has School_Nam
                             child: map['School_Nam'] != null
                                 ? Text(map['School_Nam'],
-                                style: TextStyle(fontSize: 12))
+                                    style: TextStyle(fontSize: 12))
                                 : Text(map['StrName'],
-                                style: TextStyle(fontSize: 12)),
+                                    style: TextStyle(fontSize: 12)),
                           ),
                         ),
                         Container(
@@ -142,9 +142,9 @@ class DisplayMapPageState extends State<DisplayMap> {
                             // transit/sunrail both have City, school has School_Dst
                             child: map['City'] != null
                                 ? Text(map['City'],
-                                style: TextStyle(fontSize: 12))
+                                    style: TextStyle(fontSize: 12))
                                 : Text(map['School_Dst'],
-                                style: TextStyle(fontSize: 12)),
+                                    style: TextStyle(fontSize: 12)),
                           ),
                         ),
                         Container(
@@ -157,9 +157,9 @@ class DisplayMapPageState extends State<DisplayMap> {
                             // transit/sunrail have Type, school has School_Typ
                             child: map['School_Typ'] != null
                                 ? Text(map['School_Typ'],
-                                style: TextStyle(fontSize: 12))
+                                    style: TextStyle(fontSize: 12))
                                 : Text(map['Type'],
-                                style: TextStyle(fontSize: 12)),
+                                    style: TextStyle(fontSize: 12)),
                           ),
                         ),
                       ],
@@ -205,7 +205,7 @@ class DisplayMapPageState extends State<DisplayMap> {
             point['description'],
             point['title'],
             point['eventType'],
-            imageURL.substring(1, imageURL.length -1),
+            imageURL.substring(1, imageURL.length - 1),
             DateFormat.yMEd().add_jms().format(time),
             username,
             point['creator']);
@@ -241,187 +241,183 @@ class DisplayMapPageState extends State<DisplayMap> {
         useRootNavigator: true,
         context: context,
         builder: (BuildContext bc) {
-          return SingleChildScrollView(child:
-              Stack(
-              children:[
-                Container(
-            height: MediaQuery.of(context).size.height *0.8,
-            decoration: const BoxDecoration(
-              color: Color(0xff242C73),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(25),
-                topRight: Radius.circular(25),
+          return SingleChildScrollView(
+              child: Stack(children: [
+            Container(
+              height: MediaQuery.of(context).size.height * 0.8,
+              decoration: const BoxDecoration(
+                color: Color(0xff242C73),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(25),
+                  topRight: Radius.circular(25),
+                ),
               ),
-            ),
-                child: Column(
-                  children: [
-                    Padding(
-                    padding: const EdgeInsets.only(top:20, bottom:20),
-                    child:
-                    Container(
+              child: Column(children: [
+                Padding(
+                    padding: const EdgeInsets.only(top: 20, bottom: 20),
+                    child: Container(
                       margin: const EdgeInsets.all(20.0),
-                      height: MediaQuery.of(context).size.height *0.65,
+                      height: MediaQuery.of(context).size.height * 0.65,
                       decoration: const BoxDecoration(
                         color: Colors.white,
-                        borderRadius:
-                        BorderRadius.all(Radius.circular(25)),
+                        borderRadius: BorderRadius.all(Radius.circular(25)),
                       ),
                       child: Column(
                         children: [
                           Padding(
-                            padding: const EdgeInsets.only(top:25, bottom:5),
+                            padding: const EdgeInsets.only(top: 25, bottom: 5),
                             child: Center(
                                 child: Text(
                                     style: GoogleFonts.jost(
-                                        textStyle: const
-                                        TextStyle(
-                                          fontSize: 30,
-                                          fontWeight: FontWeight.normal,
-                                          color: Color(0xff060C3E),
-                                          decoration: TextDecoration.underline,
-                                          decorationColor: Color(0xff242C73), // Color of the underline
-                                          decorationThickness: 2.0,     // Thickness of the underline
-                                          decorationStyle: TextDecorationStyle.solid,
-                                        )),
+                                        textStyle: const TextStyle(
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.normal,
+                                      color: Color(0xff060C3E),
+                                      decoration: TextDecoration.underline,
+                                      decorationColor: Color(
+                                          0xff242C73), // Color of the underline
+                                      decorationThickness:
+                                          2.0, // Thickness of the underline
+                                      decorationStyle:
+                                          TextDecorationStyle.solid,
+                                    )),
                                     pointData.title)),
                           ),
-                         const SizedBox(height:5),
-                         Text(
+                          const SizedBox(height: 5),
+                          Text(
                               style: GoogleFonts.jost(
-                                  textStyle: const
-                                  TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.normal,
-                                    color: Color(0xff060C3E),
-                                  )),
+                                  textStyle: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.normal,
+                                color: Color(0xff060C3E),
+                              )),
                               '$pointData.eventType'),
                           Padding(
                             padding: const EdgeInsets.only(top: 10),
                             child: Center(
                                 child: Text(
                                     style: GoogleFonts.jost(
-                                        textStyle: const
-                                        TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.normal,
-                                          color: Color(0xff060C3E),
-                                        )),
+                                        textStyle: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.normal,
+                                      color: Color(0xff060C3E),
+                                    )),
                                     'Submitted by: ${pointData.creator}')),
                           ),
-                          SizedBox(height:5),
-                         Center(
-                                child:  Padding(
-                                    padding: const EdgeInsets.all(15),
-                                    child: Container(
+                          SizedBox(height: 5),
+                          Center(
+                            child: Padding(
+                                padding: const EdgeInsets.all(15),
+                                child: Container(
                                     color: Colors.deepOrange,
                                     child: Text(
                                         style: GoogleFonts.jost(
-                                            textStyle: const
-                                            TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.normal,
-                                              color: Colors.white,
-                                            )),
+                                            textStyle: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.normal,
+                                          color: Colors.white,
+                                        )),
                                         pointData.description))),
                           ),
-                          SizedBox(height:10),
+                          SizedBox(height: 10),
                           Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Center(
                                 child: Image.network(
-                                  pointData.imageURL,
-                                  width: 250,
-                                  height: 250,
-                                )
-                            ),
+                              pointData.imageURL,
+                              width: 250,
+                              height: 250,
+                            )),
                           ),
-                          SizedBox(height:10),
+                          SizedBox(height: 10),
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
-                            child:
-                                Column(
-                                  children:[
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Column(children: [
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
                                         style: GoogleFonts.jost(
-                                            textStyle: const
-                                            TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.normal,
-                                              color: Color(0xff060C3E),
-                                            )),
+                                            textStyle: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.normal,
+                                          color: Color(0xff060C3E),
+                                        )),
                                         'Coordinates: (${pointData.latitude}, ${pointData.longitude})'),
                                   ],
                                 ),
-                                  ])
-                          ),
-                          SizedBox(height:10),
+                              ])),
+                          SizedBox(height: 10),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
-                            child: Center(child: Text(pointData.formattedDate, style: GoogleFonts.jost(
-                                textStyle: const
-                                TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.normal,
-                                  color: Color(0xff060C3E),
-                                )),)),
+                            child: Center(
+                                child: Text(
+                              pointData.formattedDate,
+                              style: GoogleFonts.jost(
+                                  textStyle: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.normal,
+                                color: Color(0xff060C3E),
+                              )),
+                            )),
                           ),
-                          SizedBox(height:10),
+                          SizedBox(height: 10),
                           Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child:
-                              ElevatedButton(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: ElevatedButton(
                                 onPressed: () {
                                   handleUserChat(pointData.creatorId);
                                 },
-                                  style: ButtonStyle(
-                                    padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-                                      EdgeInsets.all(10.0), // Adjust the padding to change the size
-                                    ),
-                                    backgroundColor: MaterialStateProperty.all<Color>(Color(0xff242C73)), // Default color
-                                    overlayColor: MaterialStateProperty.resolveWith<Color>(
-                                          (Set<MaterialState> states) {
-                                        if (states.contains(MaterialState.hovered))
-                                          return Colors.blueAccent.withOpacity(0.5); // Hover color
-                                      return Colors.red; // No overlay color
-                                      },
-                                    ),
+                                style: ButtonStyle(
+                                  padding: MaterialStateProperty.all<
+                                      EdgeInsetsGeometry>(
+                                    EdgeInsets.all(
+                                        10.0), // Adjust the padding to change the size
                                   ),
+                                  backgroundColor:
+                                      MaterialStateProperty.all<Color>(
+                                          Color(0xff242C73)), // Default color
+                                  overlayColor:
+                                      MaterialStateProperty.resolveWith<Color>(
+                                    (Set<MaterialState> states) {
+                                      if (states
+                                          .contains(MaterialState.hovered))
+                                        return Colors.blueAccent
+                                            .withOpacity(0.5); // Hover color
+                                      return Colors.red; // No overlay color
+                                    },
+                                  ),
+                                ),
                                 child: Text(
                                   "Chat with this user",
                                   style: GoogleFonts.jost(
-                                      textStyle: const
-                                      TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.normal,
-                                        color: Colors.white,
-                                      )),
-                                )
-                              ),
-                             ),
+                                      textStyle: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.normal,
+                                    color: Colors.white,
+                                  )),
+                                )),
+                          ),
                         ],
                       ),
                     ))
-                  ]),
-          ),
-                Positioned(
-                  top: 20, // Adjust this value as needed
-                  right: 15,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.redAccent,
-                      borderRadius: BorderRadius.all(Radius.circular(25)),
-                    ),
-                    child: CloseButton(
-                      color: Colors.white,
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ),
+              ]),
+            ),
+            Positioned(
+              top: 20, // Adjust this value as needed
+              right: 15,
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.redAccent,
+                  borderRadius: BorderRadius.all(Radius.circular(25)),
                 ),
-
-              ]));
+                child: CloseButton(
+                  color: Colors.white,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+            ),
+          ]));
         });
   }
 
@@ -432,7 +428,7 @@ class DisplayMapPageState extends State<DisplayMap> {
     for (DataSnapshot val in snapshot.children) {
       final map = val.value as Map?;
       List<String> participants =
-      map?['participants'].map<String>((val) => val.toString()).toList();
+          map?['participants'].map<String>((val) => val.toString()).toList();
       bool match = false;
       for (Object? part in map?['participants']) {
         Map<String, String> participant = {};
@@ -444,7 +440,7 @@ class DisplayMapPageState extends State<DisplayMap> {
           participant['uid'] = part.toString();
           DateTime lastUpdate = DateTime.parse(map!['lastUpdate'].toString());
           ChatModel chat =
-          ChatModel(participant, participants, lastUpdate, val.key);
+              ChatModel(participant, participants, lastUpdate, val.key);
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => MessagePage(chat: chat)));
         }
@@ -453,7 +449,7 @@ class DisplayMapPageState extends State<DisplayMap> {
     }
     var chatId = Uuid().v4();
     DatabaseReference newChat =
-    FirebaseDatabase.instance.ref('chats/${uid}/$chatId');
+        FirebaseDatabase.instance.ref('chats/${uid}/$chatId');
     var res = await newChat.update({
       "lastUpdate": DateTime.now().toString(),
       "participants": ["${uid}", "${FirebaseAuth.instance.currentUser?.uid}"]
@@ -546,19 +542,19 @@ class DisplayMapPageState extends State<DisplayMap> {
           zoomTo: zoomTo),
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
-        children: <Widget> [
+        children: <Widget>[
           FloatingActionButton(
             onPressed: () {
               refreshMap();
             },
-            backgroundColor:  Color(0xff060C3E),
+            backgroundColor: Color(0xff060C3E),
             child: Icon(Icons.refresh, color: Colors.white),
           ),
           SizedBox(
             height: 10,
           ),
           FloatingActionButton(
-            backgroundColor:  Color(0xff060C3E),
+            backgroundColor: Color(0xff060C3E),
             onPressed: () async {
               var permResult = await checkPerms('locationPerm');
               if (permResult == true) {
@@ -568,31 +564,31 @@ class DisplayMapPageState extends State<DisplayMap> {
                 showDialog(
                     context: context,
                     builder: (BuildContext context) => AlertDialog(
-                        title: const Text('Location Access Denied'),
-                        content: const Text('Please enable Location Access, you can'
-                            'change this later in app settings.'),
-                        actions: <Widget> [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context, 'Cancel');
-                            },
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              openAppSettings();
-                              Navigator.pop(context, 'OK');
-                            },
-                            child: const Text('OK'),
-                          )
-                        ]
-                    )
-                );
+                            title: const Text('Location Access Denied'),
+                            content: const Text(
+                                'Please enable Location Access, you can'
+                                'change this later in app settings.'),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context, 'Cancel');
+                                },
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  openAppSettings();
+                                  Navigator.pop(context, 'OK');
+                                },
+                                child: const Text('OK'),
+                              )
+                            ]));
                 // use default location or insist on current position?
                 //pinpointUser(latitude, longitude);
               }
             },
-            child: const Icon(Icons.location_searching_rounded, color: Colors.white),
+            child: const Icon(Icons.location_searching_rounded,
+                color: Colors.white),
           ),
         ],
       ),

@@ -6,11 +6,11 @@ import '../models/point_data.dart';
 class Search extends StatelessWidget {
   Search(
       {Key? key,
-        required this.map,
-        required this.data,
-        required this.onSelect,
-        required this.mapContext,
-        required this.zoomTo})
+      required this.map,
+      required this.data,
+      required this.onSelect,
+      required this.mapContext,
+      required this.zoomTo})
       : super(key: key);
   final Widget map;
   final List<PointData> data;
@@ -41,13 +41,14 @@ class Search extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xff242C73),
           ),
-          child:  Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Search...',
                 style: GoogleFonts.jost(
-                  textStyle: TextStyle(color: Colors.white, height: 1.0, fontSize: 18)),
+                    textStyle: TextStyle(
+                        color: Colors.white, height: 1.0, fontSize: 18)),
               ),
               SizedBox(width: 50.0),
               Icon(Icons.search, color: Colors.white),
@@ -62,9 +63,9 @@ class Search extends StatelessWidget {
 class CustomSearchDelegate extends SearchDelegate<String> {
   CustomSearchDelegate(
       {required this.data,
-        required this.onSelect,
-        required this.mapContext,
-        required this.zoomTo});
+      required this.onSelect,
+      required this.mapContext,
+      required this.zoomTo});
   final List<PointData> data;
   final BuildContext mapContext;
   final Function(BuildContext, PointData) onSelect;
@@ -105,8 +106,8 @@ class CustomSearchDelegate extends SearchDelegate<String> {
     } else {
       suggestionList = data
           .where((marker) =>
-      marker.description.toLowerCase().contains(query.toLowerCase()) ||
-          marker.title.toLowerCase().contains(query.toLowerCase()))
+              marker.description.toLowerCase().contains(query.toLowerCase()) ||
+              marker.title.toLowerCase().contains(query.toLowerCase()))
           .toList();
     }
 
