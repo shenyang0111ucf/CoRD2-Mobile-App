@@ -3,9 +3,14 @@ import 'package:cord2_mobile_app/pages/messages.dart';
 import 'package:cord2_mobile_app/pages/search.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cord2_mobile_app/pages/messages.dart';
+import 'package:cord2_mobile_app/pages/search.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_geojson/flutter_map_geojson.dart';
+import 'package:intl/intl.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
@@ -23,18 +28,56 @@ class DisplayMap extends StatefulWidget {
 }
 
 class DisplayMapPageState extends State<DisplayMap> {
+class DisplayMapPageState extends State<DisplayMap> {
   final double latitude = 28.5384;
   final double longitude = -81.3789;
   final permissionLocation = Permission.location;
+  final permissionLocation = Permission.location;
   late List<Marker> _markers = [];
+  late List<PointData> _data = [];
+  // related to lotis data
   late List<PointData> _data = [];
   // related to lotis data
   late List<Marker> school_markers = [];
   late List<Marker> sunrail_markers = [];
   late List<Marker> transit_markers = [];
   late MapController mapController;
+  late MapController mapController;
   CollectionReference events = FirebaseFirestore.instance.collection('events');
   CollectionReference users = FirebaseFirestore.instance.collection('users');
+  String permType = '';
+
+  // zooms closer to users current position
+  void pinpointUser(lat, long) async {
+    //mapController.move(LatLng(28.538336, -81.379234), 9.0);
+    mapController.move(LatLng(lat, long), 15.0);
+    //createMarkers();
+  }
+
+  // zooms closer to selected search result
+  void zoomTo(double lat, double lon) {
+    mapController.move(LatLng(lat, lon), 15.0);
+  }
+
+  // reloads submitted reports from database
+  void refreshMap() async {
+    createMarkers();
+    mapController.move(LatLng(latitude, longitude), 9.0);
+  }
+
+  // takes in type of permission need/want
+  // returns true/false if have/need perm
+  Future<bool> checkPerms(String permType) async {
+    if (permType == 'locationPerm') {
+      final status = await permissionLocation.request();
+
+      if (status.isGranted) {
+        return true;
+      }
+    }
+
+    return false;
+  }
   String permType = '';
 
   // zooms closer to users current position
@@ -87,11 +130,15 @@ class DisplayMapPageState extends State<DisplayMap> {
   }
 
   // shows lotis data points
+  // shows lotis data points
   void onTapMarkerFunction(Map<String, dynamic> map) {
+    // the specific geojsons all record diff data, so popup needs to be customized
+    // for what you want to display in popup, a lot are just blank
     // the specific geojsons all record diff data, so popup needs to be customized
     // for what you want to display in popup, a lot are just blank
     showModalBottomSheet(
         useRootNavigator: true,
+        backgroundColor: Colors.blue[300],
         backgroundColor: Colors.blue[300],
         context: context,
         builder: (BuildContext bc) {
@@ -172,11 +219,17 @@ class DisplayMapPageState extends State<DisplayMap> {
 
   // shows user submitted reports
   void createMarkers() async {
+  // shows user submitted reports
+  void createMarkers() async {
     List<Marker> markers = [];
+    List<PointData> points = [];
     List<PointData> points = [];
     // Get docs from collection reference
     QuerySnapshot querySnapshot = await events.get();
     // Get data from docs and convert map to List
+    final allData = querySnapshot.docs
+        .map((doc) => doc.data() as Map<String, dynamic>)
+        .toList();
     final allData = querySnapshot.docs
         .map((doc) => doc.data() as Map<String, dynamic>)
         .toList();
@@ -186,10 +239,19 @@ class DisplayMapPageState extends State<DisplayMap> {
     final allUsers = userSnapshot.docs
         .map((doc) => doc.data() as Map<String, dynamic>)
         .toList();
+    final allUsers = userSnapshot.docs
+        .map((doc) => doc.data() as Map<String, dynamic>)
+        .toList();
 
     // loop through allData and add markers there
     for (var point in allData) {
       String theUser;
+      DocumentSnapshot doc = await users.doc(point['creator'].toString()).get();
+      if (!mounted) return;
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      String username = data['name'];
+      DateTime time = point['time'].toDate();
+      String imageURL = point['images'].toString();
       DocumentSnapshot doc = await users.doc(point['creator'].toString()).get();
       if (!mounted) return;
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
@@ -210,11 +272,26 @@ class DisplayMapPageState extends State<DisplayMap> {
             username,
             point['creator']);
 
+        var pointData = PointData(
+            point['latitude'] as double,
+            point['longitude'] as double,
+            point['description'],
+            point['title'],
+            point['eventType'],
+            imageURL.substring(1, imageURL.length -1),
+            DateFormat.yMEd().add_jms().format(time),
+            username,
+            point['creator']);
+
         markers.add(Marker(
+            point: LatLng(
+                point['latitude'] as double, point['longitude'] as double),
             point: LatLng(
                 point['latitude'] as double, point['longitude'] as double),
             width: 56,
             height: 56,
+            child: customMarker(pointData)));
+        points.add(pointData);
             child: customMarker(pointData)));
         points.add(pointData);
       }
@@ -225,12 +302,20 @@ class DisplayMapPageState extends State<DisplayMap> {
       _markers = markers;
       _data = points;
     });
+    setState(() {
+      if (!mounted) return;
+      _markers = markers;
+      _data = points;
+    });
   }
 
+  MouseRegion customMarker(PointData pointData) {
   MouseRegion customMarker(PointData pointData) {
     return MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
+            onTap: () => _showInfoScreen(context, pointData),
+            child: const Icon(Icons.person_pin_circle_rounded)));
             onTap: () => _showInfoScreen(context, pointData),
             child: const Icon(Icons.person_pin_circle_rounded)));
   }
@@ -481,6 +566,7 @@ class DisplayMapPageState extends State<DisplayMap> {
 
   Future<void> processData() async {
     // parses geoJson
+    // parses geoJson
     // normally one would use http to access geojson on web and this is
     // the reason why this function is async.
     List<String> paths = [
@@ -491,14 +577,20 @@ class DisplayMapPageState extends State<DisplayMap> {
 
     // gets geojson from assets
     // String geoJsonData = await rootBundle.loadString(paths[0]);
+    // String geoJsonData = await rootBundle.loadString(paths[0]);
     String geoJsonData2 = await rootBundle.loadString(paths[1]);
+    // String geoJsonData3 = await rootBundle.loadString(paths[2]);
     // String geoJsonData3 = await rootBundle.loadString(paths[2]);
 
     setState(() {
       // geoJsonParser.parseGeoJsonAsString(geoJsonData);
       // sunrail_markers = geoJsonParser.markers;
+      // geoJsonParser.parseGeoJsonAsString(geoJsonData);
+      // sunrail_markers = geoJsonParser.markers;
       geoJsonParser.parseGeoJsonAsString(geoJsonData2);
       school_markers = geoJsonParser.markers;
+      // geoJsonParser.parseGeoJsonAsString(geoJsonData3);
+      // transit_markers = geoJsonParser.markers;
       // geoJsonParser.parseGeoJsonAsString(geoJsonData3);
       // transit_markers = geoJsonParser.markers;
     });
@@ -515,6 +607,16 @@ class DisplayMapPageState extends State<DisplayMap> {
 
   Widget buildMap() {
     return FlutterMap(
+      mapController: mapController,
+      options: MapOptions(
+          initialCenter: LatLng(latitude, longitude), initialZoom: 9.0),
+      children: [
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: "com.app.demo",
+        ),
+        // replaced with MarkerCLusterLayerWidget
+        /*MarkerLayer(
       mapController: mapController,
       options: MapOptions(
           initialCenter: LatLng(latitude, longitude), initialZoom: 9.0),
@@ -587,30 +689,65 @@ class DisplayMapPageState extends State<DisplayMap> {
                           )
                         ]
                     )
-                );
-                // use default location or insist on current position?
-                //pinpointUser(latitude, longitude);
-              }
-            },
-            child: const Icon(Icons.location_searching_rounded, color: Colors.white),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // handles clustering of points
-  MarkerClusterLayerWidget _buildClusterLayer(
-      List<Marker> markers, Color color) {
-    return MarkerClusterLayerWidget(
-        options: MarkerClusterLayerOptions(
-            maxClusterRadius: 75,
-            size: const Size(40, 40),
-            alignment: Alignment.center,
-            padding: const EdgeInsets.all(50),
-            markers: markers,
-            builder: (context, markers) {
-              return Container(
+                  );
+                }
+              )),
+          MarkerClusterLayerWidget(
+              options: MarkerClusterLayerOptions(
+                  maxClusterRadius: 50,
+                  size: const Size(40, 40),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.all(50),
+                  markers: school_markers,
+                  builder: (context, markers) {
+                    return Container(
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.green,
+                        ),
+                        child: Text(
+                            markers.length.toString(),
+                            style:  const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              decoration: TextDecoration.none,
+                            )
+                        )
+                    );
+                  }
+              )),
+          MarkerClusterLayerWidget(
+              options: MarkerClusterLayerOptions(
+                  maxClusterRadius: 50,
+                  size: const Size(40, 40),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.all(50),
+                  markers: sunrail_markers,
+                  builder: (context, markers) {
+                    return Container(
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.yellow,
+                        ),
+                        child: Text(
+                            markers.length.toString(),
+                            style:  const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              decoration: TextDecoration.none,
+                            )
+                        )
+                    );
+                  }
+              )),
+          MarkerClusterLayerWidget(
+              options: MarkerClusterLayerOptions(
+                  maxClusterRadius: 50,
+                  size: const Size(40, 40),
                   alignment: Alignment.center,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(

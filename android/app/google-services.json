@@ -2,6 +2,7 @@
   "project_info": {
     "project_number": "664978581793",
     "firebase_url": "https://cord2-senior-design-default-rtdb.firebaseio.com",
+    "firebase_url": "https://cord2-senior-design-default-rtdb.firebaseio.com",
     "project_id": "cord2-senior-design",
     "storage_bucket": "cord2-senior-design.appspot.com"
   },
@@ -14,6 +15,22 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "664978581793-3huk56tb6h2sa5vq715tqfvjaiimipli.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cord.cord2_mobile_app",
+            "certificate_hash": "db9538193464fb084df8181d1bc74c7644750030"
+          }
+        },
+        {
+          "client_id": "664978581793-50ividipa94501q1ehsio1ltutmi8oq5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cord.cord2_mobile_app",
+            "certificate_hash": "b9471fe8b7be13b16b92e9231feeac0f49165f4a"
+          }
+        },
         {
           "client_id": "664978581793-3huk56tb6h2sa5vq715tqfvjaiimipli.apps.googleusercontent.com",
           "client_type": 1,

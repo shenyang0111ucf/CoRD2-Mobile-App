@@ -5,6 +5,7 @@ import 'package:cord2_mobile_app/pages/report.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:cord2_mobile_app/pages/profile.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,6 @@ void main() async {
   );
   runApp(MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
  // const MyApp({super.key});
@@ -47,6 +47,7 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String currentPage = "Map";
 
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -146,6 +147,7 @@ class _HomePageState extends State<HomePage> {
     // Return the respective page content based on the selected page
     switch (pageName) {
       case "Map":
+        return Center(child: DisplayMap());
         return Center(child: DisplayMap());
       case "Report":
         return Center(child: ReportForm(userId: currentUserId));
