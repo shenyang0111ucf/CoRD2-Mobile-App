@@ -244,6 +244,7 @@ class _ReportFormState extends State<ReportForm> {
       'latitude': chooseLat,
       'longitude': chooseLng,
       'time': DateTime.now(),
+      'active': true
     };
 
     try {
