@@ -18,7 +18,6 @@ enum Page { Login, Register, Forgot }
 
 class _SignOnPageState extends State<SignOnPage> {
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
-  final User? user = FirebaseAuth.instance.currentUser;
   CollectionReference users = FirebaseFirestore.instance.collection('users');
   Page current = Page.Login;
   TextEditingController emailController = TextEditingController();
@@ -35,11 +34,6 @@ class _SignOnPageState extends State<SignOnPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (user != null) {
-        homePage();
-      }
-    });
     // Update the stored user
     _googleSignIn.onCurrentUserChanged.listen((GoogleSignInAccount? account) => handleGoogleUser(account));
     // Attempt to log in a previously authorized user
@@ -58,9 +52,10 @@ class _SignOnPageState extends State<SignOnPage> {
     if (isAuthorized) {
       GoogleSignInAuthentication googleAuth = await account.authentication;
       OAuthCredential credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken, idToken: googleAuth.idToken);
-      UserCredential firebaseCred =
-          await FirebaseAuth.instance.signInWithCredential(credential);
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken
+      );
+      UserCredential firebaseCred = await FirebaseAuth.instance.signInWithCredential(credential);
 
       DocumentSnapshot doc = await users.doc(firebaseCred.user?.uid).get();
       // Found a user account
@@ -80,7 +75,6 @@ class _SignOnPageState extends State<SignOnPage> {
             .then((value) => homePage(firebaseCred.user?.uid))
             .catchError((err) => print("Failed to add user $err"));
       }
-      homePage();
     }
   }
 
@@ -100,27 +94,25 @@ class _SignOnPageState extends State<SignOnPage> {
       setError("Passwords don't match");
       return;
     }
-    if (passController.text.isEmpty ||
-        displayNameController.text.isEmpty ||
-        emailController.text.isEmpty ||
-        confirmPassController.text.isEmpty) {
+    if (passController.text.isEmpty || displayNameController.text.isEmpty ||
+        emailController.text.isEmpty || confirmPassController.text.isEmpty) {
       setError("Please fill out all fields");
       return;
     }
     try {
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
-              email: emailController.text, password: passController.text);
+          email: emailController.text, password: passController.text
+      );
 
       users
           .doc(userCredential.user?.uid)
           .set({
-            'name': displayNameController.text,
-            'email': userCredential.user?.email,
-            'events': [],
-            'chats': [],
-            'isResponder': false
-          })
+        'name': displayNameController.text,
+        'email': userCredential.user?.email,
+        'events': [],
+        'chats': []
+      })
           .then((value) => print("Successfully added user!"))
           .catchError((err) => print("Failed to add user $err"));
     } on FirebaseAuthException catch (e) {
@@ -171,16 +163,18 @@ class _SignOnPageState extends State<SignOnPage> {
           onPressed: onPressed,
           style: ElevatedButton.styleFrom(
 
-          textStyle:   GoogleFonts.jost(
-              textStyle: TextStyle(
-                fontSize: 15,
-              color: Color(blurple),
-          )),
+            textStyle:   GoogleFonts.jost(
+                textStyle: TextStyle(
+                  fontSize: 15,
+                  color: Color(blurple),
+                )),
             backgroundColor: Color(blurple),
             shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(15))),
+                borderRadius: BorderRadius.all(Radius.circular(15))
+            ),
           ),
-          child: Text(text, style: whiteText)),
+          child: Text(text, style: whiteText)
+      ),
     );
   }
 
@@ -213,13 +207,13 @@ class _SignOnPageState extends State<SignOnPage> {
   List<Widget> registerPage() {
     return [
       Container(
-        margin: const EdgeInsets.symmetric(vertical: 15.0),
-        child: Text("Create Account",
-            style: GoogleFonts.jost(
-                textStyle: const
-                TextStyle(fontSize: 25,
-                  fontWeight: FontWeight.normal,
-                  color: Color(0xff060C3E),)))
+          margin: const EdgeInsets.symmetric(vertical: 15.0),
+          child: Text("Create Account",
+              style: GoogleFonts.jost(
+                  textStyle: const
+                  TextStyle(fontSize: 25,
+                    fontWeight: FontWeight.normal,
+                    color: Color(0xff060C3E),)))
       ),
       Container(
         margin: const EdgeInsets.symmetric(vertical: 6.0),
@@ -253,8 +247,7 @@ class _SignOnPageState extends State<SignOnPage> {
               hintStyle: const TextStyle(color: Colors.white),
               fillColor: Color(darkBlue),
               filled: true,
-              border: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(15))),
+              border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
               hintText: "Display Name"),
         ),
       ),
@@ -272,8 +265,7 @@ class _SignOnPageState extends State<SignOnPage> {
             hintStyle: const TextStyle(color: Colors.white),
             fillColor: Color(darkBlue),
             filled: true,
-            border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(15))),
+            border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
             hintText: "Password",
           ),
         ),
@@ -291,15 +283,15 @@ class _SignOnPageState extends State<SignOnPage> {
             hintStyle: const TextStyle(color: Colors.white),
             fillColor: Color(darkBlue),
             filled: true,
-            border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(15))),
+            border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
             hintText: "Confirm Password",
           ),
         ),
       ),
       Container(
           margin: const EdgeInsets.symmetric(vertical: 10.0),
-          child: createButton("Register", () => handleRegister())),
+          child: createButton("Register", () => handleRegister())
+      ),
       Text(_error, style: const TextStyle(color: Colors.red)),
       Text("Already have an account?", style: GoogleFonts.jost(
         textStyle: TextStyle(color: Color(blurple), height: 1.0, fontSize: 15),
@@ -307,13 +299,13 @@ class _SignOnPageState extends State<SignOnPage> {
       SizedBox(height:5),
       GestureDetector(
           child: Text("Login",
-    style: GoogleFonts.jost(
-    textStyle:  TextStyle(
-                  decoration: TextDecoration.underline,
-                  color: Color(blurple),
-                  fontStyle: FontStyle.italic,
-                  fontSize: 18,
-              ))
+              style: GoogleFonts.jost(
+                  textStyle:  TextStyle(
+                    decoration: TextDecoration.underline,
+                    color: Color(blurple),
+                    fontStyle: FontStyle.italic,
+                    fontSize: 18,
+                  ))
           ),
           onTap: () {
             switchPage(Page.Login);
@@ -326,7 +318,7 @@ class _SignOnPageState extends State<SignOnPage> {
       Container(
           margin: const EdgeInsets.symmetric(vertical: 15.0),
           child: Text("Forgot Password?",  style: GoogleFonts.jost(
-            textStyle: TextStyle(color: Color(blurple), fontSize: 25.0)))
+              textStyle: TextStyle(color: Color(blurple), fontSize: 25.0)))
       ),
       Container(
         margin: const EdgeInsets.only(top: 10.0),
@@ -340,17 +332,17 @@ class _SignOnPageState extends State<SignOnPage> {
               hintStyle: const TextStyle(color: Colors.white),
               fillColor: Color(darkBlue),
               filled: true,
-              border: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(15))),
+              border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
               hintText: "Enter Your Email"),
         ),
       ),
       Text(_error,  style: GoogleFonts.jost(
-      textStyle: TextStyle(
-   color: Colors.red))),
+          textStyle: TextStyle(
+              color: Colors.red))),
       Container(
           margin: const EdgeInsets.symmetric(vertical: 10.0),
-          child: createButton("Send Reset Email", () => handlePassReset())),
+          child: createButton("Send Reset Email", () => handlePassReset())
+      ),
       GestureDetector(
           child: Text("Login",
               style: GoogleFonts.jost(
@@ -373,42 +365,41 @@ class _SignOnPageState extends State<SignOnPage> {
         margin: const EdgeInsets.symmetric(vertical: 15.0),
         child: Text("Login",
             style: GoogleFonts.jost(
-              textStyle: TextStyle(color: Color(blurple), fontSize: 30.0))),
+                textStyle: TextStyle(color: Color(blurple), fontSize: 30.0))),
       ),
 
       Container(
-      margin: const EdgeInsets.symmetric(vertical: 6.0),
-      child: TextField(
-      controller: emailController,
-      style: GoogleFonts.jost(
-      textStyle: TextStyle(color: Colors.white, height: 1.0, fontSize: 18),
-      ),
-      decoration: InputDecoration(
-      isDense: true,
-      hintStyle: const TextStyle(color: Colors.white),
-      fillColor: Color(darkBlue),
-      filled: true,
-      border: OutlineInputBorder(
-      borderRadius: BorderRadius.all(Radius.circular(15)),
-    ),
-    hintText: "Email",
-    ),
-    ),
-    ),
-    Container(
-        margin: const EdgeInsets.symmetric(vertical: 10.0),
+        margin: const EdgeInsets.symmetric(vertical: 6.0),
         child: TextField(
-          controller: passController,
-          obscureText: true,
-    style: GoogleFonts.jost(
-    textStyle: TextStyle(color: Colors.white, height: 1.0, fontSize:18)),
+          controller: emailController,
+          style: GoogleFonts.jost(
+            textStyle: TextStyle(color: Colors.white, height: 1.0, fontSize: 18),
+          ),
           decoration: InputDecoration(
             isDense: true,
             hintStyle: const TextStyle(color: Colors.white),
             fillColor: Color(darkBlue),
             filled: true,
-            border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(15))),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(15)),
+            ),
+            hintText: "Email",
+          ),
+        ),
+      ),
+      Container(
+        margin: const EdgeInsets.symmetric(vertical: 10.0),
+        child: TextField(
+          controller: passController,
+          obscureText: true,
+          style: GoogleFonts.jost(
+              textStyle: TextStyle(color: Colors.white, height: 1.0, fontSize:18)),
+          decoration: InputDecoration(
+            isDense: true,
+            hintStyle: const TextStyle(color: Colors.white),
+            fillColor: Color(darkBlue),
+            filled: true,
+            border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(15))),
             hintText: "Password",
             suffixIcon: Icon(
               Icons.lock,
@@ -422,15 +413,15 @@ class _SignOnPageState extends State<SignOnPage> {
           child: Text("Forgot Password?",
               style: GoogleFonts.jost(
                   textStyle: TextStyle(
-                    fontSize: 15,
+                      fontSize: 15,
                       decoration: TextDecoration.underline,
                       color: Color(blurple),
                       fontStyle: FontStyle.italic
                   ))
-        ),
-        onTap: () {
-          switchPage(Page.Forgot);
-        }
+          ),
+          onTap: () {
+            switchPage(Page.Forgot);
+          }
       ),
       Text(_error, style: const TextStyle(color: Colors.red)),
       Container(
@@ -439,17 +430,18 @@ class _SignOnPageState extends State<SignOnPage> {
       ),
       GestureDetector(
           child: Text("Create a new account",
-    style: GoogleFonts.jost(
-    textStyle: TextStyle(
-                  decoration: TextDecoration.underline,
-                  color: Color(blurple),
-                  fontSize: 15,
-                  fontStyle: FontStyle.italic
-              ))
+              style: GoogleFonts.jost(
+                  textStyle: TextStyle(
+                      decoration: TextDecoration.underline,
+                      color: Color(blurple),
+                      fontSize: 15,
+                      fontStyle: FontStyle.italic
+                  ))
           ),
           onTap: () {
             switchPage(Page.Register);
-          }),
+          }
+      ),
       Container(
         margin: const EdgeInsets.symmetric(vertical: 10.0),
         child: SignInButton(Buttons.Google, onPressed: signInWithGoogle),
