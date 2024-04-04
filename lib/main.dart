@@ -10,6 +10,7 @@ import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import 'firebase_options.dart';
 
@@ -45,6 +46,7 @@ class _HomePageState extends State<HomePage> {
   String get currentUserId =>
       widget.userId ?? ""; // Using "currentUserId" instead of "userId"
 
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String currentPage = "Map";
 
@@ -122,6 +124,7 @@ class _HomePageState extends State<HomePage> {
                         color: Colors.white, height: 1.0, fontSize: 20),
                   )),
               onTap: () async {
+                await _googleSignIn.signOut();
                 await FirebaseAuth.instance.signOut();
                 Navigator.pushAndRemoveUntil(
                     context,
