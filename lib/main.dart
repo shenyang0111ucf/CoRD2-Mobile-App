@@ -1,10 +1,17 @@
-import 'package:cord2_mobile_app/pages/chat.dart';
 import 'package:cord2_mobile_app/pages/map.dart';
+import 'package:cord2_mobile_app/pages/chat.dart';
+import 'package:cord2_mobile_app/pages/profile.dart';
+import 'package:cord2_mobile_app/pages/report.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cord2_mobile_app/pages/profile.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
 import 'firebase_options.dart';
 
 void main() async {
@@ -16,100 +23,129 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
+  // const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
       home: SignOnPage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  String? userId;
+
+  HomePage({required this.userId}); // Track the current page
 
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  String get currentUserId =>
+      widget.userId ?? ""; // Using "currentUserId" instead of "userId"
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  String currentPage = "Map"; // Track the current page
+  String currentPage = "Map";
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        key: _scaffoldKey,
-        body: Stack(
-          children: [
-            // Your content goes here
-            _getPageContent(
-                currentPage), // Show content based on the current page
-            // Circular menu button
-            Positioned(
-              top: 35.0,
-              left: 10.0,
-              child: InkWell(
-                onTap: () {
-                  _scaffoldKey.currentState?.openDrawer();
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8.0),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.blue,
-                  ),
-                  child: const Icon(
-                    Icons.menu,
-                    color: Colors.white,
-                  ),
+      key: _scaffoldKey,
+      body: Stack(
+        children: [
+          // Your content goes here
+          _getPageContent(currentPage,
+              currentUserId), // Show content based on the current page
+          // Circular menu button
+          Positioned(
+            top: 30.0,
+            left: 10.0,
+            child: InkWell(
+              onTap: () {
+                _scaffoldKey.currentState?.openDrawer();
+              },
+              child: Container(
+                height: 55,
+                width: 55,
+                padding: const EdgeInsets.all(8.0),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xff242C73),
+                ),
+                child: const Icon(
+                  size: 30,
+                  Icons.menu,
+                  color: Colors.white,
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        backgroundColor: Color(0xff060C3E),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Color(0xff060C3E),
+                ),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'CoRD2',
+                        style: GoogleFonts.jost(
+                          textStyle: TextStyle(
+                              color: Colors.white, height: 1.0, fontSize: 25),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      Icon(
+                        CupertinoIcons.person_crop_circle,
+                        size: 70,
+                        color: Colors.white,
+                      ),
+                    ])),
+            _buildDrawerItem("Map"),
+            _buildDrawerItem("Report"),
+            _buildDrawerItem("Chat"),
+            _buildDrawerItem("Profile"),
+            const Divider(),
+            ListTile(
+              title: Text('Log Out',
+                  style: GoogleFonts.jost(
+                    textStyle: TextStyle(
+                        color: Colors.white, height: 1.0, fontSize: 20),
+                  )),
+              onTap: () async {
+                await _googleSignIn.signOut();
+                await FirebaseAuth.instance.signOut();
+                Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => SignOnPage()),
+                    (Route route) => false);
+              },
+            ),
           ],
         ),
-        drawer: Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              const DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                ),
-                child: Text(
-                  'CoRD2',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                  ),
-                ),
-              ),
-              _buildDrawerItem("Map"),
-              _buildDrawerItem("Report"),
-              _buildDrawerItem("Chat"),
-              _buildDrawerItem("Profile"),
-              const Divider(),
-              ListTile(
-                title: const Text('Log Out'),
-                onTap: () {
-                  FirebaseAuth.instance.signOut().then((_) =>
-                      Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const SignOnPage()),
-                          (Route route) => false));
-                },
-              ),
-            ],
-          ),
-        ));
+      ),
+    );
   }
 
   Widget _buildDrawerItem(String pageName) {
     return ListTile(
-      title: Text(pageName),
+      title: Text(
+        pageName,
+        style: GoogleFonts.jost(
+          textStyle: TextStyle(color: Colors.white, height: 1.0, fontSize: 20),
+        ),
+      ),
       onTap: () {
         // Add navigation to the selected page
         Navigator.pop(_scaffoldKey.currentContext!); // Close the drawer
@@ -118,17 +154,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _getPageContent(String pageName) {
+  Widget _getPageContent(String pageName, String? userId) {
     // Return the respective page content based on the selected page
     switch (pageName) {
       case "Map":
         return Center(child: DisplayMap());
+        return Center(child: DisplayMap());
       case "Report":
-        return const Center(child: Text('Report Content'));
+        return Center(child: ReportForm(userId: currentUserId));
       case "Chat":
-        return const Center(child: ChatPage());
+        return Center(child: ChatPage());
       case "Profile":
-        return const Center(child: ProfilePage());
+        return Center(child: ProfilePage());
       default:
         return Container(); // Default empty container
     }

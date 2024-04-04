@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../models/point_data.dart';
 
@@ -25,7 +26,7 @@ class Search extends StatelessWidget {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerTop,
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(top: 30.0),
+        padding: const EdgeInsets.only(top: 10.0),
         child: ElevatedButton(
           onPressed: () {
             showSearch(
@@ -38,14 +39,16 @@ class Search extends StatelessWidget {
             );
           },
           style: ElevatedButton.styleFrom(
-            primary: Theme.of(context).primaryColor,
+            backgroundColor: const Color(0xff242C73),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Search...',
-                style: TextStyle(color: Colors.white),
+                style: GoogleFonts.jost(
+                    textStyle: TextStyle(
+                        color: Colors.white, height: 1.0, fontSize: 18)),
               ),
               SizedBox(width: 50.0),
               Icon(Icons.search, color: Colors.white),

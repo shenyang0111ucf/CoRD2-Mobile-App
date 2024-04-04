@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
 
@@ -79,8 +80,12 @@ class _ProfilePage extends State<ProfilePage> {
                 children: [
                   const Padding(padding: EdgeInsets.only(top: 50)),
                   Text(
-                    "Profile",
-                    style: TextStyle(color: primary, fontSize: 28),
+                      "Profile",
+                      style: GoogleFonts.jost(
+                          textStyle:
+                          TextStyle(fontSize: 40,
+                              fontWeight: FontWeight.normal,
+                              color: Color(0xff060C3E)))
                   ),
                   const Padding(padding: EdgeInsets.only(top: 20)),
                   Container(
@@ -97,14 +102,17 @@ class _ProfilePage extends State<ProfilePage> {
                         Icon(
                           CupertinoIcons.person_crop_circle,
                           size: 90,
-                          color: primary,
+                          color: Colors.white,
                         ),
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.symmetric(vertical: 10),
                           child: Text(
-                            "Report Statuses",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                              "Report Statuses",
+                              style: GoogleFonts.jost(
+                                  textStyle:
+                                  TextStyle(fontSize: 25,
+                                      fontWeight: FontWeight.normal,
+                                      color: Color(0xff060C3E)))
                           ),
                         ),
                         Padding(
@@ -121,8 +129,8 @@ class _ProfilePage extends State<ProfilePage> {
                             onPressed: () => signOutUser(),
                             style: ButtonStyle(
                                 backgroundColor:
-                                    MaterialStateProperty.all<Color>(
-                                        highlight)),
+                                MaterialStateProperty.all<Color>(
+                                    highlight)),
                             child: Container(
                               alignment: Alignment.center,
                               width: 200,
@@ -232,7 +240,7 @@ class _ProfilePage extends State<ProfilePage> {
   // Displays all of the necessary personal data to the user
   Widget displayUserData() {
     TextStyle dataNameStyle =
-        TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: primary);
+    TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: primary);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -398,7 +406,7 @@ class _ProfilePage extends State<ProfilePage> {
                 ),
                 Container(
                   constraints:
-                      const BoxConstraints(maxHeight: 364, minHeight: 0),
+                  const BoxConstraints(maxHeight: 364, minHeight: 0),
                   child: NotificationListener<ScrollNotification>(
                     onNotification: (notification) {
                       ScrollMetrics scrollMetrics = notification.metrics;
@@ -429,14 +437,14 @@ class _ProfilePage extends State<ProfilePage> {
                               // Show loading indicator at the end of the list
                               // when more reports are being loaded
                               _isLoadingMore &&
-                                      index + 1 == _filteredReports?.length
+                                  index + 1 == _filteredReports?.length
                                   ? const Padding(
-                                      padding: EdgeInsets.all(12.0),
-                                      child: Center(
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                        ),
-                                      ))
+                                  padding: EdgeInsets.all(12.0),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                    ),
+                                  ))
                                   : Container(height: 0),
                             ],
                           );
@@ -641,9 +649,9 @@ class _ProfilePage extends State<ProfilePage> {
                   ElevatedButton(
                       style: ButtonStyle(
                           fixedSize: MaterialStateProperty.resolveWith(
-                              (states) => const Size.fromWidth(125)),
+                                  (states) => const Size.fromWidth(125)),
                           backgroundColor: MaterialStateColor.resolveWith(
-                              (states) => highlight)),
+                                  (states) => highlight)),
                       // Delete the specified report
                       onPressed: () async {
                         Navigator.pop(context);
@@ -665,9 +673,9 @@ class _ProfilePage extends State<ProfilePage> {
                   ElevatedButton(
                       style: ButtonStyle(
                           fixedSize: MaterialStateProperty.resolveWith(
-                              (states) => const Size.fromWidth(125)),
+                                  (states) => const Size.fromWidth(125)),
                           backgroundColor: MaterialStateColor.resolveWith(
-                              (states) => Colors.white12)),
+                                  (states) => Colors.white12)),
                       onPressed: () {
                         Navigator.pop(context);
                       },
@@ -699,7 +707,7 @@ class _ProfilePage extends State<ProfilePage> {
             backgroundColor: Colors.red));
       } else {
         _userReports?.removeWhere(
-            (userReport) => reportIDs.any((report) => report == userReport.id));
+                (userReport) => reportIDs.any((report) => report == userReport.id));
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Successfully deleted"),
             backgroundColor: Colors.green));
@@ -711,7 +719,7 @@ class _ProfilePage extends State<ProfilePage> {
   Widget showFullReport(int index) {
     return OpenContainer(
       closedShape:
-          RoundedRectangleBorder(borderRadius: calculateRowBorderRadius(index)),
+      RoundedRectangleBorder(borderRadius: calculateRowBorderRadius(index)),
       closedElevation: 8.0,
       transitionType: ContainerTransitionType.fadeThrough,
       closedColor: Colors.white,
@@ -729,7 +737,7 @@ class _ProfilePage extends State<ProfilePage> {
               child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child:
-                      Text(_filteredReports![index].title, style: dataStyle)),
+                  Text(_filteredReports![index].title, style: dataStyle)),
             ),
           ),
         ),
@@ -742,7 +750,7 @@ class _ProfilePage extends State<ProfilePage> {
               FilledButton(
                   style: ButtonStyle(
                       backgroundColor: MaterialStateColor.resolveWith(
-                          (states) => Colors.transparent)),
+                              (states) => Colors.transparent)),
                   onPressed: () => Navigator.pop(context),
                   child: const Icon(
                     CupertinoIcons.back,
@@ -790,7 +798,7 @@ class _ProfilePage extends State<ProfilePage> {
                                     children: [
                                       SizedBox(
                                         child:
-                                            Text(_filteredReports![index].type),
+                                        Text(_filteredReports![index].type),
                                       ),
                                     ],
                                   ),
@@ -802,7 +810,7 @@ class _ProfilePage extends State<ProfilePage> {
                                 const DataCell(Text("Description")),
                                 DataCell(Padding(
                                   padding:
-                                      const EdgeInsets.symmetric(vertical: 8.0),
+                                  const EdgeInsets.symmetric(vertical: 8.0),
                                   child: Text(
                                       _filteredReports![index].description),
                                 ))
@@ -955,7 +963,7 @@ class _ProfilePage extends State<ProfilePage> {
         MaterialPageRoute(
           builder: (context) => const SignOnPage(),
         ),
-        (route) => false);
+            (route) => false);
   }
 
   // Returns a string that the email sent was successful or an error occured.
@@ -966,7 +974,7 @@ class _ProfilePage extends State<ProfilePage> {
       await FirebaseAuth.instance.sendPasswordResetEmail(
           email: FirebaseAuth.instance.currentUser?.email ?? "error");
       status =
-          "An email has been sent to: \n${FirebaseAuth.instance.currentUser?.email}";
+      "An email has been sent to: \n${FirebaseAuth.instance.currentUser?.email}";
     } catch (e) {
       print(e);
       status = "An error occured. Please try again.";
@@ -1021,7 +1029,7 @@ class _ProfilePage extends State<ProfilePage> {
               ElevatedButton(
                 style: ButtonStyle(
                     backgroundColor:
-                        MaterialStateColor.resolveWith((states) => highlight)),
+                    MaterialStateColor.resolveWith((states) => highlight)),
                 onPressed: () {
                   if (emailController.text.isEmpty) return;
 
@@ -1053,7 +1061,7 @@ class _ProfilePage extends State<ProfilePage> {
 
                               case ConnectionState.active:
                               case ConnectionState.done:
-                                // handle error cases
+                              // handle error cases
                                 if (snapshot.data != null) {
                                   switch (snapshot.data!.code) {
                                     case "requires-recent-login":
@@ -1078,7 +1086,7 @@ class _ProfilePage extends State<ProfilePage> {
                                       return displayAlert(
                                           "Cannot Update to Same Email",
                                           "You must update to a different email than your current email.");
-                                    // not working
+                                  // not working
                                     case "email-already-exists":
                                     case "email-already-in-use":
                                       return displayAlert(
@@ -1102,7 +1110,7 @@ class _ProfilePage extends State<ProfilePage> {
                                       },
                                       style: ButtonStyle(
                                           backgroundColor:
-                                              MaterialStateColor.resolveWith(
+                                          MaterialStateColor.resolveWith(
                                                   (states) => highlight)),
                                       child: const Text("Ok"),
                                     ),
@@ -1134,7 +1142,7 @@ class _ProfilePage extends State<ProfilePage> {
               Container(
                 margin: const EdgeInsets.symmetric(vertical: 10.0),
                 child:
-                    SignInButton(Buttons.Google, onPressed: signInWithGoogle),
+                SignInButton(Buttons.Google, onPressed: signInWithGoogle),
               ),
             ],
           ),
@@ -1171,7 +1179,7 @@ class _ProfilePage extends State<ProfilePage> {
           onPressed: () => Navigator.pop(context),
           style: ButtonStyle(
               backgroundColor:
-                  MaterialStateColor.resolveWith((states) => highlight)),
+              MaterialStateColor.resolveWith((states) => highlight)),
           child: const Text("Ok"),
         )
       ];

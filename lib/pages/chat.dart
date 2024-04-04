@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../models/chat_model.dart';
@@ -25,7 +26,8 @@ class _ChatPageState extends State<ChatPage> {
   final int blurple = 0xff20297A;
   final TextStyle whiteText = const TextStyle(color: Colors.white);
   final User? user = FirebaseAuth.instance.currentUser;
-  final CollectionReference users = FirebaseFirestore.instance.collection('users');
+  final CollectionReference users =
+      FirebaseFirestore.instance.collection('users');
   late StreamSubscription<DatabaseEvent> _chatSubscription;
   late List<ChatModel> _chats = [];
 
@@ -33,7 +35,8 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     if (user == null) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const SignOnPage()));
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => const SignOnPage()));
     }
     getChatData();
   }
@@ -44,7 +47,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void getChatData() async {
-    DatabaseReference chatRef = FirebaseDatabase.instance.ref('chats/${user?.uid}');
+    DatabaseReference chatRef =
+        FirebaseDatabase.instance.ref('chats/${user?.uid}');
     _chatSubscription = chatRef.onValue.listen((DatabaseEvent event) async {
       List<ChatModel> newList = [];
       for (DataSnapshot val in event.snapshot.children) {
@@ -62,9 +66,7 @@ class _ChatPageState extends State<ChatPage> {
         }
         if (otherUser.entries.isEmpty) continue;
         DateTime lastUpdate = DateTime.parse(map!['lastUpdate'].toString());
-        newList.add(
-          ChatModel(otherUser, participants, lastUpdate, val.key)
-        );
+        newList.add(ChatModel(otherUser, participants, lastUpdate, val.key));
         setState(() {
           _chats = newList;
         });
@@ -78,26 +80,27 @@ class _ChatPageState extends State<ChatPage> {
         itemBuilder: (context, index) {
           final item = _chats[index];
           return Container(
-            child: Card(
-              color: Colors.white,
-              child: Padding(
-                padding: EdgeInsets.all(15.0),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => MessagePage(chat: item)));
-                  },
-                  child: Column(
-                    children: [
-                      Text("Chat with: ${item.otherUser['name']!}"),
-                      Text(DateFormat.yMEd().add_jms().format(item.lastUpdate))
-                    ],
-                  )
-                )
-              )
-            )
-          );
-        }
-    );
+              child: Card(
+                  color: Colors.white,
+                  child: Padding(
+                      padding: EdgeInsets.all(15.0),
+                      child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        MessagePage(chat: item)));
+                          },
+                          child: Column(
+                            children: [
+                              Text("Chat with: ${item.otherUser['name']!}"),
+                              Text(DateFormat.yMEd()
+                                  .add_jms()
+                                  .format(item.lastUpdate))
+                            ],
+                          )))));
+        });
   }
 
   @override
@@ -105,18 +108,18 @@ class _ChatPageState extends State<ChatPage> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: const Align(
-          alignment: Alignment.center,
-          child: Text("Your Chats")
-        ),
-      ),
+          title: Align(
+        alignment: Alignment.center,
+        child: Text("Your Chats",
+            style: GoogleFonts.jost(
+                textStyle: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.normal,
+                    color: Color(0xff060C3E)))),
+      )),
       body: SafeArea(
         child: Container(
-          color: Color(lightBlue),
-          child: Center(
-            child: renderChats()
-          )
-        ),
+            color: Color(lightBlue), child: Center(child: renderChats())),
       ),
     );
   }
