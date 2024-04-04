@@ -294,7 +294,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                                             fontWeight: FontWeight.normal,
                                             color: Color(0xff060C3E),
                                           )),
-                                      '$pointData.eventType'),
+                                      pointData.eventType),
                                   Padding(
                                     padding: const EdgeInsets.only(top: 10),
                                     child: Center(
@@ -334,28 +334,6 @@ class DisplayMapPageState extends State<DisplayMap> {
                                           height: 250,
                                         )
                                     ),
-                                  ),
-                                  SizedBox(height:10),
-                                  Padding(
-                                      padding: const EdgeInsets.only(bottom: 8.0),
-                                      child:
-                                      Column(
-                                          children:[
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                    style: GoogleFonts.jost(
-                                                        textStyle: const
-                                                        TextStyle(
-                                                          fontSize: 20,
-                                                          fontWeight: FontWeight.normal,
-                                                          color: Color(0xff060C3E),
-                                                        )),
-                                                    'Coordinates: (${pointData.latitude}, ${pointData.longitude})'),
-                                              ],
-                                            ),
-                                          ])
                                   ),
                                   SizedBox(height:10),
                                   Padding(
