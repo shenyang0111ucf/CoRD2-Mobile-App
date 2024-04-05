@@ -864,7 +864,7 @@ class _ProfilePage extends State<ProfilePage> {
                         const SizedBox(height: 8),
                         DataTable(
                           columnSpacing: 40,
-                          dataTextStyle: dataStyle,
+
                           dataRowMinHeight: 30,
                           dataRowMaxHeight: double.infinity,
                           headingRowHeight: 2,
@@ -1268,11 +1268,7 @@ class _ProfilePage extends State<ProfilePage> {
                     fontWeight: FontWeight.w400,
                     color: Color(0xff060C3E),
                   ),)),
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 10.0),
-                child:
-                SignInButton(Buttons.Google, onPressed: signInWithGoogle),
-              ),
+
             ],
           ),
         ),

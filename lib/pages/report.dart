@@ -218,6 +218,9 @@ class _ReportFormState extends State<ReportForm> {
               content: Text("Please choose a location for the hazard!")
           )
       );
+      descriptionCon.clear();
+      titleCon.clear();
+      selectedCategory == 'Hurricane';
       return;
     }
 
@@ -561,9 +564,6 @@ class _ReportFormState extends State<ReportForm> {
                     Center(
                       child: ElevatedButton(
                         onPressed: () {
-                          descriptionCon.clear();
-                          titleCon.clear();
-                          selectedCategory == 'Hurricane';
                           submitReport(currentUserId);
                           showDialog(
                               context: context,
