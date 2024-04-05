@@ -94,10 +94,18 @@ class _ChatPageState extends State<ChatPage> {
                           },
                           child: Column(
                             children: [
-                              Text("Chat with: ${item.otherUser['name']!}"),
+                              Text("Chat with: ${item.otherUser['name']!}",style: GoogleFonts.jost( // Applying Google Font style
+                            textStyle: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black,
+                            ),)),
                               Text(DateFormat.yMEd()
                                   .add_jms()
-                                  .format(item.lastUpdate))
+                                  .format(item.lastUpdate),style: GoogleFonts.jost( // Applying Google Font style
+                                textStyle: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black,
+                                ),))
                             ],
                           )))));
         });
@@ -118,9 +126,16 @@ class _ChatPageState extends State<ChatPage> {
                     color: Color(0xff060C3E)))),
       )),
       body: SafeArea(
-        child: Container(
-            color: Color(lightBlue), child: Center(child: renderChats())),
-      ),
-    );
+        child: Padding(
+          padding: EdgeInsets.only(top:20),
+    child:
+    Container(
+            color: Color(lightBlue), child: Center(child: Padding(
+    padding: EdgeInsets.only(top:10),
+    child:
+    renderChats()
+    )),
+    )),
+    ));
   }
 }

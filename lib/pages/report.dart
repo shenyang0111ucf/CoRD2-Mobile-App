@@ -561,7 +561,51 @@ class _ReportFormState extends State<ReportForm> {
                     Center(
                       child: ElevatedButton(
                         onPressed: () {
+                          descriptionCon.clear();
+                          titleCon.clear();
+                          selectedCategory == 'Hurricane';
                           submitReport(currentUserId);
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) =>
+                              AlertDialog(
+                            title: TextFormField(
+                                decoration: InputDecoration(
+                                    labelText: 'Submitted', // Your text
+                                    labelStyle: GoogleFonts.jost( // Applying Google Font style
+                                      textStyle: TextStyle(
+                                        fontSize: 20,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    enabledBorder: UnderlineInputBorder(
+                                      borderSide: BorderSide(color: Color(0xff060C3E), width: 2.0), // Customize underline color
+                                    ))),
+                            elevation: 10,
+                            content: SizedBox(
+                              width: 50,
+                              child: Text(
+                                  "You have successfully submitted a report!",
+                                  style: GoogleFonts.jost(
+                                      textStyle:
+                                      TextStyle(
+                                        fontSize: 16, // Set your desired font size for input text
+                                        color: Colors.black, // Set your desired color for input text
+                                      )
+                                  )),
+                            ),
+                            actions: [
+                              ElevatedButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child:
+                                  Text("Ok",
+                                      style: GoogleFonts.jost(
+                                          textStyle: TextStyle(
+                                            fontSize: 15, // Set your desired font size for input text
+                                            color: Colors.black, // Set your desired color for input text
+                                          ))))
+                            ],
+                          ));
                         },
                         style: ButtonStyle(
                           minimumSize: MaterialStateProperty.all(Size(200, 50)), // Set the size here

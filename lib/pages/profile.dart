@@ -32,6 +32,8 @@ class _ProfilePage extends State<ProfilePage> {
   bool _sortByRecent = true;
   String? _lastUsedDocID;
   final int _reportLimit = 15;
+
+  
   // Search utility vars
   final TextEditingController _searchTextField = TextEditingController();
   String _previousSearchText = "";
@@ -65,47 +67,66 @@ class _ProfilePage extends State<ProfilePage> {
       _reportSectionPadding = 48;
     }
 
-    return Material(
-      child: SafeArea(
-        child: SizedBox(
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          child: RefreshIndicator(
-            triggerMode: RefreshIndicatorTriggerMode.anywhere,
-            onRefresh: () => refreshPage(context),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const Padding(padding: EdgeInsets.only(top: 50)),
-                  Text(
-                      "Profile",
-                      style: GoogleFonts.jost(
-                          textStyle:
-                          TextStyle(fontSize: 40,
-                              fontWeight: FontWeight.normal,
-                              color: Color(0xff060C3E)))
-                  ),
-                  const Padding(padding: EdgeInsets.only(top: 20)),
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.only(
-                          topLeft: Radius.elliptical(40, 40),
-                          topRight: Radius.elliptical(40, 40)),
-                      color: secondary,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
+    return   Scaffold(
+        resizeToAvoidBottomInset: true, // Set this to true
+        body: CustomScrollView(
+        slivers: [
+        // SliverAppBar with fixed "Report" text
+        SliverAppBar(
+        expandedHeight: 130,
+        flexibleSpace: FlexibleSpaceBar(
+        title: Padding(
+        padding: EdgeInsets.only(right: 45.0),
+    child:Text(
+    'Profile',
+    style: GoogleFonts.jost(
+    textStyle: const TextStyle(
+    fontSize: 25,
+    fontWeight: FontWeight.w400,
+    color: Color(0xff060C3E),
+    ),
+    ),
+    //  textAlign: TextAlign.center,
+    )),centerTitle: true,),
+    // centerTitle: true,
+    floating: true,
+    pinned: true,
+    snap: false,
+    backgroundColor: Colors.white,
+    elevation: 0,
+    ),
+    // SliverList for the scrolling content
+    SliverList(
+    delegate: SliverChildListDelegate(
+    [
+    // Padding for spacing
+    const SizedBox(height: 20),
+
+    Container(
+    //    height:600,
+    //   height: MediaQuery.of(context).size.height-200,
+    padding: const EdgeInsets.only(top: 30, bottom:40),
+    decoration: const BoxDecoration(
+    color: Color(0xff060C3E),
+    borderRadius: BorderRadius.only(
+    topLeft: Radius.circular(30.0),
+    topRight: Radius.circular(30.0),
+    ),
+    ),
+    //  width: double.infinity,
+    child: SingleChildScrollView(
+    child: Column(
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+
                         Icon(
                           CupertinoIcons.person_crop_circle,
                           size: 90,
                           color: Colors.white,
                         ),
+                       displayUserData(),
                         Padding(
-                          padding: EdgeInsets.symmetric(vertical: 10),
+                          padding: EdgeInsets.symmetric(),
                           child: Text(
                               "Report Statuses",
                               style: GoogleFonts.jost(
@@ -120,7 +141,9 @@ class _ProfilePage extends State<ProfilePage> {
                               horizontal: _reportSectionPadding),
                           child: displayReportList(),
                         ),
-                        displayUserData(),
+                        SizedBox(height:20),
+                        displayUserEmail(),
+                        SizedBox(height:10),
                         displayResetPasswordButton(),
                         displayChangeEmailButton(context),
                         Padding(
@@ -129,29 +152,30 @@ class _ProfilePage extends State<ProfilePage> {
                             onPressed: () => signOutUser(),
                             style: ButtonStyle(
                                 backgroundColor:
-                                MaterialStateProperty.all<Color>(
-                                    highlight)),
+                                MaterialStateProperty.all<Color>(Color(0xffbf0000))),
                             child: Container(
                               alignment: Alignment.center,
-                              width: 200,
-                              child: const Text(
+
+                              width: 100,
+                              child:  Text(
                                 "Logout",
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 16),
+                                style: GoogleFonts.jost(
+                                    textStyle:
+                                    TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.normal,
+                                      color: Colors.white,
+                                    )),
                               ),
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+                  )),
+                ]))]),
+
+          );
   }
 
   Future<void> refreshPage(BuildContext context) async {
@@ -247,11 +271,8 @@ class _ProfilePage extends State<ProfilePage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 30),
-            displayUserID(dataNameStyle),
             const SizedBox(height: 15),
-            displayUserEmail(dataNameStyle),
-            const SizedBox(height: 20),
+            displayUserID(dataNameStyle),
           ],
         )
       ],
@@ -271,9 +292,10 @@ class _ProfilePage extends State<ProfilePage> {
           child: Container(
             alignment: Alignment.center,
             width: 150,
-            child: const Text(
+            child:  Text(
               "Change Email",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+              style: GoogleFonts.jost( // Applying Google Font style
+    textStyle: TextStyle(color: Colors.white, fontSize: 16)),
             ),
           ),
         ),
@@ -314,22 +336,42 @@ class _ProfilePage extends State<ProfilePage> {
                     case ConnectionState.active:
                     case ConnectionState.done:
                       return AlertDialog(
-                        title: Text(
-                          "Password Reset",
-                          style: TextStyle(color: highlight),
+                        title: TextFormField(
+                        decoration: InputDecoration(
+                        labelText: 'Password Reset', // Your text
+                        labelStyle: GoogleFonts.jost( // Applying Google Font style
+                          textStyle: TextStyle(
+                            fontSize: 20,
+                            color: Colors.black,
+                          ),
                         ),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Color(0xff060C3E), width: 2.0), // Customize underline color
+                        ))),
                         elevation: 10,
                         content: SizedBox(
                           width: 50,
                           child: Text(
                             snapshot.data,
-                            style: const TextStyle(fontSize: 16),
-                          ),
+
+                  style: GoogleFonts.jost(
+                  textStyle:
+                  TextStyle(
+                  fontSize: 16, // Set your desired font size for input text
+                  color: Colors.black, // Set your desired color for input text
+                  )
+                          )),
                         ),
                         actions: [
                           ElevatedButton(
                               onPressed: () => Navigator.pop(context),
-                              child: const Text("Ok"))
+                              child:
+                              Text("Ok",
+                                  style: GoogleFonts.jost(
+                              textStyle: TextStyle(
+                              fontSize: 15, // Set your desired font size for input text
+                              color: Colors.black, // Set your desired color for input text
+                              ))))
                         ],
                       );
                   }
@@ -342,13 +384,18 @@ class _ProfilePage extends State<ProfilePage> {
         child: Container(
           alignment: Alignment.center,
           width: 150,
-          child: const Text(
+          child:  Text(
             "Change Password",
-            style: TextStyle(color: Colors.white, fontSize: 16),
+    style: GoogleFonts.jost(
+    textStyle:
+    TextStyle(
+    fontSize: 16, // Set your desired font size for input text
+    color: Colors.white, // Set your desired color for input text
+    )
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget displayReportList() {
@@ -384,6 +431,12 @@ class _ProfilePage extends State<ProfilePage> {
                   children: [
                     Expanded(
                       child: TextField(
+                        style: GoogleFonts.jost(
+                            textStyle: const
+                            TextStyle(
+                              fontSize: 16, // Set your desired font size for input text
+                              color: Colors.black, // Set your desired color for input text
+                            )),
                         decoration: const InputDecoration(
                           fillColor: Colors.white,
                           filled: true,
@@ -396,7 +449,7 @@ class _ProfilePage extends State<ProfilePage> {
                       ),
                     ),
                     const SizedBox(
-                      width: 8,
+                      width: 10,
                     ),
                     dropdownSortButton()
                   ],
@@ -577,12 +630,13 @@ class _ProfilePage extends State<ProfilePage> {
   DropdownButton<String> dropdownSortButton() {
     return DropdownButton<String>(
       dropdownColor: highlight,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
+      style: GoogleFonts.jost(
+          textStyle: const
+          TextStyle(
+            fontSize: 16, // Set your desired font size for input text
         color: Colors.white,
         letterSpacing: 1,
-      ),
+      )),
       iconEnabledColor: secondary,
       value: _dropdownValue,
       items: _dropdownItems.map<DropdownMenuItem<String>>((String sortName) {
@@ -737,7 +791,11 @@ class _ProfilePage extends State<ProfilePage> {
               child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child:
-                  Text(_filteredReports![index].title, style: dataStyle)),
+                  Text(_filteredReports![index].title, style: GoogleFonts.jost( // Applying Google Font style
+                      textStyle: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.black,
+                      )))),
             ),
           ),
         ),
@@ -771,11 +829,11 @@ class _ProfilePage extends State<ProfilePage> {
                       children: [
                         Text(
                           _filteredReports![index].title,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            wordSpacing: 2,
-                          ),
+                            style: GoogleFonts.jost( // Applying Google Font style
+                                textStyle: const TextStyle(
+                                  fontSize: 25,
+                                  color: Colors.black,
+                                ))
                         ),
                         const SizedBox(height: 8),
                         DataTable(
@@ -791,14 +849,22 @@ class _ProfilePage extends State<ProfilePage> {
                           rows: [
                             DataRow(
                               cells: [
-                                const DataCell(Text("Type")),
+                                 DataCell(Text("Type", style: GoogleFonts.jost( // Applying Google Font style
+                                    textStyle: const TextStyle(
+                                      fontSize: 20,
+                                      color: Colors.black,
+                                    )))),
                                 DataCell(
                                   Flex(
                                     direction: Axis.horizontal,
                                     children: [
                                       SizedBox(
                                         child:
-                                        Text(_filteredReports![index].type),
+                                        Text(_filteredReports![index].type, style: GoogleFonts.jost( // Applying Google Font style
+                                            textStyle: const TextStyle(
+                                              fontSize: 15,
+                                              color: Colors.black,
+                                            ))),
                                       ),
                                     ],
                                   ),
@@ -807,24 +873,44 @@ class _ProfilePage extends State<ProfilePage> {
                             ),
                             DataRow(
                               cells: [
-                                const DataCell(Text("Description")),
+                                 DataCell(Text("Description", style: GoogleFonts.jost( // Applying Google Font style
+                                    textStyle: const TextStyle(
+                                      fontSize: 20,
+                                      color: Colors.black,
+                                    )))),
                                 DataCell(Padding(
                                   padding:
                                   const EdgeInsets.symmetric(vertical: 8.0),
                                   child: Text(
-                                      _filteredReports![index].description),
+                                      _filteredReports![index].description, style: GoogleFonts.jost( // Applying Google Font style
+                                      textStyle: const TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.black,
+                                      ))),
                                 ))
                               ],
                             ),
                             DataRow(cells: [
-                              const DataCell(Text("Date Created")),
+                               DataCell(Text("Date Created",   style: GoogleFonts.jost( // Applying Google Font style
+                                  textStyle: const TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                  )))),
                               DataCell(
                                 Text(
-                                    "${DateFormat.yMMMd().add_jmz().format(_filteredReports![index].time.toDate())} ${_filteredReports![index].time.toDate().timeZoneName}"),
+                                    "${DateFormat.yMMMd().add_jmz().format(_filteredReports![index].time.toDate())} ${_filteredReports![index].time.toDate().timeZoneName}",  style: GoogleFonts.jost( // Applying Google Font style
+                                    textStyle: const TextStyle(
+                                      fontSize: 15,
+                                      color: Colors.black,
+                                    ))),
                               )
                             ]),
                             DataRow(cells: [
-                              const DataCell(Text("Active")),
+                               DataCell(Text("Active", style: GoogleFonts.jost( // Applying Google Font style
+                                  textStyle: const TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                  )))),
                               DataCell(
                                 setStatus(_filteredReports![index].active),
                               )
@@ -896,45 +982,47 @@ class _ProfilePage extends State<ProfilePage> {
 
   // Displays the user's username
   Widget displayUserID(TextStyle dataNameStyle) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
       Text(
-        "ID",
-        style: dataNameStyle,
-      ),
-      const SizedBox(height: 8),
-      //const Padding(padding: EdgeInsets.only(right: 10)),
-      Container(
-        alignment: Alignment.centerLeft,
-        width: 225,
-        height: 30,
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.elliptical(10, 10)),
-          color: Colors.white,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-          child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Text(
-                  FirebaseAuth.instance.currentUser?.displayName.toString() ??
-                      "Unavailable.")),
-        ),
-      )
+          "Hi,",     style: GoogleFonts.jost(
+          textStyle: const
+          TextStyle(
+            fontSize: 25, // Set your desired font size for input text
+            color: Colors.white, // Set your desired color for input text
+          ))),
+      Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+          children:[
+    Text(
+      FirebaseAuth.instance.currentUser?.displayName.toString() ??
+          "Unavailable.",
+        style: GoogleFonts.jost(
+        textStyle: const
+        TextStyle(
+          fontSize: 25, // Set your desired font size for input text
+          color: Colors.white, // Set your desired color for input text
+        )))]),
+
     ]);
   }
 
   // Displays the user's email
-  Widget displayUserEmail(TextStyle dataNameStyle) {
+  Widget displayUserEmail() {
     return Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             "Email",
-            style: dataNameStyle,
+              style: GoogleFonts.jost(
+                  textStyle: const
+                  TextStyle(
+                    fontSize: 20, // Set your desired font size for input text
+                    color: Colors.white, // Set your desired color for input text
+                  ))
           ),
           const SizedBox(height: 8),
-          //const Padding(padding: EdgeInsets.only(right: 10)),
+          const Padding(padding: EdgeInsets.only(right: 10)),
           Container(
             alignment: Alignment.centerLeft,
             width: 225,
@@ -948,7 +1036,13 @@ class _ProfilePage extends State<ProfilePage> {
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Text(
-                    FirebaseAuth.instance.currentUser?.email ?? "unavailable."),
+                    FirebaseAuth.instance.currentUser?.email ?? "unavailable.",
+                    style: GoogleFonts.jost(
+                        textStyle: const
+                        TextStyle(
+                          fontSize: 15, // Set your desired font size for input text
+                          color: Colors.black, // Set your desired color for input text
+                        ))),
               ),
             ),
           )
@@ -1008,15 +1102,21 @@ class _ProfilePage extends State<ProfilePage> {
               ),
               Text(
                 "Change Email",
-                style: TextStyle(
-                    color: highlight,
+                style:
+                GoogleFonts.jost( // Applying Google Font style
+                  textStyle: TextStyle(
+                    color: Color(0xff060C3E),
                     fontSize: 24,
-                    fontWeight: FontWeight.bold),
+                    )),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: emailController,
-                style: const TextStyle(color: Colors.white, height: 1.0),
+                style: GoogleFonts.jost( // Applying Google Font style
+                  textStyle: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                  )),
                 decoration: InputDecoration(
                     isDense: true,
                     hintStyle: const TextStyle(color: Colors.white),
@@ -1026,6 +1126,7 @@ class _ProfilePage extends State<ProfilePage> {
                         borderRadius: BorderRadius.all(Radius.circular(15))),
                     hintText: "New Email"),
               ),
+              SizedBox(height:15),
               ElevatedButton(
                 style: ButtonStyle(
                     backgroundColor:
@@ -1123,22 +1224,28 @@ class _ProfilePage extends State<ProfilePage> {
                     },
                   );
                 },
-                child: const SizedBox(
+                child:  SizedBox(
                   width: 190,
                   child: Center(
                     child: Text(
                       "Update",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      style: GoogleFonts.jost( // Applying Google Font style
+                        textStyle: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                        )),
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 10),
-              Text("OR",
-                  style: TextStyle(
-                      color: primary,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold)),
+              Text("Or",
+                style: GoogleFonts.jost(
+                  textStyle: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xff060C3E),
+                  ),)),
               Container(
                 margin: const EdgeInsets.symmetric(vertical: 10.0),
                 child:

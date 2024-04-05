@@ -245,7 +245,7 @@ class DisplayMapPageState extends State<DisplayMap> {
           Stack(
               children:[
                 Container(
-                  height: MediaQuery.of(context).size.height *0.8,
+                  height: MediaQuery.of(context).size.height* 1.05,
                   decoration: const BoxDecoration(
                     color: Color(0xff242C73),
                     borderRadius: BorderRadius.only(
@@ -260,7 +260,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                             child:
                             Container(
                               margin: const EdgeInsets.all(20.0),
-                              height: MediaQuery.of(context).size.height *0.65,
+                              height: MediaQuery.of(context).size.height *0.9,
                               decoration: const BoxDecoration(
                                 color: Colors.white,
                                 borderRadius:
@@ -309,12 +309,16 @@ class DisplayMapPageState extends State<DisplayMap> {
                                             'Submitted by: ${pointData.creator}')),
                                   ),
                                   SizedBox(height:5),
-                                  Center(
-                                    child:  Padding(
-                                        padding: const EdgeInsets.all(15),
-                                        child: Container(
+                                 Padding(
+                                        padding: EdgeInsets.only(top:10,left:40, right: 40),
+                                        child: SingleChildScrollView(child: Padding(
+                                            padding: EdgeInsets.only(top:10,left:20, right: 20),
+                                            child: Container(
                                             color: Colors.deepOrange,
-                                            child: Text(
+                                            height: 60, //MediaQuery.sizeOf(),
+                                            child:
+                                            Center(
+                                            child: Wrap(children:[  Text(
                                                 style: GoogleFonts.jost(
                                                     textStyle: const
                                                     TextStyle(
@@ -322,9 +326,9 @@ class DisplayMapPageState extends State<DisplayMap> {
                                                       fontWeight: FontWeight.normal,
                                                       color: Colors.white,
                                                     )),
-                                                pointData.description))),
-                                  ),
-                                  SizedBox(height:10),
+                                                pointData.description)]))))),
+                                    ),
+                                  const SizedBox(height:10),
                                   Padding(
                                     padding: EdgeInsets.all(8.0),
                                     child: Center(
@@ -363,7 +367,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                                                 (Set<MaterialState> states) {
                                               if (states.contains(MaterialState.hovered))
                                                 return Colors.blueAccent.withOpacity(0.5); // Hover color
-                                              return Colors.red; // No overlay color
+                                              return Color(0xffbf0000); // No overlay color
                                             },
                                           ),
                                         ),
@@ -389,7 +393,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                   right: 15,
                   child: Container(
                     decoration: const BoxDecoration(
-                      color: Colors.redAccent,
+                      color: Color(0xffbf0000),
                       borderRadius: BorderRadius.all(Radius.circular(25)),
                     ),
                     child: CloseButton(
