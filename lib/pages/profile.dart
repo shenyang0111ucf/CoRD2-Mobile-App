@@ -3,6 +3,7 @@ import 'package:animations/animations.dart';
 import 'package:cord2_mobile_app/models/event_model.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:cord2_mobile_app/classes/user_data.dart';
+import 'package:cord2_mobile_app/pages/email_update_form.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -25,21 +26,22 @@ class _ProfilePage extends State<ProfilePage> {
   Color secondary = const Color(0xffD0DCF4);
   Color highlight = const Color(0xff20297A);
   late double _reportSectionPadding;
+  final titleStyle = TextStyle(
+      color: Colors.grey.shade800, fontSize: 22, fontWeight: FontWeight.bold);
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
+  String? _userName;
   // Pagination
   bool _isLoadingMore = false;
   bool _noMoreReports = false;
   bool _sortByRecent = true;
   String? _lastUsedDocID;
   final int _reportLimit = 15;
-
   // Search utility vars
   final TextEditingController _searchTextField = TextEditingController();
   int? _previousReportsLength;
   int _numOfNewlyAddedReports = 0;
   bool _isFiltering = false;
   bool _loadMore = false;
-
   // List of sort options for report section
   static const List<String> _dropdownItems = [
     "Most Recent",
@@ -53,6 +55,7 @@ class _ProfilePage extends State<ProfilePage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadReports();
+      _loadUserName();
     });
   }
 
@@ -73,7 +76,7 @@ class _ProfilePage extends State<ProfilePage> {
           expandedHeight: 130,
           flexibleSpace: FlexibleSpaceBar(
             title: Padding(
-                padding: EdgeInsets.only(right: 45.0),
+                padding: const EdgeInsets.only(right: 45.0),
                 child: Text(
                   'Profile',
                   style: GoogleFonts.jost(
@@ -116,17 +119,17 @@ class _ProfilePage extends State<ProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(
+                    const Icon(
                       CupertinoIcons.person_crop_circle,
                       size: 90,
                       color: Colors.white,
                     ),
                     displayUserData(),
                     Padding(
-                      padding: EdgeInsets.symmetric(),
+                      padding: const EdgeInsets.symmetric(),
                       child: Text("Report Statuses",
                           style: GoogleFonts.jost(
-                              textStyle: TextStyle(
+                              textStyle: const TextStyle(
                                   fontSize: 25,
                                   fontWeight: FontWeight.normal,
                                   color: Color(0xff060C3E)))),
@@ -134,27 +137,33 @@ class _ProfilePage extends State<ProfilePage> {
                     Padding(
                       padding: EdgeInsets.symmetric(
                           horizontal: _reportSectionPadding),
-                      child: displayReportList(),
+                      child: displayReportsSection(),
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     displayUserEmail(),
-                    SizedBox(height: 10),
-                    displayResetPasswordButton(),
-                    displayChangeEmailButton(context),
+                    const SizedBox(height: 10),
+                    UserData.isEmailPassLoginType()
+                        ? Column(
+                            children: [
+                              resetPasswordButton(),
+                              changeEmailButton(context),
+                            ],
+                          )
+                        : Container(),
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       child: ElevatedButton(
                         onPressed: () => signOutUser(),
                         style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all<Color>(
-                                Color(0xffbf0000))),
+                                const Color(0xffbf0000))),
                         child: Container(
                           alignment: Alignment.center,
                           width: 100,
                           child: Text(
                             "Logout",
                             style: GoogleFonts.jost(
-                                textStyle: TextStyle(
+                                textStyle: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.normal,
                               color: Colors.white,
@@ -272,7 +281,7 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
-  Padding displayChangeEmailButton(BuildContext context) {
+  Padding changeEmailButton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: OpenContainer(
@@ -289,12 +298,13 @@ class _ProfilePage extends State<ProfilePage> {
               "Change Email",
               style: GoogleFonts.jost(
                   // Applying Google Font style
-                  textStyle: TextStyle(color: Colors.white, fontSize: 16)),
+                  textStyle:
+                      const TextStyle(color: Colors.white, fontSize: 16)),
             ),
           ),
         ),
         openBuilder: (context, action) {
-          return updateUserEmailForm();
+          return const UpdateUserEmailForm();
         },
       ),
     );
@@ -302,7 +312,7 @@ class _ProfilePage extends State<ProfilePage> {
 
   // Returns a button to allow the current user to reset their password.
   // Also, displays a popup with the status of the sent email.
-  Padding displayResetPasswordButton() {
+  Padding resetPasswordButton() {
     return Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: ElevatedButton(
@@ -311,7 +321,7 @@ class _ProfilePage extends State<ProfilePage> {
               useSafeArea: true,
               builder: (context) {
                 return FutureBuilder(
-                  future: resetUserPassword(),
+                  future: UserData.resetUserPassword(),
                   builder: (context, snapshot) {
                     switch (snapshot.connectionState) {
                       case ConnectionState.waiting:
@@ -335,12 +345,12 @@ class _ProfilePage extends State<ProfilePage> {
                                   labelText: 'Password Reset', // Your text
                                   labelStyle: GoogleFonts.jost(
                                     // Applying Google Font style
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                       fontSize: 20,
                                       color: Colors.black,
                                     ),
                                   ),
-                                  enabledBorder: UnderlineInputBorder(
+                                  enabledBorder: const UnderlineInputBorder(
                                     borderSide: BorderSide(
                                         color: Color(0xff060C3E),
                                         width:
@@ -351,7 +361,7 @@ class _ProfilePage extends State<ProfilePage> {
                             width: 50,
                             child: Text(snapshot.data,
                                 style: GoogleFonts.jost(
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                   fontSize:
                                       16, // Set your desired font size for input text
                                   color: Colors
@@ -363,7 +373,7 @@ class _ProfilePage extends State<ProfilePage> {
                                 onPressed: () => Navigator.pop(context),
                                 child: Text("Ok",
                                     style: GoogleFonts.jost(
-                                        textStyle: TextStyle(
+                                        textStyle: const TextStyle(
                                       fontSize:
                                           15, // Set your desired font size for input text
                                       color: Colors
@@ -384,7 +394,7 @@ class _ProfilePage extends State<ProfilePage> {
             child: Text(
               "Change Password",
               style: GoogleFonts.jost(
-                  textStyle: TextStyle(
+                  textStyle: const TextStyle(
                 fontSize: 16, // Set your desired font size for input text
                 color: Colors.white, // Set your desired color for input text
               )),
@@ -393,7 +403,7 @@ class _ProfilePage extends State<ProfilePage> {
         ));
   }
 
-  Widget displayReportList() {
+  Widget displayReportsSection() {
     return SizedBox(
       height: 456,
       child: Theme(
@@ -488,8 +498,8 @@ class _ProfilePage extends State<ProfilePage> {
                             children: [
                               Row(
                                 children: [
-                                  Expanded(child: showFullReport(index)),
-                                  displayReportDeleteButton(index)
+                                  Expanded(child: fullReport(index)),
+                                  reportDeleteButton(index)
                                 ],
                               ),
                               // Show loading indicator at the end of the list
@@ -673,8 +683,7 @@ class _ProfilePage extends State<ProfilePage> {
   }
 
   // Returns a delete button that will delete a report from
-  Widget displayReportDeleteButton(int index,
-      {Color buttonColor = Colors.white}) {
+  Widget reportDeleteButton(int index, {Color buttonColor = Colors.white}) {
     return SizedBox(
       height: 30,
       child: IconButton(
@@ -753,7 +762,8 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
-  // Deletes the current user's reports with the specified IDs
+  // Deletes the current user's reports with the specified IDs and displays
+  // a snackbar with deletion status
   Future<void> deleteReport(List<String> reportIDs) async {
     bool deletedSuccessfully = await UserData.deleteUserReports(reportIDs);
 
@@ -772,7 +782,8 @@ class _ProfilePage extends State<ProfilePage> {
     });
   }
 
-  Widget createReportInfoDisplay({required Widget info}) {
+  // Returns a customized look for info
+  Widget createInfoDisplay({required Widget info}) {
     return Material(
       elevation: 3,
       child: Padding(
@@ -782,15 +793,21 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
-  // Displays the report in more detail on another route
-  Widget showFullReport(int index) {
-    TextStyle dataTitleStyle = TextStyle(
-        color: Colors.grey.shade800, fontSize: 22, fontWeight: FontWeight.bold);
+  // Returns a Text with a customized title style
+  Widget textTitle(String title) {
+    return Text(
+      title,
+      style: titleStyle,
+    );
+  }
+
+  // Displays the report in more detail on a fullscreen modal
+  Widget fullReport(int index) {
     TextStyle infoStyle = const TextStyle(color: Colors.black, fontSize: 16);
-    SizedBox itemPadding = const SizedBox(
+    const SizedBox itemPadding = SizedBox(
       height: 16,
     );
-    SizedBox infoPadding = const SizedBox(
+    const SizedBox infoPadding = SizedBox(
       height: 8,
     );
 
@@ -863,57 +880,42 @@ class _ProfilePage extends State<ProfilePage> {
                         const SizedBox(
                           height: 20,
                         ),
-                        Text(
-                          "Type",
-                          style: dataTitleStyle,
-                        ),
+                        textTitle("Type"),
                         infoPadding,
-                        createReportInfoDisplay(
+                        createInfoDisplay(
                           info: Text(
                             _filteredReports![index].type,
                             style: infoStyle,
                           ),
                         ),
                         itemPadding,
-                        Text(
-                          "Description",
-                          style: dataTitleStyle,
-                        ),
+                        textTitle("Description"),
                         infoPadding,
-                        createReportInfoDisplay(
+                        createInfoDisplay(
                           info: Text(
                             _filteredReports![index].description,
                             style: infoStyle,
                           ),
                         ),
                         itemPadding,
-                        Text(
-                          "Date Created",
-                          style: dataTitleStyle,
-                        ),
+                        textTitle("Date Created"),
                         infoPadding,
-                        createReportInfoDisplay(
+                        createInfoDisplay(
                           info: Text(
                             "${DateFormat.yMMMd().add_jmz().format(_filteredReports![index].time.toDate())} ${_filteredReports![index].time.toDate().timeZoneName}",
                             style: infoStyle,
                           ),
                         ),
                         itemPadding,
-                        Text(
-                          "Active",
-                          style: dataTitleStyle,
-                        ),
+                        textTitle("Active"),
                         infoPadding,
-                        createReportInfoDisplay(
+                        createInfoDisplay(
                           info: setStatus(_filteredReports![index].active),
                         ),
                         itemPadding,
                         _filteredReports![index].images.isEmpty
                             ? Container()
-                            : Text(
-                                "Images",
-                                style: dataTitleStyle,
-                              ),
+                            : textTitle("Images"),
                         infoPadding,
                         ListView.builder(
                           shrinkWrap: true,
@@ -922,7 +924,7 @@ class _ProfilePage extends State<ProfilePage> {
                           itemBuilder: (context, imageIndex) {
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 8.0),
-                              child: createReportInfoDisplay(
+                              child: createInfoDisplay(
                                 info: Image.network(
                                   _filteredReports![index].images[imageIndex],
                                   width: 250,
@@ -946,8 +948,7 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
-  TextStyle reportItem = const TextStyle(fontSize: 16);
-
+  // Returns an Icon that signifies whether a report is active
   Widget setStatus(bool status) {
     Icon statusIcon;
     Color color = Colors.black;
@@ -970,7 +971,6 @@ class _ProfilePage extends State<ProfilePage> {
   // Returns a border radius for a specified index row
   BorderRadiusGeometry calculateRowBorderRadius(int index) {
     BorderRadiusGeometry? borderRadius;
-    //if (events == null) return null;
 
     // There is only a single row on a page, so create a full border radius
     if (_filteredReports!.length == 1) {
@@ -996,6 +996,10 @@ class _ProfilePage extends State<ProfilePage> {
 
   // Displays the user's username
   Widget displayUserID(TextStyle dataNameStyle) {
+    if (_userName == null) {
+      return Container();
+    }
+
     return Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
       Text("Hi,",
           style: GoogleFonts.jost(
@@ -1004,9 +1008,7 @@ class _ProfilePage extends State<ProfilePage> {
             color: Colors.white, // Set your desired color for input text
           ))),
       Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
-        Text(
-            FirebaseAuth.instance.currentUser?.displayName.toString() ??
-                "Unavailable.",
+        Text(_userName!,
             style: GoogleFonts.jost(
                 textStyle: const TextStyle(
               fontSize: 25, // Set your desired font size for input text
@@ -1068,227 +1070,6 @@ class _ProfilePage extends State<ProfilePage> {
         (route) => false);
   }
 
-  // Returns a string that the email sent was successful or an error occured.
-  // Sends a password reset email to the current user.
-  Future resetUserPassword() async {
-    String status;
-    try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(
-          email: FirebaseAuth.instance.currentUser?.email ?? "error");
-      status =
-          "An email has been sent to: \n${FirebaseAuth.instance.currentUser?.email}";
-    } catch (e) {
-      print(e);
-      status = "An error occured. Please try again.";
-    }
-    return status;
-  }
-
-  Future<void> signInWithGoogle() async {
-    GoogleSignIn googleSignIn = GoogleSignIn(scopes: ['email']);
-    try {
-      await googleSignIn.signIn();
-    } catch (error) {
-      print(error);
-    }
-  }
-
-  // Returns a form that allows the user to reset their email.
-  // Displays the status of the sent email reset in an alert.
-  Widget updateUserEmailForm() {
-    TextEditingController emailController = TextEditingController();
-
-    return Container(
-      color: secondary,
-      child: SafeArea(
-        child: Column(
-          children: [
-            Row(
-              children: [
-                FilledButton(
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateColor.resolveWith(
-                          (states) => Colors.transparent)),
-                  onPressed: () => Navigator.pop(context),
-                  child: const Icon(
-                    CupertinoIcons.back,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 32),
-              child: Column(
-                children: [
-                  Text(
-                    "Change Email",
-                    style: GoogleFonts.jost(
-                        // Applying Google Font style
-                        textStyle: TextStyle(
-                      color: Color(0xff060C3E),
-                      fontSize: 24,
-                    )),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: emailController,
-                    style: GoogleFonts.jost(
-                        // Applying Google Font style
-                        textStyle: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                    )),
-                    decoration: InputDecoration(
-                        isDense: true,
-                        hintStyle: const TextStyle(color: Colors.white),
-                        fillColor: primary,
-                        filled: true,
-                        border: const OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(15))),
-                        hintText: "New Email"),
-                  ),
-                  const SizedBox(height: 15),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                        backgroundColor: MaterialStateColor.resolveWith(
-                            (states) => highlight)),
-                    onPressed: () {
-                      if (emailController.text.isEmpty) return;
-
-                      showDialog(
-                        barrierDismissible: false,
-                        context: context,
-                        builder: (context) {
-                          // Attempt to update email
-                          return PopScope(
-                            canPop: false,
-                            child: FutureBuilder(
-                              future: updateUserEmail(emailController.text),
-                              builder: (context, snapshot) {
-                                switch (snapshot.connectionState) {
-                                  case ConnectionState.waiting:
-                                  case ConnectionState.none:
-                                    return const AlertDialog(
-                                      elevation: 10,
-                                      content: SizedBox(
-                                        width: 40,
-                                        height: 40,
-                                        child: Center(
-                                          child: CircularProgressIndicator(),
-                                        ),
-                                      ),
-                                    );
-
-                                  case ConnectionState.active:
-                                  case ConnectionState.done:
-                                    // handle error cases
-                                    if (snapshot.data != null) {
-                                      switch (snapshot.data!.code) {
-                                        case "requires-recent-login":
-                                        case "user-token-expired":
-                                          print("requires login");
-                                          return displayAlert(
-                                              "Reauthentication Needed",
-                                              "For security purposes, please login to verify your identity.",
-                                              actions: [
-                                                ElevatedButton(
-                                                  onPressed: () {
-                                                    signOutUser();
-                                                  },
-                                                  child: const Text("Ok"),
-                                                )
-                                              ]);
-                                        case "invalid-email":
-                                          print("invalid email");
-                                          return displayAlert("Invalid Email",
-                                              "Please ensure your email is correct.");
-                                        case "same-email":
-                                          return displayAlert(
-                                              "Cannot Update to Same Email",
-                                              "You must update to a different email than your current email.");
-                                        // not working
-                                        case "email-already-exists":
-                                        case "email-already-in-use":
-                                          return displayAlert(
-                                              "Email Already in Use",
-                                              "This email is already taken. Please choose a different email.");
-                                        default:
-                                          print(snapshot.data!.code);
-                                          return displayAlert("Error Occured",
-                                              "Please try again later.");
-                                      }
-                                    }
-
-                                    // Email verification sent successfully, so prepare for reauthentication.
-                                    return displayAlert(
-                                      "Verify New Email Address",
-                                      "A verification email has been sent to ${emailController.text}.",
-                                      actions: [
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            signOutUser();
-                                          },
-                                          style: ButtonStyle(
-                                              backgroundColor:
-                                                  MaterialStateColor
-                                                      .resolveWith((states) =>
-                                                          highlight)),
-                                          child: const Text("Ok"),
-                                        ),
-                                      ],
-                                    );
-                                }
-                              },
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    child: SizedBox(
-                      width: 190,
-                      child: Center(
-                        child: Text(
-                          "Update",
-                          style: GoogleFonts.jost(
-                              // Applying Google Font style
-                              textStyle: TextStyle(
-                            fontSize: 20,
-                            color: Colors.white,
-                          )),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Updates the current user's email
-  Future<FirebaseAuthException?> updateUserEmail(String newEmail) async {
-    if (FirebaseAuth.instance.currentUser!.email?.compareTo(newEmail) == 0) {
-      print("Tried update with same email.");
-      return FirebaseAuthException(code: "same-email");
-    }
-
-    try {
-      await FirebaseAuth.instance.currentUser
-          ?.verifyBeforeUpdateEmail(newEmail);
-    } on FirebaseAuthException catch (e) {
-      print("email update error: ${e.code}");
-      return e;
-    }
-
-    return null;
-  }
-
   // Returns a custom preset alert dialog
   AlertDialog displayAlert(String alertTitle, String alertMsg,
       {List<Widget>? actions}) {
@@ -1323,15 +1104,21 @@ class _ProfilePage extends State<ProfilePage> {
     );
   }
 
-  // Determines whether a user logged in by using email and password.
-  bool isEmailPassLoginType() {
-    User? user = FirebaseAuth.instance.currentUser;
-
-    // User logged in with email and password
-    if (user?.providerData[0].providerId == "password") {
-      return true;
+  // Retrieves the user's name identifier
+  Future<void> _loadUserName() async {
+    // get username from other provider
+    if (!UserData.isEmailPassLoginType()) {
+      setState(() {
+        _userName = FirebaseAuth.instance.currentUser?.displayName;
+      });
+      return;
     }
-    // User logged in with another provider. Ex: google.com
-    return false;
+
+    // get username from database
+    String? userName = await UserData.getUserName();
+
+    setState(() {
+      _userName = userName;
+    });
   }
 }
