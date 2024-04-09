@@ -3,7 +3,7 @@ import 'package:animations/animations.dart';
 import 'package:cord2_mobile_app/models/event_model.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:cord2_mobile_app/classes/user_data.dart';
-import 'package:cord2_mobile_app/pages/email_update_form.dart';
+import 'package:cord2_mobile_app/pages/email_updater.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
