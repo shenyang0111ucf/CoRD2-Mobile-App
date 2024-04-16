@@ -362,7 +362,7 @@ class _SignOnPageState extends State<SignOnPage> {
   List<Widget> loginPage() {
     return [
       Container(
-        margin: const EdgeInsets.symmetric(vertical: 15.0),
+        margin: const EdgeInsets.symmetric(vertical: 10.0),
         child: Text("Login",
             style: GoogleFonts.jost(
                 textStyle: TextStyle(color: Color(blurple), fontSize: 30.0))),
@@ -429,7 +429,7 @@ class _SignOnPageState extends State<SignOnPage> {
         child: createButton("Login",  () => handleLogin()),
       ),
       GestureDetector(
-          child: Text("Create a new account",
+          child: Text("Create a New Account",
               style: GoogleFonts.jost(
                   textStyle: TextStyle(
                       decoration: TextDecoration.underline,
@@ -442,10 +442,12 @@ class _SignOnPageState extends State<SignOnPage> {
             switchPage(Page.Register);
           }
       ),
-      Container(
-        margin: const EdgeInsets.symmetric(vertical: 10.0),
+      const SizedBox(height:10),
+
+    Container(
         child: SignInButton(Buttons.Google, onPressed: signInWithGoogle),
-      ),
+      )
+
     ];
   }
 
@@ -469,7 +471,7 @@ class _SignOnPageState extends State<SignOnPage> {
         child: Center(
           child: SingleChildScrollView(
             child: Card(
-              margin: const EdgeInsets.fromLTRB(50, 75, 50, 75),
+              margin: const EdgeInsets.fromLTRB(40, 75, 40, 75),
               child: Padding(
                 padding: const EdgeInsets.all(40.0),
                 child: Column(

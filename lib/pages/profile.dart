@@ -334,18 +334,15 @@ class _ProfilePage extends State<ProfilePage> {
                     case ConnectionState.active:
                     case ConnectionState.done:
                       return AlertDialog(
-                        title: TextFormField(
-                        decoration: InputDecoration(
-                        labelText: 'Password Reset', // Your text
-                        labelStyle: GoogleFonts.jost( // Applying Google Font style
+                        title: Text(
+                       'Password Reset', // Your text
+                        style: GoogleFonts.jost( // Applying Google Font style
                           textStyle: TextStyle(
                             fontSize: 20,
+                            decoration: TextDecoration.underline,
                             color: Colors.black,
-                          ),
-                        ),
-                        enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xff060C3E), width: 2.0), // Customize underline color
-                        ))),
+                          ))),
+
                         elevation: 10,
                         content: SizedBox(
                           width: 50,
@@ -1261,14 +1258,6 @@ class _ProfilePage extends State<ProfilePage> {
                 ),
               ),
               const SizedBox(height: 10),
-              Text("Or",
-                style: GoogleFonts.jost(
-                  textStyle: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xff060C3E),
-                  ),)),
-
             ],
           ),
         ),

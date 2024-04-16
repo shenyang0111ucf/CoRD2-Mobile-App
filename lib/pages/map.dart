@@ -258,6 +258,8 @@ class DisplayMapPageState extends State<DisplayMap> {
                         Padding(
                             padding: const EdgeInsets.only(top:20, bottom:20),
                             child:
+                                SingleChildScrollView(
+                                  child:
                             Container(
                               margin: const EdgeInsets.all(20.0),
                               height: MediaQuery.of(context).size.height *0.9,
@@ -266,7 +268,8 @@ class DisplayMapPageState extends State<DisplayMap> {
                                 borderRadius:
                                 BorderRadius.all(Radius.circular(25)),
                               ),
-                              child: Column(
+                              child: SingleChildScrollView(
+                                child: Column(
                                 children: [
                                   Padding(
                                     padding: const EdgeInsets.only(top:25, bottom:5),
@@ -312,13 +315,19 @@ class DisplayMapPageState extends State<DisplayMap> {
                                  Padding(
                                         padding: EdgeInsets.only(top:10,left:40, right: 40),
                                         child: SingleChildScrollView(child: Padding(
-                                            padding: EdgeInsets.only(top:10,left:20, right: 20),
-                                            child: Container(
-                                            color: Colors.deepOrange,
-                                            height: 60, //MediaQuery.sizeOf(),
+                                            padding: EdgeInsets.only(top:10,left:10, right: 10),
+                                            child: SingleChildScrollView(
+                                                child:
+                                                Container(
+                                                  padding: EdgeInsets.only(right:10, left:10, top:10, bottom:10),
+                                                decoration: BoxDecoration(
+                                                  borderRadius: BorderRadius.circular(10.0), // Adjust the radius as needed
+                                                  color: Colors.deepOrange,
+                                                ),
                                             child:
                                             Center(
-                                            child: Wrap(children:[  Text(
+                                            child: Wrap(alignment: WrapAlignment.center,
+                                                children:[  Text(
                                                 style: GoogleFonts.jost(
                                                     textStyle: const
                                                     TextStyle(
@@ -326,7 +335,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                                                       fontWeight: FontWeight.normal,
                                                       color: Colors.white,
                                                     )),
-                                                pointData.description)]))))),
+                                                pointData.description)])))))),
                                     ),
                                   const SizedBox(height:10),
                                   Padding(
@@ -384,8 +393,8 @@ class DisplayMapPageState extends State<DisplayMap> {
                                     ),
                                   ),
                                 ],
-                              ),
-                            ))
+                              )),
+                            )))
                       ]),
                 ),
                 Positioned(
@@ -393,7 +402,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                   right: 15,
                   child: Container(
                     decoration: const BoxDecoration(
-                      color: Color(0xffbf0000),
+                      color: Colors.deepOrange,
                       borderRadius: BorderRadius.all(Radius.circular(25)),
                     ),
                     child: CloseButton(
@@ -533,14 +542,14 @@ class DisplayMapPageState extends State<DisplayMap> {
             onPressed: () {
               refreshMap();
             },
-            backgroundColor:  Color(0xff060C3E),
+            backgroundColor:  Color(0xff242C73),
             child: Icon(Icons.refresh, color: Colors.white),
           ),
           SizedBox(
             height: 10,
           ),
           FloatingActionButton(
-            backgroundColor:  Color(0xff060C3E),
+            backgroundColor:  Color(0xff242C73),
             onPressed: () async {
               var permResult = await checkPerms('locationPerm');
               if (permResult == true) {

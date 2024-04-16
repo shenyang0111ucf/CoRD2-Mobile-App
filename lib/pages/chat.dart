@@ -130,7 +130,7 @@ class _ChatPageState extends State<ChatPage> {
           padding: EdgeInsets.only(top:20),
     child:
     Container(
-            color: Color(lightBlue), child: Center(child: Padding(
+            color: Color(0xff060C3E), child: Center(child: Padding(
     padding: EdgeInsets.only(top:10),
     child:
     renderChats()
