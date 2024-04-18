@@ -93,7 +93,7 @@ class _MessagePageState extends State<MessagePage> {
               isSender: item.didSend,
               tail: index == _messages.length - 1 ? true : false,
               color: item.didSend
-                  ? const Color(0xFF1B97F3)
+                  ? Color(blurple)
                   : const Color(0xFFE8E8EE),
               textStyle:
                   TextStyle(color: item.didSend ? Colors.white : Colors.black));
@@ -186,6 +186,7 @@ class _MessagePageState extends State<MessagePage> {
     )))),
           body: SafeArea(
             child: Container(
+              padding: EdgeInsets.only(top:20),
                 color: Color(lightBlue),
                 child: Center(child: renderTextScreen())),
           ),

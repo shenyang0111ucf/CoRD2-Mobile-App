@@ -92,7 +92,7 @@ class DisplayMapPageState extends State<DisplayMap> {
     // for what you want to display in popup, a lot are just blank
     showModalBottomSheet(
         useRootNavigator: true,
-        backgroundColor: Colors.blue[300],
+        backgroundColor: Color(0xff242C73),
         context: context,
         builder: (BuildContext bc) {
           return SizedBox(
@@ -100,9 +100,23 @@ class DisplayMapPageState extends State<DisplayMap> {
               width: MediaQuery.of(context).size.width * 1,
               child: Column(
                 children: [
-                  CloseButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
+                  Padding(
+                padding: EdgeInsets.only(top:10),
+                  child:
+                  Positioned(
+                    top: 20, // Adjust this value as needed
+                    right: 15,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.deepOrange,
+                        borderRadius: BorderRadius.all(Radius.circular(25)),
+                      ),
+                      child: CloseButton(
+                        color: Colors.white,
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                  )),
                   Padding(
                     padding: const EdgeInsets.all(25.0),
                     child: Column(
@@ -111,55 +125,58 @@ class DisplayMapPageState extends State<DisplayMap> {
                           decoration: BoxDecoration(
                             borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(20.0)),
-                            color: Colors.grey[300],
+                            color: Colors.white,
                           ),
                           child: Center(
                             child: Text(map['FID'].toString(), // all have
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                )),
+          style: GoogleFonts.jost( textStyle: TextStyle(
+          fontSize: 18, fontWeight: FontWeight.bold))),
                           ),
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.grey[300],
+                            color: Colors.white,
                           ),
                           child: Center(
                             // transit/sunrail both have StrName, school has School_Nam
                             child: map['School_Nam'] != null
                                 ? Text(map['School_Nam'],
-                                style: TextStyle(fontSize: 12))
+                                style: GoogleFonts.jost( textStyle: TextStyle(
+                                    fontSize: 18)))
                                 : Text(map['StrName'],
-                                style: TextStyle(fontSize: 12)),
+                                style: GoogleFonts.jost( textStyle: TextStyle(
+                                    fontSize: 18))),
                           ),
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.grey[300],
+                            color: Colors.white,
                           ),
                           child: Center(
                             // transit/sunrail both have City, school has School_Dst
                             child: map['City'] != null
                                 ? Text(map['City'],
-                                style: TextStyle(fontSize: 12))
+                                style: GoogleFonts.jost( textStyle: TextStyle(
+                                    fontSize: 14)))
                                 : Text(map['School_Dst'],
-                                style: TextStyle(fontSize: 12)),
+                                style: GoogleFonts.jost( textStyle: TextStyle(
+                                    fontSize: 14))),
                           ),
                         ),
                         Container(
                           decoration: BoxDecoration(
                             borderRadius: const BorderRadius.vertical(
                                 bottom: Radius.circular(20.0)),
-                            color: Colors.grey[300],
+                            color: Colors.white,
                           ),
                           child: Center(
                             // transit/sunrail have Type, school has School_Typ
                             child: map['School_Typ'] != null
                                 ? Text(map['School_Typ'],
-                                style: TextStyle(fontSize: 12))
-                                : Text(map['Type'],
-                                style: TextStyle(fontSize: 12)),
+          style: GoogleFonts.jost( textStyle: TextStyle(
+          fontSize: 14))) : Text(map['Type'],
+                                style: GoogleFonts.jost( textStyle: TextStyle(
+                                    fontSize: 14))),
                           ),
                         ),
                       ],
