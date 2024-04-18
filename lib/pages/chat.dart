@@ -43,6 +43,7 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   void dispose() {
+    super.dispose();
     _chatSubscription.cancel();
   }
 

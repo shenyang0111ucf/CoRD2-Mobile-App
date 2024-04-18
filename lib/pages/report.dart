@@ -234,34 +234,30 @@ class _ReportFormState extends State<ReportForm> {
 
   void setError(String msg) {
     setState(() {
-      _error = msg;
+      error = msg;
     });
   }
 
   // Sets the user's report vals in firebase
   Future submitReport(String userId) async {
     setError("");
-    if (descriptionCon.text.isEmpty) {
-      error = "Please fill out the description field.";
-      return;
-    }
     if (titleCon.text.isEmpty) {
-      error = "Please add a title.";
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please add a title!")));
       return;
     }
+
+    if (descriptionCon.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please add a description!")));
+      return;
+    }
+
     if(_imageFile == null){
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please upload an image!")));
       return;
     }
+
     if(chooseLat == 0.0 && chooseLng == 0.0){
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text("Please choose a location for the hazard!")
-          )
-      );
-      descriptionCon.clear();
-      titleCon.clear();
-      selectedCategory == 'Hurricane';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please choose a location for the hazard!")));
       return;
     }
 
@@ -302,9 +298,15 @@ class _ReportFormState extends State<ReportForm> {
         });
       });
 
-      error = 'Submission saved successfully!';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Submission saved successfully!")));
+      descriptionCon.clear();
+      titleCon.clear();
+      setState(() {
+        selectedCategory = 'Hurricane';
+        _imageFile = null;
+      });
     } catch (e) {
-      error = 'Error saving submission: $e';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("There was an error saving the submission: $e")));
     }
   }
 
@@ -522,7 +524,6 @@ class _ReportFormState extends State<ReportForm> {
                                 TextStyle(fontSize: 25,
                                     fontWeight: FontWeight.normal,
                                     color: Colors.white,)))),
-                if(_selectedImage == null)
                 GestureDetector(
                   onTap: () {
                     pickImage();
@@ -585,7 +586,8 @@ class _ReportFormState extends State<ReportForm> {
                       child: ElevatedButton(
                         onPressed: () {
                           submitReport(currentUserId);
-                          showDialog(
+                          if (error.isNotEmpty) {
+                            showDialog(
                               context: context,
                               builder: (BuildContext context) =>
                               AlertDialog(
@@ -625,6 +627,7 @@ class _ReportFormState extends State<ReportForm> {
                                           ))))
                             ],
                           ));
+                          }
                         },
                         style: ButtonStyle(
                           minimumSize: MaterialStateProperty.all(Size(200, 50)), // Set the size here

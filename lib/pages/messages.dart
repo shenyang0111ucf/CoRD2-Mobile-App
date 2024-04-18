@@ -44,6 +44,7 @@ class _MessagePageState extends State<MessagePage> {
 
   @override
   void dispose() {
+    super.dispose();
     _msgSubscription.cancel();
   }
 
