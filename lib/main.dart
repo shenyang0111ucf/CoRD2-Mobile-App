@@ -1,3 +1,4 @@
+import 'package:cord2_mobile_app/pages/home.dart';
 import 'package:cord2_mobile_app/pages/map.dart';
 import 'package:cord2_mobile_app/pages/chat.dart';
 import 'package:cord2_mobile_app/pages/profile.dart';
@@ -26,8 +27,8 @@ class MyApp extends StatelessWidget {
   // const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: SignOnPage(),
+    return  MaterialApp(
+      home: AnimatedPage(),// SignOnPage(),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -106,10 +107,14 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       SizedBox(height: 15),
-                      Icon(
-                        CupertinoIcons.person_crop_circle,
-                        size: 70,
-                        color: Colors.white,
+                      IconButton(
+                        icon: Icon( CupertinoIcons.person_crop_circle, color: Colors.white, size: 50),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ProfilePage()),
+                          );
+                        },
                       ),
                     ])),
             _buildDrawerItem("Map"),
@@ -128,7 +133,7 @@ class _HomePageState extends State<HomePage> {
                 await FirebaseAuth.instance.signOut();
                 Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => SignOnPage()),
+                    MaterialPageRoute(builder: (context) => SignOnPage()),//AnimatedPage();
                     (Route route) => false);
               },
             ),

@@ -3,11 +3,11 @@ import 'package:animations/animations.dart';
 import 'package:cord2_mobile_app/models/event_model.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:cord2_mobile_app/classes/user_data.dart';
+import 'package:cord2_mobile_app/pages/email_updater.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/intl.dart';
@@ -26,6 +26,10 @@ class _ProfilePage extends State<ProfilePage> {
   Color secondary = const Color(0xffD0DCF4);
   Color highlight = const Color(0xff20297A);
   late double _reportSectionPadding;
+  final titleStyle = TextStyle(
+      color: Colors.grey.shade800, fontSize: 22, fontWeight: FontWeight.bold);
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
+  String? _userName;
   // Pagination
   bool _isLoadingMore = false;
   bool _noMoreReports = false;
@@ -34,12 +38,10 @@ class _ProfilePage extends State<ProfilePage> {
   final int _reportLimit = 15;
   // Search utility vars
   final TextEditingController _searchTextField = TextEditingController();
-  String _previousSearchText = "";
   int? _previousReportsLength;
   int _numOfNewlyAddedReports = 0;
   bool _isFiltering = false;
   bool _loadMore = false;
-
   // List of sort options for report section
   static const List<String> _dropdownItems = [
     "Most Recent",
@@ -53,6 +55,7 @@ class _ProfilePage extends State<ProfilePage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadReports();
+      _loadUserName();
     });
   }
 
@@ -65,92 +68,115 @@ class _ProfilePage extends State<ProfilePage> {
       _reportSectionPadding = 48;
     }
 
-    return Material(
-      child: SafeArea(
-        child: SizedBox(
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          child: RefreshIndicator(
-            triggerMode: RefreshIndicatorTriggerMode.anywhere,
-            onRefresh: () => refreshPage(context),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const Padding(padding: EdgeInsets.only(top: 50)),
-                  Text(
-                      "Profile",
-                      style: GoogleFonts.jost(
-                          textStyle:
-                          TextStyle(fontSize: 40,
-                              fontWeight: FontWeight.normal,
-                              color: Color(0xff060C3E)))
-                  ),
-                  const Padding(padding: EdgeInsets.only(top: 20)),
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.only(
-                          topLeft: Radius.elliptical(40, 40),
-                          topRight: Radius.elliptical(40, 40)),
-                      color: secondary,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Icon(
-                          CupertinoIcons.person_crop_circle,
-                          size: 90,
-                          color: Colors.white,
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 10),
-                          child: Text(
-                              "Report Statuses",
-                              style: GoogleFonts.jost(
-                                  textStyle:
-                                  TextStyle(fontSize: 25,
-                                      fontWeight: FontWeight.normal,
-                                      color: Color(0xff060C3E)))
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: _reportSectionPadding),
-                          child: displayReportList(),
-                        ),
-                        displayUserData(),
-                        displayResetPasswordButton(),
-                        displayChangeEmailButton(context),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          child: ElevatedButton(
-                            onPressed: () => signOutUser(),
-                            style: ButtonStyle(
-                                backgroundColor:
-                                MaterialStateProperty.all<Color>(
-                                    highlight)),
-                            child: Container(
-                              alignment: Alignment.center,
-                              width: 200,
-                              child: const Text(
-                                "Logout",
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 16),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+    return Scaffold(
+      resizeToAvoidBottomInset: true, // Set this to true
+      body: CustomScrollView(slivers: [
+        // SliverAppBar with fixed "Report" text
+        SliverAppBar(
+          expandedHeight: 130,
+          flexibleSpace: FlexibleSpaceBar(
+            title: Padding(
+                padding: const EdgeInsets.only(right: 45.0),
+                child: Text(
+                  'Profile',
+                  style: GoogleFonts.jost(
+                    textStyle: const TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xff060C3E),
                     ),
                   ),
-                ],
-              ),
-            ),
+                  //  textAlign: TextAlign.center,
+                )),
+            centerTitle: true,
           ),
+          // centerTitle: true,
+          floating: true,
+          pinned: true,
+          snap: false,
+          backgroundColor: Colors.white,
+          elevation: 0,
         ),
-      ),
+        // SliverList for the scrolling content
+        SliverList(
+            delegate: SliverChildListDelegate([
+          // Padding for spacing
+          const SizedBox(height: 20),
+
+          Container(
+              //    height:600,
+              //   height: MediaQuery.of(context).size.height-200,
+              padding: const EdgeInsets.only(top: 30, bottom: 40),
+              decoration: const BoxDecoration(
+                color: Color(0xff060C3E),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30.0),
+                  topRight: Radius.circular(30.0),
+                ),
+              ),
+              //  width: double.infinity,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      CupertinoIcons.person_crop_circle,
+                      size: 90,
+                      color: Colors.white,
+                    ),
+                    displayUserData(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(),
+                      child: Text("Report Statuses",
+                          style: GoogleFonts.jost(
+                              textStyle: const TextStyle(
+                                  fontSize: 25,
+                                  fontWeight: FontWeight.normal,
+                                  color: Color(0xff060C3E)))),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: _reportSectionPadding),
+                      child: displayReportsSection(),
+                    ),
+                    const SizedBox(height: 20),
+                    displayUserEmail(),
+                    const SizedBox(height: 10),
+                    UserData.isEmailPassLoginType()
+                        ? Column(
+                            children: [
+                              resetPasswordButton(),
+                              changeEmailButton(context),
+                            ],
+                          )
+                        : Container(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: ElevatedButton(
+                        onPressed: () => signOutUser(),
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color>(
+                                const Color(0xffbf0000))),
+                        child: Container(
+                          alignment: Alignment.center,
+                          width: 100,
+                          child: Text(
+                            "Logout",
+                            style: GoogleFonts.jost(
+                                textStyle: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.normal,
+                              color: Colors.white,
+                            )),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+        ]))
+      ]),
     );
   }
 
@@ -233,32 +259,29 @@ class _ProfilePage extends State<ProfilePage> {
         }
         _isLoadingMore = false;
       });
-      await filterLazyLoadedReport(_searchTextField.text);
+      await filterLazyLoadedReports(_searchTextField.text);
     }
   }
 
   // Displays all of the necessary personal data to the user
   Widget displayUserData() {
     TextStyle dataNameStyle =
-    TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: primary);
+        TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: primary);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 30),
-            displayUserID(dataNameStyle),
             const SizedBox(height: 15),
-            displayUserEmail(dataNameStyle),
-            const SizedBox(height: 20),
+            displayUserID(dataNameStyle),
           ],
         )
       ],
     );
   }
 
-  Padding displayChangeEmailButton(BuildContext context) {
+  Padding changeEmailButton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: OpenContainer(
@@ -271,14 +294,17 @@ class _ProfilePage extends State<ProfilePage> {
           child: Container(
             alignment: Alignment.center,
             width: 150,
-            child: const Text(
+            child: Text(
               "Change Email",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+              style: GoogleFonts.jost(
+                  // Applying Google Font style
+                  textStyle:
+                      const TextStyle(color: Colors.white, fontSize: 16)),
             ),
           ),
         ),
         openBuilder: (context, action) {
-          return updateUserEmailForm();
+          return const UpdateUserEmailForm();
         },
       ),
     );
@@ -286,50 +312,67 @@ class _ProfilePage extends State<ProfilePage> {
 
   // Returns a button to allow the current user to reset their password.
   // Also, displays a popup with the status of the sent email.
-  Padding displayResetPasswordButton() {
+  Padding resetPasswordButton() {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: ElevatedButton(
-        onPressed: () => showDialog(
-            context: context,
-            useSafeArea: true,
-            builder: (context) {
-              return FutureBuilder(
-                future: resetUserPassword(),
-                builder: (context, snapshot) {
-                  switch (snapshot.connectionState) {
-                    case ConnectionState.waiting:
-                    case ConnectionState.none:
-                      return const AlertDialog(
-                        elevation: 10,
-                        content: SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: Center(
-                            child: CircularProgressIndicator(),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: ElevatedButton(
+          onPressed: () => showDialog(
+              context: context,
+              useSafeArea: true,
+              builder: (context) {
+                return FutureBuilder(
+                  future: UserData.resetUserPassword(),
+                  builder: (context, snapshot) {
+                    switch (snapshot.connectionState) {
+                      case ConnectionState.waiting:
+                      case ConnectionState.none:
+                        return const AlertDialog(
+                          elevation: 10,
+                          content: SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: Center(
+                              child: CircularProgressIndicator(),
+                            ),
                           ),
-                        ),
-                      );
+                        );
 
                     case ConnectionState.active:
                     case ConnectionState.done:
                       return AlertDialog(
                         title: Text(
-                          "Password Reset",
-                          style: TextStyle(color: highlight),
-                        ),
+                       'Password Reset', // Your text
+                        style: GoogleFonts.jost( // Applying Google Font style
+                          textStyle: TextStyle(
+                            fontSize: 20,
+                            decoration: TextDecoration.underline,
+                            color: Colors.black,
+                          ))),
+
                         elevation: 10,
                         content: SizedBox(
                           width: 50,
                           child: Text(
                             snapshot.data,
-                            style: const TextStyle(fontSize: 16),
-                          ),
+
+                  style: GoogleFonts.jost(
+                  textStyle:
+                  TextStyle(
+                  fontSize: 16, // Set your desired font size for input text
+                  color: Colors.black, // Set your desired color for input text
+                  )
+                          )),
                         ),
                         actions: [
                           ElevatedButton(
                               onPressed: () => Navigator.pop(context),
-                              child: const Text("Ok"))
+                              child:
+                              Text("Ok",
+                                  style: GoogleFonts.jost(
+                              textStyle: TextStyle(
+                              fontSize: 15, // Set your desired font size for input text
+                              color: Colors.black, // Set your desired color for input text
+                              ))))
                         ],
                       );
                   }
@@ -342,16 +385,21 @@ class _ProfilePage extends State<ProfilePage> {
         child: Container(
           alignment: Alignment.center,
           width: 150,
-          child: const Text(
+          child:  Text(
             "Change Password",
-            style: TextStyle(color: Colors.white, fontSize: 16),
+    style: GoogleFonts.jost(
+    textStyle:
+    TextStyle(
+    fontSize: 16, // Set your desired font size for input text
+    color: Colors.white, // Set your desired color for input text
+    )
           ),
         ),
       ),
-    );
+    ));
   }
 
-  Widget displayReportList() {
+  Widget displayReportsSection() {
     return SizedBox(
       height: 456,
       child: Theme(
@@ -384,6 +432,13 @@ class _ProfilePage extends State<ProfilePage> {
                   children: [
                     Expanded(
                       child: TextField(
+                        style: GoogleFonts.jost(
+                            textStyle: const TextStyle(
+                          fontSize:
+                              16, // Set your desired font size for input text
+                          color: Colors
+                              .black, // Set your desired color for input text
+                        )),
                         decoration: const InputDecoration(
                           fillColor: Colors.white,
                           filled: true,
@@ -391,12 +446,21 @@ class _ProfilePage extends State<ProfilePage> {
                         ),
                         controller: _searchTextField,
                         onChanged: (value) async {
-                          filterLoadedReports(value);
+                          bool searchAllReports = false;
+                          // Checks if a character was not appended or prepended
+                          // meaning that we need to search all reports and not
+                          // only the current filtered list.
+                          if (_searchTextField.selection.start != 1 &&
+                              _searchTextField.selection.start !=
+                                  (value.length)) {
+                            searchAllReports = true;
+                          }
+                          filterLoadedReports(value, searchAllReports);
                         },
                       ),
                     ),
                     const SizedBox(
-                      width: 8,
+                      width: 10,
                     ),
                     dropdownSortButton()
                   ],
@@ -406,7 +470,7 @@ class _ProfilePage extends State<ProfilePage> {
                 ),
                 Container(
                   constraints:
-                  const BoxConstraints(maxHeight: 364, minHeight: 0),
+                      const BoxConstraints(maxHeight: 364, minHeight: 0),
                   child: NotificationListener<ScrollNotification>(
                     onNotification: (notification) {
                       ScrollMetrics scrollMetrics = notification.metrics;
@@ -430,21 +494,21 @@ class _ProfilePage extends State<ProfilePage> {
                             children: [
                               Row(
                                 children: [
-                                  Expanded(child: showFullReport(index)),
-                                  displayReportDeleteButton(index)
+                                  Expanded(child: fullReport(index)),
+                                  reportDeleteButton(index)
                                 ],
                               ),
                               // Show loading indicator at the end of the list
                               // when more reports are being loaded
                               _isLoadingMore &&
-                                  index + 1 == _filteredReports?.length
+                                      index + 1 == _filteredReports?.length
                                   ? const Padding(
-                                  padding: EdgeInsets.all(12.0),
-                                  child: Center(
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                    ),
-                                  ))
+                                      padding: EdgeInsets.all(12.0),
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                        ),
+                                      ))
                                   : Container(height: 0),
                             ],
                           );
@@ -461,11 +525,10 @@ class _ProfilePage extends State<ProfilePage> {
 
   // Filter the loaded reports on the first run of the search.
   // Loads more reports if not enough were shown.
-  void filterLoadedReports(String? searchText) {
+  void filterLoadedReports(String? searchText, bool searchAllReports) {
     if (searchText == null || searchText.isEmpty || _userReports == null) {
       setState(() {
         _filteredReports = _userReports;
-        _previousSearchText = searchText ?? '';
       });
       _previousReportsLength = null;
       return;
@@ -476,7 +539,7 @@ class _ProfilePage extends State<ProfilePage> {
     List<EventModel>? newReports = [];
 
     // Filter based on all reports
-    if (search.length < _previousSearchText.length || search.length == 1) {
+    if (searchAllReports) {
       // Filter based on title, type, and description
       _userReports?.forEach((report) {
         if (report.title.toLowerCase().contains(search) ||
@@ -516,7 +579,6 @@ class _ProfilePage extends State<ProfilePage> {
       }
       // update search filter data
       _filteredReports = newReports;
-      _previousSearchText = search;
       _previousReportsLength = _userReports?.length;
     });
 
@@ -527,7 +589,7 @@ class _ProfilePage extends State<ProfilePage> {
   }
 
   // Filter and add new lazily loaded reports to the current filtered list
-  Future<void> filterLazyLoadedReport(String? search) async {
+  Future<void> filterLazyLoadedReports(String? search) async {
     if (search == null ||
         search.isEmpty ||
         _filteredReports == null ||
@@ -577,12 +639,12 @@ class _ProfilePage extends State<ProfilePage> {
   DropdownButton<String> dropdownSortButton() {
     return DropdownButton<String>(
       dropdownColor: highlight,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
+      style: GoogleFonts.jost(
+          textStyle: const TextStyle(
+        fontSize: 16, // Set your desired font size for input text
         color: Colors.white,
         letterSpacing: 1,
-      ),
+      )),
       iconEnabledColor: secondary,
       value: _dropdownValue,
       items: _dropdownItems.map<DropdownMenuItem<String>>((String sortName) {
@@ -617,7 +679,7 @@ class _ProfilePage extends State<ProfilePage> {
   }
 
   // Returns a delete button that will delete a report from
-  Widget displayReportDeleteButton(int index) {
+  Widget reportDeleteButton(int index, {Color buttonColor = Colors.white}) {
     return SizedBox(
       height: 30,
       child: IconButton(
@@ -649,16 +711,16 @@ class _ProfilePage extends State<ProfilePage> {
                   ElevatedButton(
                       style: ButtonStyle(
                           fixedSize: MaterialStateProperty.resolveWith(
-                                  (states) => const Size.fromWidth(125)),
+                              (states) => const Size.fromWidth(125)),
                           backgroundColor: MaterialStateColor.resolveWith(
-                                  (states) => highlight)),
+                              (states) => highlight)),
                       // Delete the specified report
                       onPressed: () async {
                         Navigator.pop(context);
                         // Delete report from database and
                         // remove from userReports list
                         await deleteReport([_filteredReports![index].id]);
-                        // Delete report
+                        // Delete report locally
                         setState(() {
                           _filteredReports!.removeAt(index);
                         });
@@ -673,9 +735,9 @@ class _ProfilePage extends State<ProfilePage> {
                   ElevatedButton(
                       style: ButtonStyle(
                           fixedSize: MaterialStateProperty.resolveWith(
-                                  (states) => const Size.fromWidth(125)),
+                              (states) => const Size.fromWidth(125)),
                           backgroundColor: MaterialStateColor.resolveWith(
-                                  (states) => Colors.white12)),
+                              (states) => Colors.white12)),
                       onPressed: () {
                         Navigator.pop(context);
                       },
@@ -688,15 +750,16 @@ class _ProfilePage extends State<ProfilePage> {
             },
           ),
         },
-        icon: const Icon(
+        icon: Icon(
           CupertinoIcons.trash,
-          color: Colors.white,
+          color: buttonColor,
         ),
       ),
     );
   }
 
-  // Deletes the current user's reports with the specified IDs
+  // Deletes the current user's reports with the specified IDs and displays
+  // a snackbar with deletion status
   Future<void> deleteReport(List<String> reportIDs) async {
     bool deletedSuccessfully = await UserData.deleteUserReports(reportIDs);
 
@@ -707,7 +770,7 @@ class _ProfilePage extends State<ProfilePage> {
             backgroundColor: Colors.red));
       } else {
         _userReports?.removeWhere(
-                (userReport) => reportIDs.any((report) => report == userReport.id));
+            (userReport) => reportIDs.any((report) => report == userReport.id));
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Successfully deleted"),
             backgroundColor: Colors.green));
@@ -715,11 +778,38 @@ class _ProfilePage extends State<ProfilePage> {
     });
   }
 
-  // Displays the report in more detail on another route
-  Widget showFullReport(int index) {
+  // Returns a customized look for info
+  Widget createInfoDisplay({required Widget info}) {
+    return Material(
+      elevation: 3,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: info,
+      ),
+    );
+  }
+
+  // Returns a Text with a customized title style
+  Widget textTitle(String title) {
+    return Text(
+      title,
+      style: titleStyle,
+    );
+  }
+
+  // Displays the report in more detail on a fullscreen modal
+  Widget fullReport(int index) {
+    TextStyle infoStyle = const TextStyle(color: Colors.black, fontSize: 16);
+    const SizedBox itemPadding = SizedBox(
+      height: 16,
+    );
+    const SizedBox infoPadding = SizedBox(
+      height: 8,
+    );
+
     return OpenContainer(
       closedShape:
-      RoundedRectangleBorder(borderRadius: calculateRowBorderRadius(index)),
+          RoundedRectangleBorder(borderRadius: calculateRowBorderRadius(index)),
       closedElevation: 8.0,
       transitionType: ContainerTransitionType.fadeThrough,
       closedColor: Colors.white,
@@ -735,116 +825,126 @@ class _ProfilePage extends State<ProfilePage> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child:
-                  Text(_filteredReports![index].title, style: dataStyle)),
+                scrollDirection: Axis.horizontal,
+                child: Text(
+                  _filteredReports![index].title,
+                  style: const TextStyle(color: Colors.black, fontSize: 18),
+                ),
+              ),
             ),
           ),
         ),
       ),
       openBuilder: (context, action) {
         return SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FilledButton(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FilledButton(
                   style: ButtonStyle(
                       backgroundColor: MaterialStateColor.resolveWith(
-                              (states) => Colors.transparent)),
+                          (states) => Colors.transparent)),
                   onPressed: () => Navigator.pop(context),
                   child: const Icon(
                     CupertinoIcons.back,
                     color: Colors.black,
-                  )),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
+                  ),
                 ),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: Theme(
-                    data: ThemeData(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          _filteredReports![index].title,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            wordSpacing: 2,
+                        Center(
+                          child: Text(
+                            _filteredReports![index].title,
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              wordSpacing: 2,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        DataTable(
-                          columnSpacing: 40,
-                          dataTextStyle: dataStyle,
-                          dataRowMinHeight: 30,
-                          dataRowMaxHeight: double.infinity,
-                          headingRowHeight: 2,
-                          columns: [
-                            DataColumn(label: Container()),
-                            DataColumn(label: Container()),
-                          ],
-                          rows: [
-                            DataRow(
-                              cells: [
-                                const DataCell(Text("Type")),
-                                DataCell(
-                                  Flex(
-                                    direction: Axis.horizontal,
-                                    children: [
-                                      SizedBox(
-                                        child:
-                                        Text(_filteredReports![index].type),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              ],
-                            ),
-                            DataRow(
-                              cells: [
-                                const DataCell(Text("Description")),
-                                DataCell(Padding(
-                                  padding:
-                                  const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: Text(
-                                      _filteredReports![index].description),
-                                ))
-                              ],
-                            ),
-                            DataRow(cells: [
-                              const DataCell(Text("Date Created")),
-                              DataCell(
-                                Text(
-                                    "${DateFormat.yMMMd().add_jmz().format(_filteredReports![index].time.toDate())} ${_filteredReports![index].time.toDate().timeZoneName}"),
-                              )
-                            ]),
-                            DataRow(cells: [
-                              const DataCell(Text("Active")),
-                              DataCell(
-                                setStatus(_filteredReports![index].active),
-                              )
-                            ]),
-                          ],
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        textTitle("Type"),
+                        infoPadding,
+                        createInfoDisplay(
+                          info: Text(
+                            _filteredReports![index].type,
+                            style: infoStyle,
+                          ),
+                        ),
+                        itemPadding,
+                        textTitle("Description"),
+                        infoPadding,
+                        createInfoDisplay(
+                          info: Text(
+                            _filteredReports![index].description,
+                            style: infoStyle,
+                          ),
+                        ),
+                        itemPadding,
+                        textTitle("Date Created"),
+                        infoPadding,
+                        createInfoDisplay(
+                          info: Text(
+                            "${DateFormat.yMMMd().add_jmz().format(_filteredReports![index].time.toDate())} ${_filteredReports![index].time.toDate().timeZoneName}",
+                            style: infoStyle,
+                          ),
+                        ),
+                        itemPadding,
+                        textTitle("Active"),
+                        infoPadding,
+                        createInfoDisplay(
+                          info: setStatus(_filteredReports![index].active),
+                        ),
+                        itemPadding,
+                        _filteredReports![index].images.isEmpty
+                            ? Container()
+                            : textTitle("Images"),
+                        infoPadding,
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _filteredReports![index].images.length,
+                          itemBuilder: (context, imageIndex) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: createInfoDisplay(
+                                info: Image.network(
+                                  _filteredReports![index].images[imageIndex],
+                                  width: 250,
+                                  height: 250,
+                                  semanticLabel:
+                                      _filteredReports![index].description,
+                                ),
+                              ),
+                            );
+                          },
                         )
                       ],
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
     );
   }
 
-  TextStyle reportItem = const TextStyle(fontSize: 16);
-
+  // Returns an Icon that signifies whether a report is active
   Widget setStatus(bool status) {
     Icon statusIcon;
     Color color = Colors.black;
@@ -864,13 +964,9 @@ class _ProfilePage extends State<ProfilePage> {
     return statusIcon;
   }
 
-  TextStyle dataStyle = const TextStyle(
-      color: Colors.black, fontSize: 18, fontWeight: FontWeight.w500);
-
   // Returns a border radius for a specified index row
   BorderRadiusGeometry calculateRowBorderRadius(int index) {
     BorderRadiusGeometry? borderRadius;
-    //if (events == null) return null;
 
     // There is only a single row on a page, so create a full border radius
     if (_filteredReports!.length == 1) {
@@ -896,45 +992,42 @@ class _ProfilePage extends State<ProfilePage> {
 
   // Displays the user's username
   Widget displayUserID(TextStyle dataNameStyle) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(
-        "ID",
-        style: dataNameStyle,
-      ),
-      const SizedBox(height: 8),
-      //const Padding(padding: EdgeInsets.only(right: 10)),
-      Container(
-        alignment: Alignment.centerLeft,
-        width: 225,
-        height: 30,
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.elliptical(10, 10)),
-          color: Colors.white,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-          child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Text(
-                  FirebaseAuth.instance.currentUser?.displayName.toString() ??
-                      "Unavailable.")),
-        ),
-      )
+    if (_userName == null) {
+      return Container();
+    }
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+      Text("Hi,",
+          style: GoogleFonts.jost(
+              textStyle: const TextStyle(
+            fontSize: 25, // Set your desired font size for input text
+            color: Colors.white, // Set your desired color for input text
+          ))),
+      Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
+        Text(_userName!,
+            style: GoogleFonts.jost(
+                textStyle: const TextStyle(
+              fontSize: 25, // Set your desired font size for input text
+              color: Colors.white, // Set your desired color for input text
+            )))
+      ]),
     ]);
   }
 
   // Displays the user's email
-  Widget displayUserEmail(TextStyle dataNameStyle) {
+  Widget displayUserEmail() {
     return Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            "Email",
-            style: dataNameStyle,
-          ),
+          Text("Email",
+              style: GoogleFonts.jost(
+                  textStyle: const TextStyle(
+                fontSize: 20, // Set your desired font size for input text
+                color: Colors.white, // Set your desired color for input text
+              ))),
           const SizedBox(height: 8),
-          //const Padding(padding: EdgeInsets.only(right: 10)),
+          const Padding(padding: EdgeInsets.only(right: 10)),
           Container(
             alignment: Alignment.centerLeft,
             width: 225,
@@ -948,7 +1041,13 @@ class _ProfilePage extends State<ProfilePage> {
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Text(
-                    FirebaseAuth.instance.currentUser?.email ?? "unavailable."),
+                    FirebaseAuth.instance.currentUser?.email ?? "unavailable.",
+                    style: GoogleFonts.jost(
+                        textStyle: const TextStyle(
+                      fontSize: 15, // Set your desired font size for input text
+                      color:
+                          Colors.black, // Set your desired color for input text
+                    ))),
               ),
             ),
           )
@@ -956,14 +1055,15 @@ class _ProfilePage extends State<ProfilePage> {
   }
 
   // Signs out the current user and redirects them to the login
-  void signOutUser() {
-    FirebaseAuth.instance.signOut();
+  void signOutUser() async {
+    await _googleSignIn.signOut();
+    await FirebaseAuth.instance.signOut();
     Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
           builder: (context) => const SignOnPage(),
         ),
-            (route) => false);
+        (route) => false);
   }
 
   // Returns a string that the email sent was successful or an error occured.
@@ -974,7 +1074,7 @@ class _ProfilePage extends State<ProfilePage> {
       await FirebaseAuth.instance.sendPasswordResetEmail(
           email: FirebaseAuth.instance.currentUser?.email ?? "error");
       status =
-      "An email has been sent to: \n${FirebaseAuth.instance.currentUser?.email}";
+          "An email has been sent to: \n${FirebaseAuth.instance.currentUser?.email}";
     } catch (e) {
       print(e);
       status = "An error occured. Please try again.";
@@ -1008,15 +1108,21 @@ class _ProfilePage extends State<ProfilePage> {
               ),
               Text(
                 "Change Email",
-                style: TextStyle(
-                    color: highlight,
+                style:
+                GoogleFonts.jost( // Applying Google Font style
+                  textStyle: TextStyle(
+                    color: Color(0xff060C3E),
                     fontSize: 24,
-                    fontWeight: FontWeight.bold),
+                    )),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: emailController,
-                style: const TextStyle(color: Colors.white, height: 1.0),
+                style: GoogleFonts.jost( // Applying Google Font style
+                  textStyle: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                  )),
                 decoration: InputDecoration(
                     isDense: true,
                     hintStyle: const TextStyle(color: Colors.white),
@@ -1026,6 +1132,7 @@ class _ProfilePage extends State<ProfilePage> {
                         borderRadius: BorderRadius.all(Radius.circular(15))),
                     hintText: "New Email"),
               ),
+              SizedBox(height:15),
               ElevatedButton(
                 style: ButtonStyle(
                     backgroundColor:
@@ -1033,71 +1140,69 @@ class _ProfilePage extends State<ProfilePage> {
                 onPressed: () {
                   if (emailController.text.isEmpty) return;
 
-                  showDialog(
-                    barrierDismissible: false,
-                    context: context,
-                    builder: (context) {
-                      // Attempt to update email
-                      return WillPopScope(
-                        onWillPop: () async {
-                          return false;
-                        },
-                        child: FutureBuilder(
-                          future: updateUserEmail(emailController.text),
-                          builder: (context, snapshot) {
-                            switch (snapshot.connectionState) {
-                              case ConnectionState.waiting:
-                              case ConnectionState.none:
-                                return const AlertDialog(
-                                  elevation: 10,
-                                  content: SizedBox(
-                                    width: 40,
-                                    height: 40,
-                                    child: Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  ),
-                                );
+                      showDialog(
+                        barrierDismissible: false,
+                        context: context,
+                        builder: (context) {
+                          // Attempt to update email
+                          return PopScope(
+                            canPop: false,
+                            child: FutureBuilder(
+                              future: updateUserEmail(emailController.text),
+                              builder: (context, snapshot) {
+                                switch (snapshot.connectionState) {
+                                  case ConnectionState.waiting:
+                                  case ConnectionState.none:
+                                    return const AlertDialog(
+                                      elevation: 10,
+                                      content: SizedBox(
+                                        width: 40,
+                                        height: 40,
+                                        child: Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      ),
+                                    );
 
-                              case ConnectionState.active:
-                              case ConnectionState.done:
-                              // handle error cases
-                                if (snapshot.data != null) {
-                                  switch (snapshot.data!.code) {
-                                    case "requires-recent-login":
-                                    case "user-token-expired":
-                                      print("requires login");
-                                      return displayAlert(
-                                          "Reauthentication Needed",
-                                          "For security purposes, please login to verify your identity.",
-                                          actions: [
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                signOutUser();
-                                              },
-                                              child: const Text("Ok"),
-                                            )
-                                          ]);
-                                    case "invalid-email":
-                                      print("invalid email");
-                                      return displayAlert("Invalid Email",
-                                          "Please ensure your email is correct.");
-                                    case "same-email":
-                                      return displayAlert(
-                                          "Cannot Update to Same Email",
-                                          "You must update to a different email than your current email.");
-                                  // not working
-                                    case "email-already-exists":
-                                    case "email-already-in-use":
-                                      return displayAlert(
-                                          "Email Already in Use",
-                                          "This email is already taken. Please choose a different email.");
-                                    default:
-                                      print(snapshot.data!.code);
-                                      return displayAlert("Error Occured",
-                                          "Please try again later.");
-                                  }
-                                }
+                                  case ConnectionState.active:
+                                  case ConnectionState.done:
+                                    // handle error cases
+                                    if (snapshot.data != null) {
+                                      switch (snapshot.data!.code) {
+                                        case "requires-recent-login":
+                                        case "user-token-expired":
+                                          print("requires login");
+                                          return displayAlert(
+                                              "Reauthentication Needed",
+                                              "For security purposes, please login to verify your identity.",
+                                              actions: [
+                                                ElevatedButton(
+                                                  onPressed: () {
+                                                    signOutUser();
+                                                  },
+                                                  child: const Text("Ok"),
+                                                )
+                                              ]);
+                                        case "invalid-email":
+                                          print("invalid email");
+                                          return displayAlert("Invalid Email",
+                                              "Please ensure your email is correct.");
+                                        case "same-email":
+                                          return displayAlert(
+                                              "Cannot Update to Same Email",
+                                              "You must update to a different email than your current email.");
+                                        // not working
+                                        case "email-already-exists":
+                                        case "email-already-in-use":
+                                          return displayAlert(
+                                              "Email Already in Use",
+                                              "This email is already taken. Please choose a different email.");
+                                        default:
+                                          print(snapshot.data!.code);
+                                          return displayAlert("Error Occured",
+                                              "Please try again later.");
+                                      }
+                                    }
 
                                 // Email verification sent successfully, so prepare for reauthentication.
                                 return displayAlert(
@@ -1123,27 +1228,21 @@ class _ProfilePage extends State<ProfilePage> {
                     },
                   );
                 },
-                child: const SizedBox(
+                child:  SizedBox(
                   width: 190,
                   child: Center(
                     child: Text(
                       "Update",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      style: GoogleFonts.jost( // Applying Google Font style
+                        textStyle: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                        )),
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 10),
-              Text("OR",
-                  style: TextStyle(
-                      color: primary,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold)),
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 10.0),
-                child:
-                SignInButton(Buttons.Google, onPressed: signInWithGoogle),
-              ),
             ],
           ),
         ),
@@ -1179,7 +1278,7 @@ class _ProfilePage extends State<ProfilePage> {
           onPressed: () => Navigator.pop(context),
           style: ButtonStyle(
               backgroundColor:
-              MaterialStateColor.resolveWith((states) => highlight)),
+                  MaterialStateColor.resolveWith((states) => highlight)),
           child: const Text("Ok"),
         )
       ];
@@ -1201,5 +1300,23 @@ class _ProfilePage extends State<ProfilePage> {
       ),
       actions: actions,
     );
+  }
+
+  // Retrieves the user's name identifier
+  Future<void> _loadUserName() async {
+    // get username from other provider
+    if (!UserData.isEmailPassLoginType()) {
+      setState(() {
+        _userName = FirebaseAuth.instance.currentUser?.displayName;
+      });
+      return;
+    }
+
+    // get username from database
+    String? userName = await UserData.getUserName();
+
+    setState(() {
+      _userName = userName;
+    });
   }
 }

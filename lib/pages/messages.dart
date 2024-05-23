@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
 
 import '../models/chat_model.dart';
@@ -43,6 +44,7 @@ class _MessagePageState extends State<MessagePage> {
 
   @override
   void dispose() {
+    super.dispose();
     _msgSubscription.cancel();
   }
 
@@ -91,7 +93,7 @@ class _MessagePageState extends State<MessagePage> {
               isSender: item.didSend,
               tail: index == _messages.length - 1 ? true : false,
               color: item.didSend
-                  ? const Color(0xFF1B97F3)
+                  ? Color(blurple)
                   : const Color(0xFFE8E8EE),
               textStyle:
                   TextStyle(color: item.didSend ? Colors.white : Colors.black));
@@ -137,7 +139,11 @@ class _MessagePageState extends State<MessagePage> {
         flex: 4,
         child: TextField(
           controller: textController,
-          style: const TextStyle(color: Colors.white, height: 1.0),
+          style: GoogleFonts.jost( // Applying Google Font style
+            textStyle: const TextStyle(
+              fontSize: 20,
+              color: Colors.white,
+            )),
           decoration: InputDecoration(
               isDense: true,
               hintStyle: const TextStyle(color: Colors.white),
@@ -156,7 +162,11 @@ class _MessagePageState extends State<MessagePage> {
                 shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(15))),
               ),
-              child: Text("send", style: whiteText)))
+              child: Text("Send", style: GoogleFonts.jost( // Applying Google Font style
+    textStyle: TextStyle(
+    fontSize: 15,
+    color: Colors.white,
+    ),))))
     ]);
   }
 
@@ -169,9 +179,14 @@ class _MessagePageState extends State<MessagePage> {
         },
         child: Scaffold(
           resizeToAvoidBottomInset: true,
-          appBar: AppBar(title: Text("${widget.chat.otherUser['name']}")),
+          appBar: AppBar(title: Text("${widget.chat.otherUser['name']}",   style: GoogleFonts.jost( // Applying Google Font style
+    textStyle: const TextStyle(
+    fontSize: 25,
+    color: Colors.black,
+    )))),
           body: SafeArea(
             child: Container(
+              padding: EdgeInsets.only(top:20),
                 color: Color(lightBlue),
                 child: Center(child: renderTextScreen())),
           ),

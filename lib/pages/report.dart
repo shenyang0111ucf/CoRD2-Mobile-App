@@ -33,6 +33,7 @@ class _ReportFormState extends State<ReportForm> {
   final cameraPermission = Permission.camera;
   final locationPermission = Permission.location;
   String? permType;
+  String error= "";
   late MapController mapController;
 
   @override
@@ -87,6 +88,46 @@ class _ReportFormState extends State<ReportForm> {
           maxWidth: 640,
           imageQuality: 50,
       );
+      showDialog(
+          context: context,
+          builder: (BuildContext context) =>   AlertDialog(
+        title: TextFormField(
+            decoration: InputDecoration(
+                labelText: 'Image Selected', // Your text
+                labelStyle: GoogleFonts.jost( // Applying Google Font style
+                  textStyle: TextStyle(
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xff060C3E), width: 2.0), // Customize underline color
+                ))),
+        elevation: 10,
+        content: SizedBox(
+          width: 50,
+          child: Text(
+              "You have successfully selected an image.",
+              style: GoogleFonts.jost(
+                  textStyle:
+                  TextStyle(
+                    fontSize: 16, // Set your desired font size for input text
+                    color: Colors.black, // Set your desired color for input text
+                  )
+              )),
+        ),
+        actions: [
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child:
+              Text("Ok",
+                  style: GoogleFonts.jost(
+                      textStyle: TextStyle(
+                        fontSize: 15, // Set your desired font size for input text
+                        color: Colors.black, // Set your desired color for input text
+                      ))))
+        ],
+      ));
     } else {
       showDialog(
           context: context,
@@ -193,31 +234,30 @@ class _ReportFormState extends State<ReportForm> {
 
   void setError(String msg) {
     setState(() {
-      _error = msg;
+      error = msg;
     });
   }
 
   // Sets the user's report vals in firebase
   Future submitReport(String userId) async {
     setError("");
-    if (descriptionCon.text.isEmpty) {
-      setError("Please fill out the description field.");
-      return;
-    }
     if (titleCon.text.isEmpty) {
-      setError("Please add a title.");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please add a title!")));
       return;
     }
+
+    if (descriptionCon.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please add a description!")));
+      return;
+    }
+
     if(_imageFile == null){
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please upload an image!")));
       return;
     }
+
     if(chooseLat == 0.0 && chooseLng == 0.0){
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text("Please choose a location for the hazard!")
-          )
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please choose a location for the hazard!")));
       return;
     }
 
@@ -258,9 +298,15 @@ class _ReportFormState extends State<ReportForm> {
         });
       });
 
-      print('Submission saved successfully!');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Submission saved successfully!")));
+      descriptionCon.clear();
+      titleCon.clear();
+      setState(() {
+        selectedCategory = 'Hurricane';
+        _imageFile = null;
+      });
     } catch (e) {
-      print('Error saving submission: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("There was an error saving the submission: $e")));
     }
   }
 
@@ -277,7 +323,8 @@ class _ReportFormState extends State<ReportForm> {
             flexibleSpace: FlexibleSpaceBar(
               title: Padding(
                   padding: EdgeInsets.only(right: 45.0),
-  child:Text(
+                  child:
+                  Text(
         'Report',
           style: GoogleFonts.jost(
             textStyle: const TextStyle(
@@ -477,45 +524,22 @@ class _ReportFormState extends State<ReportForm> {
                                 TextStyle(fontSize: 25,
                                     fontWeight: FontWeight.normal,
                                     color: Colors.white,)))),
-                    if (_selectedImage != null)
-                      GestureDetector(
-                        onTap: () {
-                          pickImage();
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 40, top: 15, bottom: 10),
-                          child: Container(
-                            width: 330,
-                            height: 300,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Image.file(
-                              _selectedImage!,
-                              width: double.infinity,
-                              height: double.infinity,
-                              fit: BoxFit.fill,
-                            ),
-                          ),
-                        ),
-                      )
-                    else
                 GestureDetector(
-                  onTap: (){
+                  onTap: () {
                     pickImage();
-                    },
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 40, top:15, bottom:10),
-                    child:
-                  Container(
-                    width: 330,
-                    height: 300,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child:  Column(
+                  },
+                  child:
+                  Padding(
+                    padding: const EdgeInsets.only(left: 40, right: 40, top: 15, bottom: 10),
+                    child: Container(
+                      width: 330,
+                      height: 300,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: _imageFile != null ?Image.file(File(_imageFile!.path)):
+                  Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(
@@ -533,8 +557,8 @@ class _ReportFormState extends State<ReportForm> {
                                     color: Color(0xff060C3E)))
                         ),
                       ],
-                    ),
-                  )),
+                    ))),
+
                 ),
                 SizedBox(height:30),
                     Center(
@@ -562,6 +586,48 @@ class _ReportFormState extends State<ReportForm> {
                       child: ElevatedButton(
                         onPressed: () {
                           submitReport(currentUserId);
+                          if (error.isNotEmpty) {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) =>
+                              AlertDialog(
+                            title: Text(
+                             'Report Status', // Your text
+                                    style: GoogleFonts.jost( // Applying Google Font style
+                                      textStyle: TextStyle(
+                                        decoration: TextDecoration.underline,
+                                        fontSize: 20,
+                                        color: Colors.black,
+                                      ),
+                                    )),
+                                 // Customize underline color
+
+                            elevation: 10,
+                            content: SizedBox(
+                              width: 50,
+                              child: Text(
+                                error,
+                                  style: GoogleFonts.jost(
+                                      textStyle:
+                                      TextStyle(
+                                        fontSize: 16, // Set your desired font size for input text
+                                        color: Colors.black, // Set your desired color for input text
+                                      )
+                                  )),
+                            ),
+                            actions: [
+                              ElevatedButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child:
+                                  Text("Ok",
+                                      style: GoogleFonts.jost(
+                                          textStyle: TextStyle(
+                                            fontSize: 15, // Set your desired font size for input text
+                                            color: Colors.black, // Set your desired color for input text
+                                          ))))
+                            ],
+                          ));
+                          }
                         },
                         style: ButtonStyle(
                           minimumSize: MaterialStateProperty.all(Size(200, 50)), // Set the size here
@@ -647,6 +713,22 @@ class _ReportFormState extends State<ReportForm> {
         ],
       ),
     ));
+  }
+
+  Future<String?> getImageURL() async {
+    // Retrieve the download URL of the image from Firebase Storage
+    String uniqueFileName = DateTime.now().millisecondsSinceEpoch.toString();
+    Reference referenceImageToUpload = referenceDirImages.child(uniqueFileName);
+    try {
+      File imageFile = File(_imageFile!.path);
+      await referenceImageToUpload.putFile(imageFile);
+      imageUrl = await referenceImageToUpload.getDownloadURL();
+      print('Uploaded image URL: $imageUrl');
+    } catch (error) {
+      print('Error: $error');
+    }
+
+    imageUrls.add(imageUrl);
   }
 
 }

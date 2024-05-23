@@ -92,7 +92,7 @@ class DisplayMapPageState extends State<DisplayMap> {
     // for what you want to display in popup, a lot are just blank
     showModalBottomSheet(
         useRootNavigator: true,
-        backgroundColor: Colors.blue[300],
+        backgroundColor: Color(0xff242C73),
         context: context,
         builder: (BuildContext bc) {
           return SizedBox(
@@ -100,9 +100,23 @@ class DisplayMapPageState extends State<DisplayMap> {
               width: MediaQuery.of(context).size.width * 1,
               child: Column(
                 children: [
-                  CloseButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
+                  Padding(
+                padding: EdgeInsets.only(top:10),
+                  child:
+                  Positioned(
+                    top: 20, // Adjust this value as needed
+                    right: 15,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.deepOrange,
+                        borderRadius: BorderRadius.all(Radius.circular(25)),
+                      ),
+                      child: CloseButton(
+                        color: Colors.white,
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                  )),
                   Padding(
                     padding: const EdgeInsets.all(25.0),
                     child: Column(
@@ -111,55 +125,58 @@ class DisplayMapPageState extends State<DisplayMap> {
                           decoration: BoxDecoration(
                             borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(20.0)),
-                            color: Colors.grey[300],
+                            color: Colors.white,
                           ),
                           child: Center(
                             child: Text(map['FID'].toString(), // all have
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                )),
+          style: GoogleFonts.jost( textStyle: TextStyle(
+          fontSize: 18, fontWeight: FontWeight.bold))),
                           ),
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.grey[300],
+                            color: Colors.white,
                           ),
                           child: Center(
                             // transit/sunrail both have StrName, school has School_Nam
                             child: map['School_Nam'] != null
                                 ? Text(map['School_Nam'],
-                                style: TextStyle(fontSize: 12))
+                                style: GoogleFonts.jost( textStyle: TextStyle(
+                                    fontSize: 18)))
                                 : Text(map['StrName'],
-                                style: TextStyle(fontSize: 12)),
+                                style: GoogleFonts.jost( textStyle: TextStyle(
+                                    fontSize: 18))),
                           ),
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.grey[300],
+                            color: Colors.white,
                           ),
                           child: Center(
                             // transit/sunrail both have City, school has School_Dst
                             child: map['City'] != null
                                 ? Text(map['City'],
-                                style: TextStyle(fontSize: 12))
+                                style: GoogleFonts.jost( textStyle: TextStyle(
+                                    fontSize: 14)))
                                 : Text(map['School_Dst'],
-                                style: TextStyle(fontSize: 12)),
+                                style: GoogleFonts.jost( textStyle: TextStyle(
+                                    fontSize: 14))),
                           ),
                         ),
                         Container(
                           decoration: BoxDecoration(
                             borderRadius: const BorderRadius.vertical(
                                 bottom: Radius.circular(20.0)),
-                            color: Colors.grey[300],
+                            color: Colors.white,
                           ),
                           child: Center(
                             // transit/sunrail have Type, school has School_Typ
                             child: map['School_Typ'] != null
                                 ? Text(map['School_Typ'],
-                                style: TextStyle(fontSize: 12))
-                                : Text(map['Type'],
-                                style: TextStyle(fontSize: 12)),
+          style: GoogleFonts.jost( textStyle: TextStyle(
+          fontSize: 14))) : Text(map['Type'],
+                                style: GoogleFonts.jost( textStyle: TextStyle(
+                                    fontSize: 14))),
                           ),
                         ),
                       ],
@@ -245,7 +262,7 @@ class DisplayMapPageState extends State<DisplayMap> {
           Stack(
               children:[
                 Container(
-                  height: MediaQuery.of(context).size.height *0.8,
+                  height: MediaQuery.of(context).size.height* 1.05,
                   decoration: const BoxDecoration(
                     color: Color(0xff242C73),
                     borderRadius: BorderRadius.only(
@@ -258,15 +275,18 @@ class DisplayMapPageState extends State<DisplayMap> {
                         Padding(
                             padding: const EdgeInsets.only(top:20, bottom:20),
                             child:
+                                SingleChildScrollView(
+                                  child:
                             Container(
                               margin: const EdgeInsets.all(20.0),
-                              height: MediaQuery.of(context).size.height *0.65,
+                              height: MediaQuery.of(context).size.height *0.9,
                               decoration: const BoxDecoration(
                                 color: Colors.white,
                                 borderRadius:
                                 BorderRadius.all(Radius.circular(25)),
                               ),
-                              child: Column(
+                              child: SingleChildScrollView(
+                                child: Column(
                                 children: [
                                   Padding(
                                     padding: const EdgeInsets.only(top:25, bottom:5),
@@ -309,12 +329,22 @@ class DisplayMapPageState extends State<DisplayMap> {
                                             'Submitted by: ${pointData.creator}')),
                                   ),
                                   SizedBox(height:5),
-                                  Center(
-                                    child:  Padding(
-                                        padding: const EdgeInsets.all(15),
-                                        child: Container(
-                                            color: Colors.deepOrange,
-                                            child: Text(
+                                 Padding(
+                                        padding: EdgeInsets.only(top:10,left:40, right: 40),
+                                        child: SingleChildScrollView(child: Padding(
+                                            padding: EdgeInsets.only(top:10,left:10, right: 10),
+                                            child: SingleChildScrollView(
+                                                child:
+                                                Container(
+                                                  padding: EdgeInsets.only(right:10, left:10, top:10, bottom:10),
+                                                decoration: BoxDecoration(
+                                                  borderRadius: BorderRadius.circular(10.0), // Adjust the radius as needed
+                                                  color: Colors.deepOrange,
+                                                ),
+                                            child:
+                                            Center(
+                                            child: Wrap(alignment: WrapAlignment.center,
+                                                children:[  Text(
                                                 style: GoogleFonts.jost(
                                                     textStyle: const
                                                     TextStyle(
@@ -322,9 +352,9 @@ class DisplayMapPageState extends State<DisplayMap> {
                                                       fontWeight: FontWeight.normal,
                                                       color: Colors.white,
                                                     )),
-                                                pointData.description))),
-                                  ),
-                                  SizedBox(height:10),
+                                                pointData.description)])))))),
+                                    ),
+                                  const SizedBox(height:10),
                                   Padding(
                                     padding: EdgeInsets.all(8.0),
                                     child: Center(
@@ -363,7 +393,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                                                 (Set<MaterialState> states) {
                                               if (states.contains(MaterialState.hovered))
                                                 return Colors.blueAccent.withOpacity(0.5); // Hover color
-                                              return Colors.red; // No overlay color
+                                              return Color(0xffbf0000); // No overlay color
                                             },
                                           ),
                                         ),
@@ -380,8 +410,8 @@ class DisplayMapPageState extends State<DisplayMap> {
                                     ),
                                   ),
                                 ],
-                              ),
-                            ))
+                              )),
+                            )))
                       ]),
                 ),
                 Positioned(
@@ -389,7 +419,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                   right: 15,
                   child: Container(
                     decoration: const BoxDecoration(
-                      color: Colors.redAccent,
+                      color: Colors.deepOrange,
                       borderRadius: BorderRadius.all(Radius.circular(25)),
                     ),
                     child: CloseButton(
@@ -529,14 +559,14 @@ class DisplayMapPageState extends State<DisplayMap> {
             onPressed: () {
               refreshMap();
             },
-            backgroundColor:  Color(0xff060C3E),
+            backgroundColor:  Color(0xff242C73),
             child: Icon(Icons.refresh, color: Colors.white),
           ),
           SizedBox(
             height: 10,
           ),
           FloatingActionButton(
-            backgroundColor:  Color(0xff060C3E),
+            backgroundColor:  Color(0xff242C73),
             onPressed: () async {
               var permResult = await checkPerms('locationPerm');
               if (permResult == true) {
