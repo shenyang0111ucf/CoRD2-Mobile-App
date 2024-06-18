@@ -12,7 +12,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
+import 'package:cord2_mobile_app/pages/pre_drill_survey.dart';
+import 'package:cord2_mobile_app/pages/evacuation_drill.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -121,10 +122,8 @@ class _HomePageState extends State<HomePage> {
             _buildDrawerItem("Report"),
             _buildDrawerItem("Chat"),
             _buildDrawerItem("Profile"),
-            //Shenyag just adds these in DrawerItem.
+            //Shenyang just adds these in DrawerItem.
             _buildDrawerItem("Evacuation Drill"),
-            _buildDrawerItem("Pre-drill survey"),
-            _buildDrawerItem("Post-drill survey"),
             const Divider(),
             ListTile(
               title: Text('Log Out',
@@ -178,11 +177,7 @@ class _HomePageState extends State<HomePage> {
       //Shenyang just adds these placeholders.
       //We need to add child for these pages (.dart file)
       case "Evacuation Drill":
-        return Container();
-      case "Pre-drill survey":
-        return Container();
-      case "Post-drill survey":
-        return Container();
+        return PreSurveyScreen(userId: currentUserId);
       default:
         return Container(); // Default empty container
     }
