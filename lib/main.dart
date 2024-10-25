@@ -27,8 +27,8 @@ class MyApp extends StatelessWidget {
   // const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return  MaterialApp(
-      home: AnimatedPage(),// SignOnPage(),
+    return MaterialApp(
+      home: AnimatedPage(), // SignOnPage(),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -108,11 +108,13 @@ class _HomePageState extends State<HomePage> {
                       ),
                       SizedBox(height: 15),
                       IconButton(
-                        icon: Icon( CupertinoIcons.person_crop_circle, color: Colors.white, size: 50),
+                        icon: Icon(CupertinoIcons.person_crop_circle,
+                            color: Colors.white, size: 50),
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => ProfilePage()),
+                            MaterialPageRoute(
+                                builder: (context) => ProfilePage()),
                           );
                         },
                       ),
@@ -133,7 +135,8 @@ class _HomePageState extends State<HomePage> {
                 await FirebaseAuth.instance.signOut();
                 Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => SignOnPage()),//AnimatedPage();
+                    MaterialPageRoute(
+                        builder: (context) => SignOnPage()), //AnimatedPage();
                     (Route route) => false);
               },
             ),
@@ -163,7 +166,6 @@ class _HomePageState extends State<HomePage> {
     // Return the respective page content based on the selected page
     switch (pageName) {
       case "Map":
-        return Center(child: DisplayMap());
         return Center(child: DisplayMap());
       case "Report":
         return Center(child: ReportForm(userId: currentUserId));
