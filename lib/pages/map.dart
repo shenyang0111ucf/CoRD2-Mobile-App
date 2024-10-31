@@ -122,7 +122,7 @@ class DisplayMapPageState extends State<DisplayMap> {
     // for what you want to display in popup, a lot are just blank
     showModalBottomSheet(
         useRootNavigator: true,
-        backgroundColor: Color(0xff242C73),
+        backgroundColor: const Color(0xff242C73),
         context: context,
         builder: (BuildContext bc) {
           return SizedBox(
@@ -131,7 +131,7 @@ class DisplayMapPageState extends State<DisplayMap> {
               child: Column(
                 children: [
                   Padding(
-                      padding: EdgeInsets.only(top: 10),
+                      padding: const EdgeInsets.only(top: 10),
                       child: Positioned(
                         top: 20, // Adjust this value as needed
                         right: 15,
@@ -151,21 +151,21 @@ class DisplayMapPageState extends State<DisplayMap> {
                     child: Column(
                       children: [
                         Container(
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.vertical(
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.vertical(
                                 top: Radius.circular(20.0)),
                             color: Colors.white,
                           ),
                           child: Center(
                             child: Text(map['FID'].toString(), // all have
                                 style: GoogleFonts.jost(
-                                    textStyle: TextStyle(
+                                    textStyle: const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold))),
                           ),
                         ),
                         Container(
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: Colors.white,
                           ),
                           child: Center(
@@ -173,14 +173,16 @@ class DisplayMapPageState extends State<DisplayMap> {
                             child: map['School_Nam'] != null
                                 ? Text(map['School_Nam'],
                                     style: GoogleFonts.jost(
-                                        textStyle: TextStyle(fontSize: 18)))
+                                        textStyle:
+                                            const TextStyle(fontSize: 18)))
                                 : Text(map['StrName'],
                                     style: GoogleFonts.jost(
-                                        textStyle: TextStyle(fontSize: 18))),
+                                        textStyle:
+                                            const TextStyle(fontSize: 18))),
                           ),
                         ),
                         Container(
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: Colors.white,
                           ),
                           child: Center(
@@ -188,15 +190,17 @@ class DisplayMapPageState extends State<DisplayMap> {
                             child: map['City'] != null
                                 ? Text(map['City'],
                                     style: GoogleFonts.jost(
-                                        textStyle: TextStyle(fontSize: 14)))
+                                        textStyle:
+                                            const TextStyle(fontSize: 14)))
                                 : Text(map['School_Dst'],
                                     style: GoogleFonts.jost(
-                                        textStyle: TextStyle(fontSize: 14))),
+                                        textStyle:
+                                            const TextStyle(fontSize: 14))),
                           ),
                         ),
                         Container(
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadius.vertical(
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.vertical(
                                 bottom: Radius.circular(20.0)),
                             color: Colors.white,
                           ),
@@ -205,10 +209,12 @@ class DisplayMapPageState extends State<DisplayMap> {
                             child: map['School_Typ'] != null
                                 ? Text(map['School_Typ'],
                                     style: GoogleFonts.jost(
-                                        textStyle: TextStyle(fontSize: 14)))
+                                        textStyle:
+                                            const TextStyle(fontSize: 14)))
                                 : Text(map['Type'],
                                     style: GoogleFonts.jost(
-                                        textStyle: TextStyle(fontSize: 14))),
+                                        textStyle:
+                                            const TextStyle(fontSize: 14))),
                           ),
                         ),
                       ],
@@ -355,17 +361,17 @@ class DisplayMapPageState extends State<DisplayMap> {
                                     )),
                                     'Submitted by: ${pointData.creator}')),
                           ),
-                          SizedBox(height: 5),
+                          const SizedBox(height: 5),
                           Padding(
-                            padding:
-                                EdgeInsets.only(top: 10, left: 40, right: 40),
+                            padding: const EdgeInsets.only(
+                                top: 10, left: 40, right: 40),
                             child: SingleChildScrollView(
                                 child: Padding(
-                                    padding: EdgeInsets.only(
+                                    padding: const EdgeInsets.only(
                                         top: 10, left: 10, right: 10),
                                     child: SingleChildScrollView(
                                         child: Container(
-                                            padding: EdgeInsets.only(
+                                            padding: const EdgeInsets.only(
                                                 right: 10,
                                                 left: 10,
                                                 top: 10,
@@ -394,7 +400,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                           ),
                           const SizedBox(height: 10),
                           Padding(
-                            padding: EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(8.0),
                             child: Center(
                                 child: Image.network(
                               pointData.imageURL,
@@ -402,7 +408,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                               height: 250,
                             )),
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
                             child: Center(
@@ -416,7 +422,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                               )),
                             )),
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
                             child: ElevatedButton(
@@ -426,12 +432,12 @@ class DisplayMapPageState extends State<DisplayMap> {
                                 style: ButtonStyle(
                                   padding: MaterialStateProperty.all<
                                       EdgeInsetsGeometry>(
-                                    EdgeInsets.all(
+                                    const EdgeInsets.all(
                                         10.0), // Adjust the padding to change the size
                                   ),
-                                  backgroundColor:
-                                      MaterialStateProperty.all<Color>(
-                                          Color(0xff242C73)), // Default color
+                                  backgroundColor: MaterialStateProperty.all<
+                                          Color>(
+                                      const Color(0xff242C73)), // Default color
                                   overlayColor:
                                       MaterialStateProperty.resolveWith<Color>(
                                     (Set<MaterialState> states) {
@@ -439,7 +445,7 @@ class DisplayMapPageState extends State<DisplayMap> {
                                           .contains(MaterialState.hovered))
                                         return Colors.blueAccent
                                             .withOpacity(0.5); // Hover color
-                                      return Color(
+                                      return const Color(
                                           0xffbf0000); // No overlay color
                                     },
                                   ),
@@ -477,6 +483,229 @@ class DisplayMapPageState extends State<DisplayMap> {
         });
   }
 
+  void _showFilterScreen(BuildContext context) {
+    showModalBottomSheet(
+        useRootNavigator: true,
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(
+              builder: (BuildContext context, StateSetter setFilterState) {
+            return SingleChildScrollView(
+                child: Stack(children: [
+              Container(
+                height: MediaQuery.of(context).size.height * 1.05,
+                decoration: const BoxDecoration(
+                  color: Color(0xff242C73),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(25),
+                    topRight: Radius.circular(25),
+                  ),
+                ),
+                child: Column(children: [
+                  Padding(
+                      padding: const EdgeInsets.only(top: 20, bottom: 20),
+                      child: SingleChildScrollView(
+                          child: Container(
+                        margin: const EdgeInsets.all(20.0),
+                        height: MediaQuery.of(context).size.height * 0.9,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.all(Radius.circular(25)),
+                        ),
+                        child: SingleChildScrollView(
+                            child: Column(
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 25, bottom: 5),
+                              child: Center(
+                                  child: Text(
+                                      style: GoogleFonts.jost(
+                                          textStyle: const TextStyle(
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.normal,
+                                        color: Color(0xff060C3E),
+                                        decoration: TextDecoration.underline,
+                                        decorationColor: Color(
+                                            0xff242C73), // Color of the underline
+                                        decorationThickness:
+                                            2.0, // Thickness of the underline
+                                        decorationStyle:
+                                            TextDecorationStyle.solid,
+                                      )),
+                                      "Select Filters to Show")),
+                            ),
+                            const SizedBox(height: 20),
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  showReports = !showReports;
+                                });
+                                setFilterState(() {});
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 32.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                        style: GoogleFonts.jost(
+                                            textStyle: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.normal,
+                                          color: Color(0xff060C3E),
+                                          decorationColor: Color(
+                                              0xff242C73), // Color of the underline
+                                          decorationThickness:
+                                              2.0, // Thickness of the underline
+                                          decorationStyle:
+                                              TextDecorationStyle.solid,
+                                        )),
+                                        "Reports"),
+                                    showReports
+                                        ? const Icon(Icons.check)
+                                        : Container()
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  showSchools = !showSchools;
+                                });
+
+                                setFilterState(() {});
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 32.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                        style: GoogleFonts.jost(
+                                            textStyle: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.normal,
+                                          color: Color(0xff060C3E),
+                                          decorationColor: Color(
+                                              0xff242C73), // Color of the underline
+                                          decorationThickness:
+                                              2.0, // Thickness of the underline
+                                          decorationStyle:
+                                              TextDecorationStyle.solid,
+                                        )),
+                                        "Schools"),
+                                    showSchools
+                                        ? const Icon(Icons.check)
+                                        : Container()
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  showSunrail = !showSunrail;
+                                });
+
+                                setFilterState(() {});
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 32.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                        style: GoogleFonts.jost(
+                                            textStyle: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.normal,
+                                          color: Color(0xff060C3E),
+                                          decorationColor: Color(
+                                              0xff242C73), // Color of the underline
+                                          decorationThickness:
+                                              2.0, // Thickness of the underline
+                                          decorationStyle:
+                                              TextDecorationStyle.solid,
+                                        )),
+                                        "Sunrail"),
+                                    showSunrail
+                                        ? const Icon(Icons.check)
+                                        : Container()
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  showTransit = !showTransit;
+                                });
+
+                                setFilterState(() {});
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 32.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                        style: GoogleFonts.jost(
+                                            textStyle: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.normal,
+                                          color: Color(0xff060C3E),
+                                          decorationColor: Color(
+                                              0xff242C73), // Color of the underline
+                                          decorationThickness:
+                                              2.0, // Thickness of the underline
+                                          decorationStyle:
+                                              TextDecorationStyle.solid,
+                                        )),
+                                        "Transit"),
+                                    showTransit
+                                        ? const Icon(Icons.check)
+                                        : Container(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        )),
+                      )))
+                ]),
+              ),
+              Positioned(
+                top: 20, // Adjust this value as needed
+                right: 15,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.deepOrange,
+                    borderRadius: BorderRadius.all(Radius.circular(25)),
+                  ),
+                  child: CloseButton(
+                    color: Colors.white,
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ),
+            ]));
+          });
+        });
+  }
+
   void handleUserChat(String uid) async {
     DatabaseReference ref = FirebaseDatabase.instance
         .ref('chats/${FirebaseAuth.instance.currentUser?.uid}');
@@ -503,7 +732,7 @@ class DisplayMapPageState extends State<DisplayMap> {
       }
       if (match) return;
     }
-    var chatId = Uuid().v4();
+    var chatId = const Uuid().v4();
     DatabaseReference newChat =
         FirebaseDatabase.instance.ref('chats/${uid}/$chatId');
     var res = await newChat.update({
@@ -622,12 +851,12 @@ class DisplayMapPageState extends State<DisplayMap> {
           FloatingActionButton(
             heroTag: null,
             onPressed: () {
-              refreshMap();
+              _showFilterScreen(context);
             },
-            backgroundColor: Color(0xff242C73),
-            child: Icon(Icons.filter_alt, color: Colors.white),
+            backgroundColor: const Color(0xff242C73),
+            child: const Icon(Icons.filter_alt, color: Colors.white),
           ),
-          SizedBox(
+          const SizedBox(
             height: 10,
           ),
           FloatingActionButton(
@@ -635,15 +864,15 @@ class DisplayMapPageState extends State<DisplayMap> {
             onPressed: () {
               refreshMap();
             },
-            backgroundColor: Color(0xff242C73),
-            child: Icon(Icons.refresh, color: Colors.white),
+            backgroundColor: const Color(0xff242C73),
+            child: const Icon(Icons.refresh, color: Colors.white),
           ),
-          SizedBox(
+          const SizedBox(
             height: 10,
           ),
           FloatingActionButton(
             heroTag: null,
-            backgroundColor: Color(0xff242C73),
+            backgroundColor: const Color(0xff242C73),
             onPressed: () async {
               var permResult = await checkPerms('locationPerm');
               if (permResult == true) {
