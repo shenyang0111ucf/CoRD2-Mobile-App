@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cord2_mobile_app/pages/add_chat.dart';
 import 'package:cord2_mobile_app/pages/messages.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -95,18 +96,25 @@ class _ChatPageState extends State<ChatPage> {
                           },
                           child: Column(
                             children: [
-                              Text("Chat with: ${item.otherUser['name']!}",style: GoogleFonts.jost( // Applying Google Font style
-                            textStyle: TextStyle(
-                              fontSize: 18,
-                              color: Colors.black,
-                            ),)),
-                              Text(DateFormat.yMEd()
-                                  .add_jms()
-                                  .format(item.lastUpdate),style: GoogleFonts.jost( // Applying Google Font style
-                                textStyle: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black,
-                                ),))
+                              Text("Chat with: ${item.otherUser['name']!}",
+                                  style: GoogleFonts.jost(
+                                    // Applying Google Font style
+                                    textStyle: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.black,
+                                    ),
+                                  )),
+                              Text(
+                                  DateFormat.yMEd()
+                                      .add_jms()
+                                      .format(item.lastUpdate),
+                                  style: GoogleFonts.jost(
+                                    // Applying Google Font style
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black,
+                                    ),
+                                  ))
                             ],
                           )))));
         });
@@ -115,28 +123,38 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-          title: Align(
-        alignment: Alignment.center,
-        child: Text("Your Chats",
-            style: GoogleFonts.jost(
-                textStyle: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.normal,
-                    color: Color(0xff060C3E)))),
-      )),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(top:20),
-    child:
-    Container(
-            color: Color(0xffD0DCF4), child: Center(child: Padding(
-    padding: EdgeInsets.only(top:10),
-    child:
-    renderChats()
-    )),
-    )),
-    ));
+        floatingActionButton: FloatingActionButton(
+          heroTag: null,
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => AddChatPage(userId: user!.uid)));
+          },
+          backgroundColor: const Color(0xff242C73),
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(
+            title: Align(
+          alignment: Alignment.center,
+          child: Text("Your Chats",
+              style: GoogleFonts.jost(
+                  textStyle: TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.normal,
+                      color: Color(0xff060C3E)))),
+        )),
+        body: SafeArea(
+          child: Padding(
+              padding: EdgeInsets.only(top: 20),
+              child: Container(
+                color: Color(0xffD0DCF4),
+                child: Center(
+                    child: Padding(
+                        padding: EdgeInsets.only(top: 10),
+                        child: renderChats())),
+              )),
+        ));
   }
 }
