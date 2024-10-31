@@ -682,6 +682,43 @@ class DisplayMapPageState extends State<DisplayMap> {
                                 ),
                               ),
                             ),
+                            const SizedBox(height: 20),
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  showCountyLine = !showCountyLine;
+                                });
+
+                                setFilterState(() {});
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 32.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                        style: GoogleFonts.jost(
+                                            textStyle: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.normal,
+                                          color: Color(0xff060C3E),
+                                          decorationColor: Color(
+                                              0xff242C73), // Color of the underline
+                                          decorationThickness:
+                                              2.0, // Thickness of the underline
+                                          decorationStyle:
+                                              TextDecorationStyle.solid,
+                                        )),
+                                        "County Lines"),
+                                    showCountyLine
+                                        ? const Icon(Icons.check)
+                                        : Container(),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ],
                         )),
                       )))
