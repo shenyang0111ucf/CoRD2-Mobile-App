@@ -37,8 +37,10 @@ class MyApp extends StatelessWidget {
 
 class HomePage extends StatefulWidget {
   String? userId;
+  bool admin;
 
-  HomePage({required this.userId}); // Track the current page
+  HomePage(
+      {required this.userId, this.admin = false}); // Track the current page
 
   @override
   _HomePageState createState() => _HomePageState();
