@@ -45,5 +45,28 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to the photo library for users to upload photos to reports.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app does not require access to the microphone.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires access to the camera for users to take pictures to upload to reports.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app requires access to location information when in use in order for users locate themselves in the map functionality.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app requires access to location information when not in use for users to utilize the location history feature.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.664978581793-hhiai0uleqpvu23sj2soh4ps7j38grbe</string>
+			</array>
+		</dict>
+	</array>
+	<key>GIDClientID</key>
+	<string>664978581793-hhiai0uleqpvu23sj2soh4ps7j38grbe.apps.googleusercontent.com</string>
 </dict>
 </plist>
