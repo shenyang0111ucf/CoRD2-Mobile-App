@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cord2_mobile_app/classes/analytics.dart';
 import 'package:cord2_mobile_app/pages/add_chat.dart';
 import 'package:cord2_mobile_app/pages/messages.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
@@ -22,6 +23,7 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
+  final AnalyticsService analytics = AnalyticsService();
   final int darkBlue = 0xff5f79BA;
   final int lightBlue = 0xffD0DCF4;
   final int blurple = 0xff20297A;
@@ -39,6 +41,8 @@ class _ChatPageState extends State<ChatPage> {
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => const SignOnPage()));
     }
+
+    analytics.logScreenBrowsing("Messages");
     getChatData();
   }
 
@@ -88,6 +92,7 @@ class _ChatPageState extends State<ChatPage> {
                       padding: EdgeInsets.all(15.0),
                       child: GestureDetector(
                           onTap: () {
+                            analytics.logScreenBrowsing("Chat");
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(

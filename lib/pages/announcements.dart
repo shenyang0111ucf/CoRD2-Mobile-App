@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cord2_mobile_app/classes/analytics.dart';
 import 'package:cord2_mobile_app/models/announcement_model.dart';
 import 'package:cord2_mobile_app/pages/add_announcement.dart';
 import 'package:cord2_mobile_app/pages/announcement_details.dart';
@@ -20,6 +21,7 @@ class Announcements extends StatefulWidget {
 
 class _AnnouncementsState extends State<Announcements> {
   final User? user = FirebaseAuth.instance.currentUser;
+  final AnalyticsService analytics = AnalyticsService();
 
   @override
   void initState() {
@@ -29,6 +31,8 @@ class _AnnouncementsState extends State<Announcements> {
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => const SignOnPage()));
     }
+
+    analytics.logScreenBrowsing("Announcement Page");
   }
 
   static Stream<QuerySnapshot> listenOnCollection(String collection) async* {
@@ -64,6 +68,7 @@ class _AnnouncementsState extends State<Announcements> {
                       padding: const EdgeInsets.all(15.0),
                       child: GestureDetector(
                           onTap: () {
+                            analytics.logAnnouncementViewed();
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(

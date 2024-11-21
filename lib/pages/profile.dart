@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:animations/animations.dart';
+import 'package:cord2_mobile_app/classes/analytics.dart';
 import 'package:cord2_mobile_app/models/event_model.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:cord2_mobile_app/classes/user_data.dart';
@@ -20,6 +21,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePage extends State<ProfilePage> {
+  final AnalyticsService _analytics = AnalyticsService();
   List<EventModel>? _userReports = []; // All retrieved reports
   late List<EventModel>? _filteredReports = []; // displayed reports
   Color primary = const Color(0xff5f79BA);
@@ -57,6 +59,8 @@ class _ProfilePage extends State<ProfilePage> {
       _loadReports();
       _loadUserName();
     });
+
+    _analytics.logScreenBrowsing("Profile");
   }
 
   @override
@@ -337,66 +341,62 @@ class _ProfilePage extends State<ProfilePage> {
                           ),
                         );
 
-                    case ConnectionState.active:
-                    case ConnectionState.done:
-                      return AlertDialog(
-                        title: Text(
-                       'Password Reset', // Your text
-                        style: GoogleFonts.jost( // Applying Google Font style
-                          textStyle: TextStyle(
-                            fontSize: 20,
-                            decoration: TextDecoration.underline,
-                            color: Colors.black,
-                          ))),
-
-                        elevation: 10,
-                        content: SizedBox(
-                          width: 50,
-                          child: Text(
-                            snapshot.data,
-
-                  style: GoogleFonts.jost(
-                  textStyle:
-                  TextStyle(
-                  fontSize: 16, // Set your desired font size for input text
-                  color: Colors.black, // Set your desired color for input text
-                  )
-                          )),
-                        ),
-                        actions: [
-                          ElevatedButton(
-                              onPressed: () => Navigator.pop(context),
-                              child:
-                              Text("Ok",
-                                  style: GoogleFonts.jost(
-                              textStyle: TextStyle(
-                              fontSize: 15, // Set your desired font size for input text
-                              color: Colors.black, // Set your desired color for input text
-                              ))))
-                        ],
-                      );
-                  }
-                },
-              );
-            }),
-        style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all<Color>(primary),
-        ),
-        child: Container(
-          alignment: Alignment.center,
-          width: 150,
-          child:  Text(
-            "Change Password",
-    style: GoogleFonts.jost(
-    textStyle:
-    TextStyle(
-    fontSize: 16, // Set your desired font size for input text
-    color: Colors.white, // Set your desired color for input text
-    )
+                      case ConnectionState.active:
+                      case ConnectionState.done:
+                        return AlertDialog(
+                          title: Text('Password Reset', // Your text
+                              style: GoogleFonts.jost(
+                                  // Applying Google Font style
+                                  textStyle: TextStyle(
+                                fontSize: 20,
+                                decoration: TextDecoration.underline,
+                                color: Colors.black,
+                              ))),
+                          elevation: 10,
+                          content: SizedBox(
+                            width: 50,
+                            child: Text(snapshot.data,
+                                style: GoogleFonts.jost(
+                                    textStyle: TextStyle(
+                                  fontSize:
+                                      16, // Set your desired font size for input text
+                                  color: Colors
+                                      .black, // Set your desired color for input text
+                                ))),
+                          ),
+                          actions: [
+                            ElevatedButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text("Ok",
+                                    style: GoogleFonts.jost(
+                                        textStyle: TextStyle(
+                                      fontSize:
+                                          15, // Set your desired font size for input text
+                                      color: Colors
+                                          .black, // Set your desired color for input text
+                                    ))))
+                          ],
+                        );
+                    }
+                  },
+                );
+              }),
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all<Color>(primary),
           ),
-        ),
-      ),
-    ));
+          child: Container(
+            alignment: Alignment.center,
+            width: 150,
+            child: Text(
+              "Change Password",
+              style: GoogleFonts.jost(
+                  textStyle: TextStyle(
+                fontSize: 16, // Set your desired font size for input text
+                color: Colors.white, // Set your desired color for input text
+              )),
+            ),
+          ),
+        ));
   }
 
   Widget displayReportsSection() {
@@ -1108,21 +1108,22 @@ class _ProfilePage extends State<ProfilePage> {
               ),
               Text(
                 "Change Email",
-                style:
-                GoogleFonts.jost( // Applying Google Font style
-                  textStyle: TextStyle(
-                    color: Color(0xff060C3E),
-                    fontSize: 24,
-                    )),
+                style: GoogleFonts.jost(
+                    // Applying Google Font style
+                    textStyle: TextStyle(
+                  color: Color(0xff060C3E),
+                  fontSize: 24,
+                )),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: emailController,
-                style: GoogleFonts.jost( // Applying Google Font style
-                  textStyle: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  )),
+                style: GoogleFonts.jost(
+                    // Applying Google Font style
+                    textStyle: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                )),
                 decoration: InputDecoration(
                     isDense: true,
                     hintStyle: const TextStyle(color: Colors.white),
@@ -1132,77 +1133,77 @@ class _ProfilePage extends State<ProfilePage> {
                         borderRadius: BorderRadius.all(Radius.circular(15))),
                     hintText: "New Email"),
               ),
-              SizedBox(height:15),
+              SizedBox(height: 15),
               ElevatedButton(
                 style: ButtonStyle(
                     backgroundColor:
-                    MaterialStateColor.resolveWith((states) => highlight)),
+                        MaterialStateColor.resolveWith((states) => highlight)),
                 onPressed: () {
                   if (emailController.text.isEmpty) return;
 
-                      showDialog(
-                        barrierDismissible: false,
-                        context: context,
-                        builder: (context) {
-                          // Attempt to update email
-                          return PopScope(
-                            canPop: false,
-                            child: FutureBuilder(
-                              future: updateUserEmail(emailController.text),
-                              builder: (context, snapshot) {
-                                switch (snapshot.connectionState) {
-                                  case ConnectionState.waiting:
-                                  case ConnectionState.none:
-                                    return const AlertDialog(
-                                      elevation: 10,
-                                      content: SizedBox(
-                                        width: 40,
-                                        height: 40,
-                                        child: Center(
-                                          child: CircularProgressIndicator(),
-                                        ),
-                                      ),
-                                    );
+                  showDialog(
+                    barrierDismissible: false,
+                    context: context,
+                    builder: (context) {
+                      // Attempt to update email
+                      return PopScope(
+                        canPop: false,
+                        child: FutureBuilder(
+                          future: updateUserEmail(emailController.text),
+                          builder: (context, snapshot) {
+                            switch (snapshot.connectionState) {
+                              case ConnectionState.waiting:
+                              case ConnectionState.none:
+                                return const AlertDialog(
+                                  elevation: 10,
+                                  content: SizedBox(
+                                    width: 40,
+                                    height: 40,
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
+                                );
 
-                                  case ConnectionState.active:
-                                  case ConnectionState.done:
-                                    // handle error cases
-                                    if (snapshot.data != null) {
-                                      switch (snapshot.data!.code) {
-                                        case "requires-recent-login":
-                                        case "user-token-expired":
-                                          print("requires login");
-                                          return displayAlert(
-                                              "Reauthentication Needed",
-                                              "For security purposes, please login to verify your identity.",
-                                              actions: [
-                                                ElevatedButton(
-                                                  onPressed: () {
-                                                    signOutUser();
-                                                  },
-                                                  child: const Text("Ok"),
-                                                )
-                                              ]);
-                                        case "invalid-email":
-                                          print("invalid email");
-                                          return displayAlert("Invalid Email",
-                                              "Please ensure your email is correct.");
-                                        case "same-email":
-                                          return displayAlert(
-                                              "Cannot Update to Same Email",
-                                              "You must update to a different email than your current email.");
-                                        // not working
-                                        case "email-already-exists":
-                                        case "email-already-in-use":
-                                          return displayAlert(
-                                              "Email Already in Use",
-                                              "This email is already taken. Please choose a different email.");
-                                        default:
-                                          print(snapshot.data!.code);
-                                          return displayAlert("Error Occured",
-                                              "Please try again later.");
-                                      }
-                                    }
+                              case ConnectionState.active:
+                              case ConnectionState.done:
+                                // handle error cases
+                                if (snapshot.data != null) {
+                                  switch (snapshot.data!.code) {
+                                    case "requires-recent-login":
+                                    case "user-token-expired":
+                                      print("requires login");
+                                      return displayAlert(
+                                          "Reauthentication Needed",
+                                          "For security purposes, please login to verify your identity.",
+                                          actions: [
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                signOutUser();
+                                              },
+                                              child: const Text("Ok"),
+                                            )
+                                          ]);
+                                    case "invalid-email":
+                                      print("invalid email");
+                                      return displayAlert("Invalid Email",
+                                          "Please ensure your email is correct.");
+                                    case "same-email":
+                                      return displayAlert(
+                                          "Cannot Update to Same Email",
+                                          "You must update to a different email than your current email.");
+                                    // not working
+                                    case "email-already-exists":
+                                    case "email-already-in-use":
+                                      return displayAlert(
+                                          "Email Already in Use",
+                                          "This email is already taken. Please choose a different email.");
+                                    default:
+                                      print(snapshot.data!.code);
+                                      return displayAlert("Error Occured",
+                                          "Please try again later.");
+                                  }
+                                }
 
                                 // Email verification sent successfully, so prepare for reauthentication.
                                 return displayAlert(
@@ -1215,7 +1216,7 @@ class _ProfilePage extends State<ProfilePage> {
                                       },
                                       style: ButtonStyle(
                                           backgroundColor:
-                                          MaterialStateColor.resolveWith(
+                                              MaterialStateColor.resolveWith(
                                                   (states) => highlight)),
                                       child: const Text("Ok"),
                                     ),
@@ -1228,16 +1229,17 @@ class _ProfilePage extends State<ProfilePage> {
                     },
                   );
                 },
-                child:  SizedBox(
+                child: SizedBox(
                   width: 190,
                   child: Center(
                     child: Text(
                       "Update",
-                      style: GoogleFonts.jost( // Applying Google Font style
-                        textStyle: TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
-                        )),
+                      style: GoogleFonts.jost(
+                          // Applying Google Font style
+                          textStyle: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                      )),
                     ),
                   ),
                 ),

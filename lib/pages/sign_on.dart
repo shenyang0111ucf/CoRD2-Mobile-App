@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cord2_mobile_app/classes/analytics.dart';
 import 'package:cord2_mobile_app/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ class SignOnPage extends StatefulWidget {
 enum Page { Login, Register, Forgot }
 
 class _SignOnPageState extends State<SignOnPage> {
+  final AnalyticsService _analytics = AnalyticsService();
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
   CollectionReference users = FirebaseFirestore.instance.collection('users');
   Page current = Page.Login;
@@ -61,19 +63,20 @@ class _SignOnPageState extends State<SignOnPage> {
       // Found a user account
       if (doc.exists) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        _analytics.logLogin("Google");
         homePage(firebaseCred.user?.uid, data["admin"]);
       } else {
         // Need to create a new account
-        users
-            .doc(firebaseCred.user?.uid)
-            .set({
-              'name': account.displayName,
-              'email': account.email,
-              'events': [],
-              'chats': []
-            })
-            .then((value) => homePage(firebaseCred.user?.uid, false))
-            .catchError((err) => print("Failed to add user $err"));
+        users.doc(firebaseCred.user?.uid).set({
+          'name': account.displayName,
+          'email': account.email,
+          'events': [],
+          'chats': []
+        }).then((value) {
+          _analytics.logSignUp("Google");
+          _analytics.logLogin("Google");
+          return homePage(firebaseCred.user?.uid, false);
+        }).catchError((err) => print("Failed to add user $err"));
       }
     }
   }
@@ -106,16 +109,17 @@ class _SignOnPageState extends State<SignOnPage> {
           .createUserWithEmailAndPassword(
               email: emailController.text, password: passController.text);
 
-      users
-          .doc(userCredential.user?.uid)
-          .set({
-            'name': displayNameController.text,
-            'email': userCredential.user?.email,
-            'events': [],
-            'chats': []
-          })
-          .then((value) => print("Successfully added user!"))
-          .catchError((err) => print("Failed to add user $err"));
+      users.doc(userCredential.user?.uid).set({
+        'name': displayNameController.text,
+        'email': userCredential.user?.email,
+        'events': [],
+        'chats': []
+      }).then((value) {
+        _analytics.logSignUp("Email");
+        print("Successfully added user!");
+      }).catchError((err) {
+        print("Failed to add user $err");
+      });
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         setError("Password is too weak");
@@ -141,6 +145,8 @@ class _SignOnPageState extends State<SignOnPage> {
 
       DocumentSnapshot doc = await users.doc(credential.user?.uid).get();
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+      _analytics.logLogin("Email");
 
       homePage(credential.user?.uid, data["admin"]);
     } on FirebaseAuthException catch (e) {

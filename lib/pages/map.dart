@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cord2_mobile_app/classes/analytics.dart';
 import 'package:cord2_mobile_app/pages/messages.dart';
 import 'package:cord2_mobile_app/pages/search.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -23,6 +24,7 @@ class DisplayMap extends StatefulWidget {
 }
 
 class DisplayMapPageState extends State<DisplayMap> {
+  final AnalyticsService analytics = AnalyticsService();
   final double latitude = 28.5384;
   final double longitude = -81.3789;
   final permissionLocation = Permission.location;
@@ -44,10 +46,25 @@ class DisplayMapPageState extends State<DisplayMap> {
   bool showTransit = false;
   bool showCountyLine = false;
 
+  @override
+  void initState() {
+    geoJsonParser.setDefaultMarkerTapCallback(onTapMarkerFunction);
+    geoJsonParser2.setDefaultMarkerTapCallback(onTapMarkerFunction);
+    geoJsonParser3.setDefaultMarkerTapCallback(onTapMarkerFunction);
+    geoJsonParser4.setDefaultMarkerTapCallback(onTapMarkerFunction);
+
+    mapController = MapController();
+    processData();
+    createMarkers();
+    analytics.logScreenBrowsing("Map");
+    super.initState();
+  }
+
   // zooms closer to users current position
   void pinpointUser(lat, long) async {
     //mapController.move(LatLng(28.538336, -81.379234), 9.0);
     mapController.move(LatLng(lat, long), 15.0);
+    analytics.logLocationChecked(lat, long);
     //createMarkers();
   }
 
@@ -118,6 +135,8 @@ class DisplayMapPageState extends State<DisplayMap> {
 
   // shows lotis data points
   void onTapMarkerFunction(Map<String, dynamic> map) {
+    analytics.logMapPointClick("GeoJson Point");
+
     // the specific geojsons all record diff data, so popup needs to be customized
     // for what you want to display in popup, a lot are just blank
     showModalBottomSheet(
@@ -289,6 +308,7 @@ class DisplayMapPageState extends State<DisplayMap> {
 
   // shows user submitted points
   void _showInfoScreen(BuildContext context, PointData pointData) {
+    analytics.logMapPointClick("Report");
     showModalBottomSheet(
         useRootNavigator: true,
         context: context,
@@ -821,19 +841,6 @@ class DisplayMapPageState extends State<DisplayMap> {
       geoJsonParser4.parseGeoJsonAsString(geoJsonData4);
       counties_polygons = geoJsonParser4.polygons;
     });
-  }
-
-  @override
-  void initState() {
-    geoJsonParser.setDefaultMarkerTapCallback(onTapMarkerFunction);
-    geoJsonParser2.setDefaultMarkerTapCallback(onTapMarkerFunction);
-    geoJsonParser3.setDefaultMarkerTapCallback(onTapMarkerFunction);
-    geoJsonParser4.setDefaultMarkerTapCallback(onTapMarkerFunction);
-
-    mapController = MapController();
-    processData();
-    createMarkers();
-    super.initState();
   }
 
   Widget buildMap() {

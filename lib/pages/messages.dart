@@ -1,5 +1,6 @@
 import 'package:chat_bubbles/bubbles/bubble_special_three.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cord2_mobile_app/classes/analytics.dart';
 import 'package:cord2_mobile_app/pages/sign_on.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -21,6 +22,7 @@ class MessagePage extends StatefulWidget {
 
 class _MessagePageState extends State<MessagePage> {
   final ScrollController _scrollController = new ScrollController();
+  final AnalyticsService _analytics = AnalyticsService();
   final int darkBlue = 0xff5f79BA;
   final int lightBlue = 0xffD0DCF4;
   final int blurple = 0xff20297A;
@@ -92,9 +94,7 @@ class _MessagePageState extends State<MessagePage> {
               text: item.contents,
               isSender: item.didSend,
               tail: index == _messages.length - 1 ? true : false,
-              color: item.didSend
-                  ? Color(blurple)
-                  : const Color(0xFFE8E8EE),
+              color: item.didSend ? Color(blurple) : const Color(0xFFE8E8EE),
               textStyle:
                   TextStyle(color: item.didSend ? Colors.white : Colors.black));
         });
@@ -130,6 +130,7 @@ class _MessagePageState extends State<MessagePage> {
       "participants": widget.chat.participants
     };
     var res = await chatRef.update(updates);
+    _analytics.logMessageSent();
     textController.clear();
   }
 
@@ -139,11 +140,12 @@ class _MessagePageState extends State<MessagePage> {
         flex: 4,
         child: TextField(
           controller: textController,
-          style: GoogleFonts.jost( // Applying Google Font style
-            textStyle: const TextStyle(
-              fontSize: 20,
-              color: Colors.white,
-            )),
+          style: GoogleFonts.jost(
+              // Applying Google Font style
+              textStyle: const TextStyle(
+            fontSize: 20,
+            color: Colors.white,
+          )),
           decoration: InputDecoration(
               isDense: true,
               hintStyle: const TextStyle(color: Colors.white),
@@ -162,11 +164,14 @@ class _MessagePageState extends State<MessagePage> {
                 shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(15))),
               ),
-              child: Text("Send", style: GoogleFonts.jost( // Applying Google Font style
-    textStyle: TextStyle(
-    fontSize: 15,
-    color: Colors.white,
-    ),))))
+              child: Text("Send",
+                  style: GoogleFonts.jost(
+                    // Applying Google Font style
+                    textStyle: TextStyle(
+                      fontSize: 15,
+                      color: Colors.white,
+                    ),
+                  ))))
     ]);
   }
 
@@ -179,14 +184,17 @@ class _MessagePageState extends State<MessagePage> {
         },
         child: Scaffold(
           resizeToAvoidBottomInset: true,
-          appBar: AppBar(title: Text("${widget.chat.otherUser['name']}",   style: GoogleFonts.jost( // Applying Google Font style
-    textStyle: const TextStyle(
-    fontSize: 25,
-    color: Colors.black,
-    )))),
+          appBar: AppBar(
+              title: Text("${widget.chat.otherUser['name']}",
+                  style: GoogleFonts.jost(
+                      // Applying Google Font style
+                      textStyle: const TextStyle(
+                    fontSize: 25,
+                    color: Colors.black,
+                  )))),
           body: SafeArea(
             child: Container(
-              padding: EdgeInsets.only(top:20),
+                padding: EdgeInsets.only(top: 20),
                 color: Color(lightBlue),
                 child: Center(child: renderTextScreen())),
           ),

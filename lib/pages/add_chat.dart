@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cord2_mobile_app/classes/analytics.dart';
 import 'package:cord2_mobile_app/models/user_model.dart';
 import 'package:cord2_mobile_app/pages/messages.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -22,6 +23,15 @@ class _AddChatPageState extends State<AddChatPage> {
   UserModel? selectedUser;
   static final CollectionReference users =
       FirebaseFirestore.instance.collection('users');
+
+  final AnalyticsService _analytics = AnalyticsService();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _analytics.logScreenBrowsing("Add Chat");
+  }
 
   void onSelected(UserModel selected) {
     setState(() {
