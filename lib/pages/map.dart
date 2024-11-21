@@ -131,21 +131,18 @@ class DisplayMapPageState extends State<DisplayMap> {
               child: Column(
                 children: [
                   Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Positioned(
-                        top: 20, // Adjust this value as needed
-                        right: 15,
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            color: Colors.deepOrange,
-                            borderRadius: BorderRadius.all(Radius.circular(25)),
-                          ),
-                          child: CloseButton(
-                            color: Colors.white,
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                        ),
-                      )),
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.deepOrange,
+                        borderRadius: BorderRadius.all(Radius.circular(25)),
+                      ),
+                      child: CloseButton(
+                        color: Colors.white,
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(25.0),
                     child: Column(
