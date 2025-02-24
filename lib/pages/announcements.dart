@@ -13,7 +13,7 @@ import 'package:intl/intl.dart';
 
 class Announcements extends StatefulWidget {
   final bool admin;
-  const Announcements({super.key, required this.admin});
+  const Announcements({super.key, this.admin = false});
 
   @override
   State<Announcements> createState() => _AnnouncementsState();

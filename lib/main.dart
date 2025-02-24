@@ -170,9 +170,10 @@ class _HomePageState extends State<HomePage> {
     // Return the respective page content based on the selected page
     switch (pageName) {
       case "Announcements":
-        return Center(child: Announcements(admin: true));
+        return Center(child: Announcements(admin: widget.admin));
       case "Map":
-        return Center(child: DisplayMap());
+        return Center(
+            child: DisplayMap(admin: widget.admin, userId: currentUserId));
       case "Report":
         return Center(child: ReportForm(userId: currentUserId));
       case "Chat":

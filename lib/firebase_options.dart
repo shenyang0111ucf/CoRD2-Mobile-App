@@ -28,10 +28,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-              'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for windows - '
@@ -50,21 +47,30 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCoOwA2rgEl8L4V43v5SJQIfYD_ZdL0OtI',
-    appId: '1:664978581793:android:bcf5d067948fdb0e017660',
-    messagingSenderId: '664978581793',
-    projectId: 'cord2-senior-design',
-    storageBucket: 'cord2-senior-design.appspot.com',
+    apiKey: 'AIzaSyBbW3zcU-kZhfN2W5vBjYIyNQWniP9AKQw',
+    appId: '1:571790127747:android:235897febcb103294c61b6',
+    messagingSenderId: '571790127747',
+    projectId: 'cord2-6c88c',
+    storageBucket: 'cord2-6c88c.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAash_zoCB0XRfCW1iiLZz1m7usCMLJ9-g',
-    appId: '1:664978581793:ios:57f9fb13de630837017660',
-    messagingSenderId: '664978581793',
-    projectId: 'cord2-senior-design',
-    storageBucket: 'cord2-senior-design.appspot.com',
-    androidClientId: '664978581793-qu98skff43dai5mqpnd1pcbd5u71i7th.apps.googleusercontent.com',
-    iosClientId: '664978581793-hhiai0uleqpvu23sj2soh4ps7j38grbe.apps.googleusercontent.com',
+    apiKey: 'AIzaSyAW7kjg-UUh-8nYEZC1iuyDFovkzSl8cc0',
+    appId: '1:571790127747:ios:694bbb5e50643a7f4c61b6',
+    messagingSenderId: '571790127747',
+    projectId: 'cord2-6c88c',
+    storageBucket: 'cord2-6c88c.firebasestorage.app',
+    iosClientId: '571790127747-25f4gtg81jc0j1tsfejuvknad7pon6bo.apps.googleusercontent.com',
     iosBundleId: 'com.cord.cord2MobileApp',
   );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyAW7kjg-UUh-8nYEZC1iuyDFovkzSl8cc0',
+    appId: '1:571790127747:ios:694bbb5e50643a7f4c61b6',
+    messagingSenderId: '571790127747',
+    projectId: 'cord2-6c88c',
+    storageBucket: 'cord2-6c88c.firebasestorage.app',
+    iosBundleId: 'com.cord.cord2MobileApp',
+  );
+
 }

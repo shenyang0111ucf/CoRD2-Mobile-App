@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cord2_mobile_app/classes/analytics.dart';
 import 'package:cord2_mobile_app/pages/messages.dart';
@@ -11,14 +13,18 @@ import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/chat_model.dart';
 import '../models/point_data.dart';
+import 'package:location/location.dart';
 
 class DisplayMap extends StatefulWidget {
+  final bool admin;
+  final String userId;
+
+  const DisplayMap({super.key, this.admin = false, required this.userId});
+
   @override
   State<DisplayMap> createState() => DisplayMapPageState();
 }
@@ -27,7 +33,6 @@ class DisplayMapPageState extends State<DisplayMap> {
   final AnalyticsService analytics = AnalyticsService();
   final double latitude = 28.5384;
   final double longitude = -81.3789;
-  final permissionLocation = Permission.location;
   late List<Marker> _markers = [];
   late List<PointData> _data = [];
   // related to lotis data
@@ -46,6 +51,12 @@ class DisplayMapPageState extends State<DisplayMap> {
   bool showTransit = false;
   bool showCountyLine = false;
 
+  final Location _locationController = Location();
+  StreamSubscription<LocationData>? locationSubscription;
+
+  LatLng? _currentP;
+  Timer? locationUpdates;
+
   @override
   void initState() {
     geoJsonParser.setDefaultMarkerTapCallback(onTapMarkerFunction);
@@ -57,15 +68,78 @@ class DisplayMapPageState extends State<DisplayMap> {
     processData();
     createMarkers();
     analytics.logScreenBrowsing("Map");
+
+    getLocationUpdates();
+    locationUpdates = Timer.periodic(
+        const Duration(minutes: 5), (Timer t) => sendLocationToFirebase());
+
     super.initState();
   }
 
+  @override
+  void dispose() {
+    locationSubscription?.cancel();
+    locationUpdates?.cancel();
+    super.dispose();
+  }
+
+  // Sends Location to Firebase
+  void sendLocationToFirebase() {
+    if (_currentP != null) {
+      analytics.logLocationChecked(_currentP!.latitude, _currentP!.longitude);
+
+      users.doc(widget.userId).update({
+        "location": {
+          "latitude": _currentP!.latitude,
+          "longitude": _currentP!.longitude,
+          "lastUpdate": DateTime.now().millisecondsSinceEpoch
+        }
+      });
+    }
+  }
+
+  // will update realtime location in app if given permission
+  Future<void> getLocationUpdates() async {
+    bool _serviceEnabled;
+    PermissionStatus _permissionGranted;
+
+    _serviceEnabled = await _locationController.serviceEnabled();
+    if (_serviceEnabled) {
+      _serviceEnabled = await _locationController.requestService();
+    } else {
+      return;
+    }
+
+    _permissionGranted = await _locationController.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await _locationController.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    locationSubscription = _locationController.onLocationChanged
+        .listen((LocationData currentLocation) {
+      if (currentLocation.latitude != null &&
+          currentLocation.longitude != null) {
+        if (mounted) {
+          setState(() {
+            _currentP =
+                LatLng(currentLocation.latitude!, currentLocation.longitude!);
+          });
+        }
+      }
+    });
+  }
+
   // zooms closer to users current position
-  void pinpointUser(lat, long) async {
-    //mapController.move(LatLng(28.538336, -81.379234), 9.0);
-    mapController.move(LatLng(lat, long), 15.0);
-    analytics.logLocationChecked(lat, long);
-    //createMarkers();
+  void pinpointUser() async {
+    if (_currentP != null) {
+      mapController.move(_currentP!, 15.0);
+      analytics.logLocationChecked(_currentP!.latitude, _currentP!.longitude);
+    }
+
+    createMarkers();
   }
 
   // zooms closer to selected search result
@@ -77,20 +151,6 @@ class DisplayMapPageState extends State<DisplayMap> {
   void refreshMap() async {
     createMarkers();
     mapController.move(LatLng(latitude, longitude), 9.0);
-  }
-
-  // takes in type of permission need/want
-  // returns true/false if have/need perm
-  Future<bool> checkPerms(String permType) async {
-    if (permType == 'locationPerm') {
-      final status = await permissionLocation.request();
-
-      if (status.isGranted) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   // instantiate parser, use the defaults
@@ -915,36 +975,7 @@ class DisplayMapPageState extends State<DisplayMap> {
             heroTag: null,
             backgroundColor: const Color(0xff242C73),
             onPressed: () async {
-              var permResult = await checkPerms('locationPerm');
-              if (permResult == true) {
-                final position = await Geolocator.getCurrentPosition();
-                pinpointUser(position.latitude, position.longitude);
-              } else {
-                showDialog(
-                    context: context,
-                    builder: (BuildContext context) => AlertDialog(
-                            title: const Text('Location Access Denied'),
-                            content: const Text(
-                                'Please enable Location Access, you can'
-                                'change this later in app settings.'),
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context, 'Cancel');
-                                },
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  openAppSettings();
-                                  Navigator.pop(context, 'OK');
-                                },
-                                child: const Text('OK'),
-                              )
-                            ]));
-                // use default location or insist on current position?
-                //pinpointUser(latitude, longitude);
-              }
+              pinpointUser();
             },
             child: const Icon(Icons.location_searching_rounded,
                 color: Colors.white),

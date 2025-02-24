@@ -13,7 +13,9 @@ class AnalyticsService {
     print("Screen View + $screenName");
     _analytics.logScreenView(
       screenName: screenName,
-      parameters: {'timestamp': DateTime.now().toIso8601String()},
+      parameters: {
+        'timestamp': DateTime.now().toIso8601String(),
+      },
     );
   }
 
@@ -30,7 +32,7 @@ class AnalyticsService {
   void logMapPointClick(String type) {
     print("Map Point Click $type");
     _analytics.logEvent(
-      name: 'location_checked',
+      name: 'map_click',
       parameters: {
         'map_point_type': type,
         'timestamp': DateTime.now().toIso8601String(),

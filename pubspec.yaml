@@ -58,6 +58,7 @@ dependencies:
   win32: ^5.7.1
   dropdown_button2: ^2.3.9
   firebase_analytics: ^11.3.5
+  location: ^7.0.1
 
 dev_dependencies:
   flutter_test:
