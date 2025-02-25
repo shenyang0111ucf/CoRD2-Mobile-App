@@ -51,6 +51,7 @@ class DefaultFirebaseOptions {
     appId: '1:571790127747:android:235897febcb103294c61b6',
     messagingSenderId: '571790127747',
     projectId: 'cord2-6c88c',
+    databaseURL: 'https://cord2-6c88c-default-rtdb.firebaseio.com',
     storageBucket: 'cord2-6c88c.firebasestorage.app',
   );
 
@@ -59,6 +60,7 @@ class DefaultFirebaseOptions {
     appId: '1:571790127747:ios:694bbb5e50643a7f4c61b6',
     messagingSenderId: '571790127747',
     projectId: 'cord2-6c88c',
+    databaseURL: 'https://cord2-6c88c-default-rtdb.firebaseio.com',
     storageBucket: 'cord2-6c88c.firebasestorage.app',
     iosClientId: '571790127747-25f4gtg81jc0j1tsfejuvknad7pon6bo.apps.googleusercontent.com',
     iosBundleId: 'com.cord.cord2MobileApp',

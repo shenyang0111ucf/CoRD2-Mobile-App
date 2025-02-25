@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "571790127747",
+    "firebase_url": "https://cord2-6c88c-default-rtdb.firebaseio.com",
+    "project_id": "cord2-6c88c",
+    "storage_bucket": "cord2-6c88c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:571790127747:android:235897febcb103294c61b6",
+        "android_client_info": {
+          "package_name": "com.cord.cord2_mobile_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "571790127747-oor41rch6ak1t908mm8tnhm06l5sc27m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbW3zcU-kZhfN2W5vBjYIyNQWniP9AKQw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "571790127747-oor41rch6ak1t908mm8tnhm06l5sc27m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "571790127747-25f4gtg81jc0j1tsfejuvknad7pon6bo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.cord.cord2MobileApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -13,12 +13,16 @@ class UserModel {
       : id = uid,
         displayName = json['name'] as String,
         email = json['email'] as String,
-        location = Location.fromJson(json['location']);
+        location = json.containsKey('location')
+            ? Location.fromJson(json['location'])
+            : null;
 
   UserModel.fromJson(Map<String, dynamic> json)
       : displayName = json['displayName'] as String,
         email = json['email'] as String,
-        location = Location.fromJson(json['location']);
+        location = json.containsKey('location')
+            ? Location.fromJson(json['location'])
+            : null;
 
   Map<String, dynamic> toJson() => {
         'displayName': displayName,

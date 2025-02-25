@@ -17,7 +17,8 @@ import 'package:uuid/uuid.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/chat_model.dart';
 import '../models/point_data.dart';
-import 'package:location/location.dart';
+import 'package:location/location.dart' hide PermissionStatus;
+import 'package:permission_handler/permission_handler.dart';
 
 class DisplayMap extends StatefulWidget {
   final bool admin;
@@ -69,9 +70,11 @@ class DisplayMapPageState extends State<DisplayMap> {
     createMarkers();
     analytics.logScreenBrowsing("Map");
 
+    print("here");
+
     getLocationUpdates();
-    locationUpdates = Timer.periodic(
-        const Duration(minutes: 5), (Timer t) => sendLocationToFirebase());
+    // locationUpdates = Timer.periodic(
+    //     const Duration(minutes: 5), (Timer t) => sendLocationToFirebase());
 
     super.initState();
   }
@@ -103,33 +106,39 @@ class DisplayMapPageState extends State<DisplayMap> {
     bool _serviceEnabled;
     PermissionStatus _permissionGranted;
 
-    _serviceEnabled = await _locationController.serviceEnabled();
-    if (_serviceEnabled) {
-      _serviceEnabled = await _locationController.requestService();
-    } else {
-      return;
+    _permissionGranted = await Permission.location.request();
+    if (_permissionGranted != PermissionStatus.granted) {
+      var status = await Permission.location.request();
+
+      if (status != PermissionStatus.granted) {
+        await openAppSettings();
+      }
     }
 
-    _permissionGranted = await _locationController.hasPermission();
-    if (_permissionGranted == PermissionStatus.denied) {
-      _permissionGranted = await _locationController.requestPermission();
-      if (_permissionGranted != PermissionStatus.granted) {
+    if (_permissionGranted.isGranted) {
+      print("here!");
+      _serviceEnabled = await _locationController.serviceEnabled();
+      if (_serviceEnabled) {
+        _serviceEnabled = await _locationController.requestService();
+      } else {
         return;
       }
-    }
 
-    locationSubscription = _locationController.onLocationChanged
-        .listen((LocationData currentLocation) {
-      if (currentLocation.latitude != null &&
-          currentLocation.longitude != null) {
-        if (mounted) {
-          setState(() {
-            _currentP =
-                LatLng(currentLocation.latitude!, currentLocation.longitude!);
-          });
+      print("here!!!");
+
+      locationSubscription = _locationController.onLocationChanged
+          .listen((LocationData currentLocation) {
+        if (currentLocation.latitude != null &&
+            currentLocation.longitude != null) {
+          if (mounted) {
+            setState(() {
+              _currentP =
+                  LatLng(currentLocation.latitude!, currentLocation.longitude!);
+            });
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   // zooms closer to users current position
