@@ -71,5 +71,7 @@
 	<string>Used to help add photos to reports</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Used to help add photos to reports</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Used to help provide audio files for user to apply</string>
 </dict>
 </plist>
