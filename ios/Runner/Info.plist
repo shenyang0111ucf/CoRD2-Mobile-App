@@ -65,5 +65,11 @@
 	<string>Location used for user to self-locate on map for responders to view user locations</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Location used for user to self-locate on map for responders to view user locations</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Used to help add photos to reports</string>
+	<key>NSPhotoLibraryUsageDescription	</key>
+	<string>Used to help add photos to reports</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Used to help add photos to reports</string>
 </dict>
 </plist>

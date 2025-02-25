@@ -41,7 +41,7 @@ class _AddChatPageState extends State<AddChatPage> {
 
   void handleChat() {
     if (selectedUser != null) {
-      // handleUserChat(selectedUser!.id!);
+      handleUserChat(selectedUser!.id!);
       Navigator.pop(context);
     }
   }

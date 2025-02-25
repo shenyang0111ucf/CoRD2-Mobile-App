@@ -137,13 +137,13 @@ class _MessagePageState extends State<MessagePage> {
   Widget renderTextBar() {
     return Row(children: [
       Expanded(
-        flex: 4,
+        flex: 3,
         child: TextField(
           controller: textController,
           style: GoogleFonts.jost(
               // Applying Google Font style
               textStyle: const TextStyle(
-            fontSize: 20,
+            fontSize: 15,
             color: Colors.white,
           )),
           decoration: InputDecoration(
@@ -162,7 +162,7 @@ class _MessagePageState extends State<MessagePage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(blurple),
                 shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(15))),
+                    borderRadius: BorderRadius.all(Radius.circular(10))),
               ),
               child: Text("Send",
                   style: GoogleFonts.jost(
